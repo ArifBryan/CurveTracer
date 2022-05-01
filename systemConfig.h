@@ -1,0 +1,128 @@
+#pragma once
+
+#include "stm32f1xx.h"
+#include <stm32f1xx_ll_rcc.h>
+#include <stm32f1xx_ll_bus.h>
+#include <stm32f1xx_ll_exti.h>
+#include <stm32f1xx_ll_cortex.h>
+#include <stm32f1xx_ll_utils.h>
+#include <stm32f1xx_ll_gpio.h>
+
+#define VSENSE_5V_GPIO		GPIOA
+#define VSENSE_5V_PIN		LL_GPIO_PIN_1
+
+#define VSENSE_VIN_GPIO		GPIOA
+#define VSENSE_VIN_PIN		LL_GPIO_PIN_2
+
+#define TSENSE_GPIO			GPIOC
+#define TSENSE_PIN			LL_GPIO_PIN_2
+
+#define VSENSE_USB_GPIO		GPIOA
+#define VSENSE_USB_PIN		LL_GPIO_PIN_11
+
+#define UART1_TX_GPIO		GPIOA
+#define UART1_TX_PIN		LL_GPIO_PIN_9
+#define UART1_RX_GPIO		GPIOA
+#define UART1_RX_PIN		LL_GPIO_PIN_10
+
+#define UART3_TX_GPIO		GPIOC
+#define UART3_TX_PIN		LL_GPIO_PIN_10
+#define UART3_RX_GPIO		GPIOC
+#define UART3_RX_PIN		LL_GPIO_PIN_11
+
+#define I2C1_SCL_GPIO		GPIOB
+#define I2C1_SCL_PIN		LL_GPIO_PIN_6
+#define I2C1_SDA_GPIO		GPIOB
+#define I2C1_SDA_PIN		LL_GPIO_PIN_7
+
+#define I2C2_SCL_GPIO		GPIOB
+#define I2C2_SCL_PIN		LL_GPIO_PIN_10
+#define I2C2_SDA_GPIO		GPIOB
+#define I2C2_SDA_PIN		LL_GPIO_PIN_11
+
+#define SPI1_SCK_GPIO		GPIOA
+#define SPI1_SCK_PIN		LL_GPIO_PIN_5
+#define SPI1_MISO_GPIO		GPIOA
+#define SPI1_MISO_PIN		LL_GPIO_PIN_6
+#define SPI1_MOSI_GPIO		GPIOA
+#define SPI1_MOSI_PIN		LL_GPIO_PIN_7
+
+#define SPI2_SCK_GPIO		GPIOB
+#define SPI2_SCK_PIN		LL_GPIO_PIN_13
+#define SPI2_MISO_GPIO		GPIOB
+#define SPI2_MISO_PIN		LL_GPIO_PIN_14
+#define SPI2_MOSI_GPIO		GPIOB
+#define SPI2_MOSI_PIN		LL_GPIO_PIN_15
+
+#define INA226_CH1_INT_GPIO	GPIOB
+#define INA226_CH1_INT_PIN	LL_GPIO_PIN_4
+#define INA226_CH2_INT_GPIO	GPIOB
+#define INA226_CH2_INT_PIN	LL_GPIO_PIN_3
+#define INA226_CH3_INT_GPIO	GPIOB
+#define INA226_CH3_INT_PIN	LL_GPIO_PIN_9
+
+#define AD5541_CH1_NSS_GPIO	GPIOB
+#define AD5541_CH1_NSS_PIN	LL_GPIO_PIN_5
+#define AD5541_CH2_NSS_GPIO	GPIOD
+#define AD5541_CH2_NSS_PIN	LL_GPIO_PIN_2
+#define AD5541_CH3_NSS_GPIO	GPIOA
+#define AD5541_CH3_NSS_PIN	LL_GPIO_PIN_4
+
+#define OPA548_CH1_ES_GPIO	GPIOC
+#define OPA548_CH1_ES_PIN	LL_GPIO_PIN_12
+#define OPA548_CH2_ES_GPIO	GPIOC
+#define OPA548_CH2_ES_PIN	LL_GPIO_PIN_0
+#define OPA548_CH3_ES_GPIO	GPIOC
+#define OPA548_CH3_ES_PIN	LL_GPIO_PIN_1
+
+#define LED_PWR_GPIO		GPIOB
+#define LED_PWR_PIN			LL_GPIO_PIN_0
+#define PWR_LATCH_GPIO		GPIOB
+#define PWR_LATCH_PIN		LL_GPIO_PIN_1
+#define BTN_PWR_GPIO		GPIOB
+#define BTN_PWR_PIN			LL_GPIO_PIN_2
+
+#define LED_STA_GPIO		GPIOA
+#define LED_STA_PIN			LL_GPIO_PIN_15
+
+#define FAN_GPIO			GPIOA
+#define FAN_PIN				LL_GPIO_PIN_3
+
+#define XPT2046_NSS_GPIO	GPIOA
+#define XPT2046_NSS_PIN		LL_GPIO_PIN_8
+
+#define XPT2046_IRQ_GPIO	GPIOC
+#define XPT2046_IRQ_PIN		LL_GPIO_PIN_8
+
+#define LCD_NSS_GPIO		GPIOB
+#define LCD_NSS_PIN			LL_GPIO_PIN_12
+
+#define LCD_DC_GPIO			GPIOC
+#define LCD_DC_PIN			LL_GPIO_PIN_7
+
+#define LCD_BKLT_GPIO		GPIOB
+#define LCD_BKLT_PIN		LL_GPIO_PIN_8
+
+#define BEEPER_GPIO			GPIOC
+#define BEEPER_PIN			LL_GPIO_PIN_6
+
+#define IO1_GPIO			GPIOC
+#define IO1_PIN				LL_GPIO_PIN_9
+
+#define SWD_IO_GPIO			GPIOA
+#define SWD_IO_PIN			LL_GPIO_PIN_13
+#define SWD_CLK_GPIO		GPIOA
+#define SWD_CLK_PIN			LL_GPIO_PIN_14
+
+struct System_TypeDef {
+	void RCC_Init(void);
+	void GPIO_Init(void);
+	void ADC_Init(void);
+	void UART_Init(void);
+	void SPI_Init(void);
+	void I2C_Init(void);
+	void EXTI_Init(void);
+	uint32_t Ticks(void);
+};
+
+extern System_TypeDef system;
