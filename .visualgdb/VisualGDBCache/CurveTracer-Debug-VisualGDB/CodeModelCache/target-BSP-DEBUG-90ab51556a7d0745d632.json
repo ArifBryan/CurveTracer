@@ -1,0 +1,188 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "CMakeFiles/BSP.dir/./D_/VisualGDB/EmbeddedBSPs/arm-eabi/com.sysprogs.arm.stm32/STM32F1xxxx/StartupFiles/startup_stm32f103xe.c.obj"
+		}
+	],
+	"backtrace" : 3,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"create_bsp_library",
+			"find_bsp",
+			"target_compile_options",
+			"set_bsp_core_properties_from_vars",
+			"target_compile_definitions",
+			"target_include_directories"
+		],
+		"files" : 
+		[
+			"D:/Program Files (x86)/Sysprogs/VisualGDB/CMake/embedded/bsp.cmake",
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 1
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 5,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 337,
+				"parent" : 1
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 43,
+				"parent" : 2
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 392,
+				"parent" : 1
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 67,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 66,
+				"parent" : 4
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 65,
+				"parent" : 4
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g3 -O0"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-mcpu=cortex-m3"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-mthumb"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-ffunction-sections"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-fdata-sections"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 6,
+					"define" : "ARM_MATH_CM3"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "DEBUG=1"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "STM32F103RE"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "STM32F103xE"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "USE_FULL_LL_DRIVER"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "flash_layout"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 7,
+					"path" : "D:/VisualStudio_Projects/STM32_Projetcs/CurveTracer/."
+				},
+				{
+					"backtrace" : 7,
+					"path" : "D:/VisualGDB/EmbeddedBSPs/arm-eabi/com.sysprogs.arm.stm32/STM32F1xxxx/STM32F1xx_HAL_Driver/Inc"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "D:/VisualGDB/EmbeddedBSPs/arm-eabi/com.sysprogs.arm.stm32/STM32F1xxxx/STM32F1xx_HAL_Driver/Inc/Legacy"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "D:/VisualGDB/EmbeddedBSPs/arm-eabi/com.sysprogs.arm.stm32/STM32F1xxxx/CMSIS_HAL/Device/ST/STM32F1xx/Include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "D:/VisualGDB/EmbeddedBSPs/arm-eabi/com.sysprogs.arm.stm32/STM32F1xxxx/CMSIS_HAL/Core/Include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "D:/VisualGDB/EmbeddedBSPs/arm-eabi/com.sysprogs.arm.stm32/STM32F1xxxx/CMSIS_HAL/Include"
+				}
+			],
+			"language" : "C",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"id" : "BSP::@6890427a1f51a3e7e1df",
+	"name" : "BSP",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 3,
+			"compileGroupIndex" : 0,
+			"path" : "D:/VisualGDB/EmbeddedBSPs/arm-eabi/com.sysprogs.arm.stm32/STM32F1xxxx/StartupFiles/startup_stm32f103xe.c",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "OBJECT_LIBRARY"
+}
