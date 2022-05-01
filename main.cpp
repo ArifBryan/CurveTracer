@@ -19,6 +19,6 @@ int main(void)
 		LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_12);
 		LL_mDelay(500);
 		LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_12);
-		LL_mDelay(500);
+		LL_mDelay(250);
 	}
 }
