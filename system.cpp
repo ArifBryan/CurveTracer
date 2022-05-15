@@ -1,8 +1,76 @@
-#include "systemConfig.h"
+#include "system.h"
 
 System_TypeDef system;
 
 extern "C" volatile uint32_t ticks;
+uint32_t pwrBtnTmr;
+uint32_t sledTmr;
+void (*Shutdown_Callback)(void);
+
+extern "C" void CSSFault_Handler() {
+	SystemCoreClockUpdate();
+	LL_Init1msTick(SystemCoreClock);
+	Shutdown_Callback();
+	uint8_t cnt = 0;
+	while (1) {
+		LL_GPIO_TogglePin(LED_STA_GPIO, LED_STA_PIN);
+		LL_mDelay(100);
+		if (cnt ++ >= 15) {break;}
+	}
+	NVIC_SystemReset();
+}
+
+void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_CallbackHandler)(void)) {
+	RCC_Init();
+	GPIO_Init();
+	LL_GPIO_ResetOutputPin(LED_STA_GPIO, LED_STA_PIN);
+	while (1) {
+		if (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) {
+			if (Ticks() - pwrBtnTmr >= 200) {
+				LL_GPIO_SetOutputPin(BEEPER_GPIO, BEEPER_PIN);
+				LL_mDelay(50);
+				LL_GPIO_ResetOutputPin(BEEPER_GPIO, BEEPER_PIN);
+				LL_GPIO_SetOutputPin(PWR_LATCH_GPIO, PWR_LATCH_PIN);
+				LL_GPIO_SetOutputPin(LED_PWR_GPIO, LED_PWR_PIN);
+				Startup_CallbackHandler();
+				Shutdown_Callback = Shutdown_CallbackHandler;
+				while (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) ;
+				pwrBtnTmr = Ticks();
+				break;
+			}
+		}
+		else {
+			pwrBtnTmr = Ticks();
+		}
+	}
+}
+
+void System_TypeDef::Handler() {
+	if (Ticks() - sledTmr >= 100 && !LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
+		LL_GPIO_SetOutputPin(LED_STA_GPIO, LED_STA_PIN);
+		sledTmr = Ticks();
+	}
+	else if (Ticks() - sledTmr >= 500 && LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
+		LL_GPIO_ResetOutputPin(LED_STA_GPIO, LED_STA_PIN);
+		sledTmr = Ticks();
+	}
+	
+	if (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) {
+		if (Ticks() - pwrBtnTmr >= 200) {
+			LL_GPIO_SetOutputPin(BEEPER_GPIO, BEEPER_PIN);
+			LL_mDelay(50);
+			LL_GPIO_ResetOutputPin(BEEPER_GPIO, BEEPER_PIN);
+			Shutdown_Callback();
+			LL_GPIO_ResetOutputPin(LED_PWR_GPIO, LED_PWR_PIN);
+			while (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) ;
+			LL_GPIO_ResetOutputPin(PWR_LATCH_GPIO, PWR_LATCH_PIN);
+			NVIC_SystemReset();
+		}
+	}
+	else {
+		pwrBtnTmr = Ticks();
+	}
+}
 
 void System_TypeDef::RCC_Init() {
 	LL_UTILS_PLLInitTypeDef PLLInit_Struct;

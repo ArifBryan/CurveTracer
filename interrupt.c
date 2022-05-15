@@ -6,11 +6,11 @@ void SysTick_Handler() {
 	ticks++;
 }
 
-void CSSFault_Handler(void) {}
+void CSSFault_Handler(void);
 
 void NMI_Handler(void) {
 	if (LL_RCC_IsActiveFlag_HSECSS()) {
-		LL_RCC_ClearFlag_HSECSS();
 		CSSFault_Handler();
+		LL_RCC_ClearFlag_HSECSS();
 	}
 }

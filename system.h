@@ -115,6 +115,10 @@
 #define SWD_CLK_PIN			LL_GPIO_PIN_14
 
 struct System_TypeDef {
+	void Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_CallbackHandler)(void));
+	void Handler(void);
+	uint32_t Ticks(void);
+private:
 	void RCC_Init(void);
 	void GPIO_Init(void);
 	void ADC_Init(void);
@@ -122,7 +126,6 @@ struct System_TypeDef {
 	void SPI_Init(void);
 	void I2C_Init(void);
 	void EXTI_Init(void);
-	uint32_t Ticks(void);
 };
 
 extern System_TypeDef system;
