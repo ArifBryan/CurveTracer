@@ -1,21 +1,30 @@
 #pragma once
 
 #include "stm32f1xx.h"
+#include <stm32f1xx_ll_adc.h>
 #include <stm32f1xx_ll_rcc.h>
 #include <stm32f1xx_ll_bus.h>
 #include <stm32f1xx_ll_exti.h>
+#include <stm32f1xx_ll_tim.h>
 #include <stm32f1xx_ll_cortex.h>
 #include <stm32f1xx_ll_utils.h>
 #include <stm32f1xx_ll_gpio.h>
+#include <stm32f1xx_ll_usart.h>
+#include <stm32f1xx_ll_i2c.h>
+#include <stm32f1xx_ll_spi.h>
+#include <stm32f1xx_ll_exti.h>
 
 #define VSENSE_5V_GPIO		GPIOA
 #define VSENSE_5V_PIN		LL_GPIO_PIN_1
+#define VSENSE_5V_ADC_CH	LL_ADC_CHANNEL_1
 
 #define VSENSE_VIN_GPIO		GPIOA
 #define VSENSE_VIN_PIN		LL_GPIO_PIN_2
+#define VSENSE_VIN_ADC_CH	LL_ADC_CHANNEL_2
 
 #define TSENSE_GPIO			GPIOC
 #define TSENSE_PIN			LL_GPIO_PIN_2
+#define TSENSE_ADC_CH		LL_ADC_CHANNEL_12
 
 #define VSENSE_USB_GPIO		GPIOA
 #define VSENSE_USB_PIN		LL_GPIO_PIN_11
@@ -87,6 +96,8 @@
 
 #define FAN_GPIO			GPIOA
 #define FAN_PIN				LL_GPIO_PIN_3
+#define FAN_TIM				TIM2
+#define FAN_TIM_CH			LL_TIM_CHANNEL_CH4
 
 #define XPT2046_NSS_GPIO	GPIOA
 #define XPT2046_NSS_PIN		LL_GPIO_PIN_8
@@ -102,6 +113,8 @@
 
 #define LCD_BKLT_GPIO		GPIOB
 #define LCD_BKLT_PIN		LL_GPIO_PIN_8
+#define LCD_BKLT_TIM		TIM4
+#define LCD_BKLT_TIM_CH		LL_TIM_CHANNEL_CH3
 
 #define BEEPER_GPIO			GPIOC
 #define BEEPER_PIN			LL_GPIO_PIN_6
@@ -115,17 +128,25 @@
 #define SWD_CLK_PIN			LL_GPIO_PIN_14
 
 struct System_TypeDef {
-	void Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_CallbackHandler)(void));
+	void Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_CallbackHandler)(void), void(*OverTemperature_CallbackHandler)(void));
 	void Handler(void);
+	void Shutdown(void);
+	uint8_t OverTemperature(void);
+	uint32_t ReadVsense5V(void);
+	uint32_t ReadVsenseVin(void);
+	float ReadDriverTemp(void);
 	uint32_t Ticks(void);
 private:
 	void RCC_Init(void);
 	void GPIO_Init(void);
 	void ADC_Init(void);
+	void TIM_Init(void);
 	void UART_Init(void);
 	void SPI_Init(void);
 	void I2C_Init(void);
 	void EXTI_Init(void);
+	void ADC_StartConv(void);
+	void SetFanSpeed(uint32_t spd);
 };
 
 extern System_TypeDef system;
