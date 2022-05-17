@@ -13,6 +13,8 @@
 #include <stm32f1xx_ll_i2c.h>
 #include <stm32f1xx_ll_spi.h>
 #include <stm32f1xx_ll_exti.h>
+#include <string.h>
+#include "uart_it.h"
 
 #define VSENSE_5V_GPIO		GPIOA
 #define VSENSE_5V_PIN		LL_GPIO_PIN_1
@@ -141,7 +143,7 @@ private:
 	void GPIO_Init(void);
 	void ADC_Init(void);
 	void TIM_Init(void);
-	void UART_Init(void);
+	void USART_Init(void);
 	void SPI_Init(void);
 	void I2C_Init(void);
 	void EXTI_Init(void);
@@ -150,3 +152,4 @@ private:
 };
 
 extern System_TypeDef system;
+extern UART_IT_TypeDef uart1;

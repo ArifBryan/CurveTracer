@@ -1,7 +1,5 @@
 #include "system.h"
 
-System_TypeDef system;
-
 #define UVLO_BYPASS 1
 
 void(*Shutdown_Callback)(void);
@@ -14,6 +12,11 @@ volatile uint16_t adcData[3];
 volatile uint8_t adcDataIdx;
 uint8_t overTemp;
 
+
+System_TypeDef system;
+UART_IT_TypeDef uart1(USART1, &ticks);
+
+// Interrupt & exception handler
 extern "C" void CSSFault_Handler() {
 	SystemCoreClockUpdate();
 	LL_Init1msTick(SystemCoreClock);
@@ -31,6 +34,10 @@ extern "C" void ADC1_EOS_Handler() {
 	adcData[adcDataIdx++] = LL_ADC_REG_ReadConversionData12(ADC1);
 	if (adcDataIdx == 3){adcDataIdx = 0; }
 	LL_ADC_REG_StartConversionSWStart(ADC1);
+}
+
+extern "C" void USART1_IRQHandler() {
+	uart1.IRQ_Handler();
 }
 
 void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_CallbackHandler)(void), void(*OverTemperature_CallbackHandler)(void)) {
@@ -52,7 +59,7 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 				LL_GPIO_SetOutputPin(LED_PWR_GPIO, LED_PWR_PIN);
 				// Peripheral init
 				TIM_Init();
-				UART_Init();
+				USART_Init();
 				SPI_Init();
 				I2C_Init();
 				EXTI_Init();
@@ -335,9 +342,9 @@ void System_TypeDef::ADC_Init() {
 	LL_ADC_SetChannelSamplingTime(ADC1, VSENSE_5V_ADC_CH, LL_ADC_SAMPLINGTIME_71CYCLES_5);
 	LL_ADC_SetChannelSamplingTime(ADC1, TSENSE_ADC_CH, LL_ADC_SAMPLINGTIME_71CYCLES_5);
 	
-	LL_ADC_Enable(ADC1);
-	LL_ADC_EnableIT_EOS(ADC1);
 	NVIC_EnableIRQ(ADC1_2_IRQn);
+	LL_ADC_EnableIT_EOS(ADC1);
+	LL_ADC_Enable(ADC1);
 	
 	LL_ADC_StartCalibration(ADC1);
 	while (LL_ADC_IsCalibrationOnGoing(ADC1)) ;
@@ -411,8 +418,30 @@ void System_TypeDef::SetFanSpeed(uint32_t spd) {
 	LL_TIM_OC_SetCompareCH4(FAN_TIM, spd);
 }
 
-void System_TypeDef::UART_Init() {}
-void System_TypeDef::SPI_Init() {}
+void System_TypeDef::USART_Init() {
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART1);
+}
+void System_TypeDef::SPI_Init() {
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SPI1);
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_SPI2);
+	
+	LL_SPI_InitTypeDef SPIInit_Struct;
+	
+	SPIInit_Struct.Mode = LL_SPI_MODE_MASTER;
+	SPIInit_Struct.TransferDirection = LL_SPI_FULL_DUPLEX;
+	SPIInit_Struct.NSS = LL_SPI_NSS_SOFT;
+	SPIInit_Struct.ClockPolarity = LL_SPI_POLARITY_LOW;
+	SPIInit_Struct.ClockPhase = LL_SPI_PHASE_1EDGE;
+	SPIInit_Struct.BitOrder = LL_SPI_MSB_FIRST;
+	SPIInit_Struct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV128;
+	SPIInit_Struct.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
+	
+	LL_SPI_Init(SPI1, &SPIInit_Struct);
+	LL_SPI_Init(SPI2, &SPIInit_Struct);
+	
+	LL_SPI_Enable(SPI1);
+	LL_SPI_Enable(SPI2);
+}
 void System_TypeDef::I2C_Init() {}
 void System_TypeDef::EXTI_Init() {}
 

@@ -1,11 +1,13 @@
 #include <stm32f1xx.h>
 #include <stm32f1xx_ll_rcc.h>
 #include <stm32f1xx_ll_adc.h>
+#include <stm32f1xx_ll_usart.h>
 
 void CSSFault_Handler(void);
 void ADC1_EOS_Handler(void);
 
 volatile uint32_t ticks;
+
 void SysTick_Handler() {
 	ticks++;
 }

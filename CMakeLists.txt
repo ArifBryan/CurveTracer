@@ -13,6 +13,16 @@ find_bsp(
 
 add_bsp_based_executable(
 	NAME CurveTracer
-	SOURCES main.cpp system_stm32f1xx.c stm32f1xx_hal_conf.h system.h system.cpp interrupt.c
+	SOURCES
+		main.cpp
+		system_stm32f1xx.c
+		stm32f1xx_hal_conf.h
+		system.h
+		system.cpp
+		interrupt.c
+		uart_it.h
+		uart_it.cpp
+		serial.cpp
+		serial.h
 	GENERATE_BIN
 	GENERATE_MAP)
