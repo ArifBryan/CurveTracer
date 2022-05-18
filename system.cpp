@@ -480,7 +480,7 @@ void System_TypeDef::SPI_Init() {
 	SPIInit_Struct.ClockPolarity = LL_SPI_POLARITY_LOW;
 	SPIInit_Struct.ClockPhase = LL_SPI_PHASE_1EDGE;
 	SPIInit_Struct.BitOrder = LL_SPI_MSB_FIRST;
-	SPIInit_Struct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV2;
+	SPIInit_Struct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV16;
 	SPIInit_Struct.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
 	SPIInit_Struct.CRCPoly = 1U;
 	
