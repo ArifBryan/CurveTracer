@@ -17,7 +17,7 @@ struct UART_IT_TypeDef {
 	UART_IT_TypeDef(USART_TypeDef *usart, volatile uint32_t *ticks) {
 		this->usart = usart;
 		this->ticks = ticks; }
-	void Init(UART_IT_InitTypeDef *initStruct, void(*Receive_CallbackHandler)(char *data), char delimiter, uint32_t timeout);
+	void Init(UART_IT_InitTypeDef *initStruct, void(*Receive_CallbackHandler)(char *data), char delimiter, uint32_t timeout = 1000);
 	void Transmit(const char *data);
 	void Handler();
 	void IRQ_Handler();

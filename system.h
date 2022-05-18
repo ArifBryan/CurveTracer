@@ -15,7 +15,9 @@
 #include <stm32f1xx_ll_exti.h>
 #include <string.h>
 #include "uart_it.h"
+#include "ILI9341.h"
 
+// GPIO pins
 #define VSENSE_5V_GPIO		GPIOA
 #define VSENSE_5V_PIN		LL_GPIO_PIN_1
 #define VSENSE_5V_ADC_CH	LL_ADC_CHANNEL_1
@@ -153,3 +155,4 @@ private:
 
 extern System_TypeDef system;
 extern UART_IT_TypeDef uart1;
+extern ILI9341_TypeDef lcd;

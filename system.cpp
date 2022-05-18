@@ -15,6 +15,7 @@ uint8_t overTemp;
 
 System_TypeDef system;
 UART_IT_TypeDef uart1(USART1, &ticks);
+ILI9341_TypeDef lcd(SPI2, LCD_NSS_GPIO, LCD_NSS_PIN, LCD_DC_GPIO, LCD_DC_PIN);
 
 // Interrupt & exception handler
 extern "C" void CSSFault_Handler() {
@@ -114,6 +115,7 @@ void System_TypeDef::Handler() {
 	// Status LED
 	if (Ticks() - sledTmr >= 100 && !LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
 		LL_GPIO_SetOutputPin(LED_STA_GPIO, LED_STA_PIN);
+		lcd.Init();
 		sledTmr = Ticks();
 	}
 	else if (Ticks() - sledTmr >= 500 && LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
@@ -166,6 +168,12 @@ void System_TypeDef::RCC_Init() {
 	LL_SYSTICK_SetClkSource(LL_SYSTICK_CLKSOURCE_HCLK);
 	LL_InitTick(SystemCoreClock, 1000);
 	LL_SYSTICK_EnableIT();
+	
+	LL_APB1_GRP1_ForceReset(LL_APB1_GRP1_PERIPH_ALL);
+	LL_APB2_GRP1_ForceReset(LL_APB2_GRP1_PERIPH_ALL);
+	LL_mDelay(1);
+	LL_APB1_GRP1_ReleaseReset(LL_APB1_GRP1_PERIPH_ALL);
+	LL_APB2_GRP1_ReleaseReset(LL_APB2_GRP1_PERIPH_ALL);
 }
 
 void System_TypeDef::GPIO_Init() {
@@ -205,17 +213,21 @@ void System_TypeDef::GPIO_Init() {
 	
 	GPIOInit_Struct.Pin = SPI1_MOSI_PIN;
 	LL_GPIO_Init(SPI1_MOSI_GPIO, &GPIOInit_Struct);
-	GPIOInit_Struct.Pin = SPI1_MISO_PIN;
-	LL_GPIO_Init(SPI1_MISO_GPIO, &GPIOInit_Struct);
 	GPIOInit_Struct.Pin = SPI1_SCK_PIN;
 	LL_GPIO_Init(SPI1_SCK_GPIO, &GPIOInit_Struct);
 	
 	GPIOInit_Struct.Pin = SPI2_MOSI_PIN;
 	LL_GPIO_Init(SPI2_MOSI_GPIO, &GPIOInit_Struct);
-	GPIOInit_Struct.Pin = SPI2_MISO_PIN;
-	LL_GPIO_Init(SPI2_MISO_GPIO, &GPIOInit_Struct);
 	GPIOInit_Struct.Pin = SPI2_SCK_PIN;
 	LL_GPIO_Init(SPI2_SCK_GPIO, &GPIOInit_Struct);
+	
+	GPIOInit_Struct.Mode = LL_GPIO_MODE_INPUT;
+	GPIOInit_Struct.Pull = LL_GPIO_PULL_DOWN;
+	GPIOInit_Struct.Pin = SPI1_MISO_PIN;
+	LL_GPIO_Init(SPI1_MISO_GPIO, &GPIOInit_Struct);
+	
+	GPIOInit_Struct.Pin = SPI2_MISO_PIN;
+	LL_GPIO_Init(SPI2_MISO_GPIO, &GPIOInit_Struct);
 	
 	// Comm. : I2C
 	GPIOInit_Struct.Mode = LL_GPIO_MODE_ALTERNATE;
@@ -243,6 +255,31 @@ void System_TypeDef::GPIO_Init() {
 	GPIOInit_Struct.Pin = LCD_BKLT_PIN;
 	LL_GPIO_Init(LCD_BKLT_GPIO, &GPIOInit_Struct);
 	
+	// High frequency output pins
+	GPIOInit_Struct.Mode = LL_GPIO_MODE_OUTPUT;
+	GPIOInit_Struct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	GPIOInit_Struct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+	
+	LL_GPIO_SetOutputPin(LCD_NSS_GPIO, LCD_NSS_PIN);
+	GPIOInit_Struct.Pin = LCD_NSS_PIN;
+	LL_GPIO_Init(LCD_NSS_GPIO, &GPIOInit_Struct);
+	LL_GPIO_SetOutputPin(LCD_DC_GPIO, LCD_DC_PIN);
+	GPIOInit_Struct.Pin = LCD_DC_PIN;
+	LL_GPIO_Init(LCD_DC_GPIO, &GPIOInit_Struct);
+	
+	LL_GPIO_SetOutputPin(XPT2046_NSS_GPIO, XPT2046_NSS_PIN);
+	GPIOInit_Struct.Pin = XPT2046_NSS_PIN;
+	LL_GPIO_Init(XPT2046_NSS_GPIO, &GPIOInit_Struct);
+	
+	GPIOInit_Struct.Pin = AD5541_CH1_NSS_PIN;
+	LL_GPIO_Init(AD5541_CH1_NSS_GPIO, &GPIOInit_Struct);
+	
+	GPIOInit_Struct.Pin = AD5541_CH2_NSS_PIN;
+	LL_GPIO_Init(AD5541_CH2_NSS_GPIO, &GPIOInit_Struct);
+	
+	GPIOInit_Struct.Pin = AD5541_CH3_NSS_PIN;
+	LL_GPIO_Init(AD5541_CH3_NSS_GPIO, &GPIOInit_Struct);
+	
 	// Low frequency output pins
 	GPIOInit_Struct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIOInit_Struct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
@@ -260,15 +297,6 @@ void System_TypeDef::GPIO_Init() {
 	
 	GPIOInit_Struct.Pin = BEEPER_PIN;
 	LL_GPIO_Init(BEEPER_GPIO, &GPIOInit_Struct);
-	
-	GPIOInit_Struct.Pin = AD5541_CH1_NSS_PIN;
-	LL_GPIO_Init(AD5541_CH1_NSS_GPIO, &GPIOInit_Struct);
-	
-	GPIOInit_Struct.Pin = AD5541_CH2_NSS_PIN;
-	LL_GPIO_Init(AD5541_CH2_NSS_GPIO, &GPIOInit_Struct);
-	
-	GPIOInit_Struct.Pin = AD5541_CH3_NSS_PIN;
-	LL_GPIO_Init(AD5541_CH3_NSS_GPIO, &GPIOInit_Struct);
 	
 	GPIOInit_Struct.Pin = OPA548_CH1_ES_PIN;
 	LL_GPIO_Init(OPA548_CH1_ES_GPIO, &GPIOInit_Struct);
@@ -433,14 +461,16 @@ void System_TypeDef::SPI_Init() {
 	SPIInit_Struct.ClockPolarity = LL_SPI_POLARITY_LOW;
 	SPIInit_Struct.ClockPhase = LL_SPI_PHASE_1EDGE;
 	SPIInit_Struct.BitOrder = LL_SPI_MSB_FIRST;
-	SPIInit_Struct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV128;
+	SPIInit_Struct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV2;
 	SPIInit_Struct.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
+	SPIInit_Struct.CRCPoly = 1;
 	
 	LL_SPI_Init(SPI1, &SPIInit_Struct);
 	LL_SPI_Init(SPI2, &SPIInit_Struct);
-	
+			
 	LL_SPI_Enable(SPI1);
 	LL_SPI_Enable(SPI2);
+	
 }
 void System_TypeDef::I2C_Init() {}
 void System_TypeDef::EXTI_Init() {}

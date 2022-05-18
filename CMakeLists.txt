@@ -24,5 +24,7 @@ add_bsp_based_executable(
 		uart_it.cpp
 		serial.cpp
 		serial.h
+		ILI9341.h
+		ILI9341.cpp
 	GENERATE_BIN
 	GENERATE_MAP)

@@ -1,6 +1,8 @@
 #include "system.h"
 #include "serial.h"
 
+#include "ILI9341.h"
+
 uint32_t tBeep;
 uint8_t lTouch;
 
@@ -11,7 +13,9 @@ uint8_t bklt = 25;
 void Startup_Handler() {
 	serial.Init();
 	LL_mDelay(500);
-	LL_TIM_OC_SetCompareCH3(LCD_BKLT_TIM, 50);
+	LL_TIM_OC_SetCompareCH3(LCD_BKLT_TIM, bklt);
+	LL_mDelay(200);
+	lcd.Init();
 }
 
 void Shutdown_Handler() {
@@ -25,17 +29,6 @@ void OverTemperature_Handler() {
 
 int main() {
 	system.Init(Startup_Handler, Shutdown_Handler, OverTemperature_Handler);
-	
-	// Testing SPI LCD
-	LL_GPIO_ResetOutputPin(LCD_NSS_GPIO, LCD_NSS_PIN);
-	LL_GPIO_ResetOutputPin(LCD_DC_GPIO, LCD_DC_PIN);
-	
-	
-	
-	LL_GPIO_SetOutputPin(LCD_NSS_GPIO, LCD_NSS_PIN);
-	LL_GPIO_SetOutputPin(LCD_DC_GPIO, LCD_DC_PIN);
-	// Testing SPI LCD - END
-	
 	
 	while (1) {
 		if (!LL_GPIO_IsInputPinSet(XPT2046_IRQ_GPIO, XPT2046_IRQ_PIN) && !lTouch) {
