@@ -1,6 +1,7 @@
 #include "system.h"
 
-#define UVLO_BYPASS 1
+#define UVLO_BYPASS		1
+#define PWRCTL_BYPASS	0
 
 void(*Shutdown_Callback)(void);
 void(*OverTemperature_Callback)(void);
@@ -42,6 +43,7 @@ extern "C" void USART1_IRQHandler() {
 }
 
 void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_CallbackHandler)(void), void(*OverTemperature_CallbackHandler)(void)) {
+	// Peripheral init
 	RCC_Init();
 	GPIO_Init();
 	LL_GPIO_SetOutputPin(PWR_LATCH_GPIO, PWR_LATCH_PIN);
@@ -51,7 +53,7 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 	uint32_t platchTmr = Ticks();
 	while (1) {
 		// Power on button
-		if (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN) && (ReadVsenseVin() >= 23000 || UVLO_BYPASS)) {
+		if ((!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN) && (ReadVsenseVin() >= 23000 || UVLO_BYPASS)) || PWRCTL_BYPASS) {
 			if (Ticks() - pwrBtnTmr >= 200) {
 				LL_GPIO_SetOutputPin(BEEPER_GPIO, BEEPER_PIN);
 				LL_mDelay(50);
@@ -59,15 +61,16 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 				LL_GPIO_SetOutputPin(PWR_LATCH_GPIO, PWR_LATCH_PIN);
 				LL_GPIO_SetOutputPin(LED_PWR_GPIO, LED_PWR_PIN);
 				// Peripheral init
-				TIM_Init();
 				USART_Init();
 				SPI_Init();
 				I2C_Init();
+				TIM_Init();
 				EXTI_Init();
 				// Startup handler
 				Startup_CallbackHandler();
 				Shutdown_Callback = Shutdown_CallbackHandler;
 				OverTemperature_Callback = OverTemperature_CallbackHandler;
+				LL_mDelay(100);
 				while (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) ;
 				pwrBtnTmr = Ticks();
 				break;
@@ -115,7 +118,6 @@ void System_TypeDef::Handler() {
 	// Status LED
 	if (Ticks() - sledTmr >= 100 && !LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
 		LL_GPIO_SetOutputPin(LED_STA_GPIO, LED_STA_PIN);
-		lcd.Init();
 		sledTmr = Ticks();
 	}
 	else if (Ticks() - sledTmr >= 500 && LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
@@ -171,19 +173,21 @@ void System_TypeDef::RCC_Init() {
 	
 	LL_APB1_GRP1_ForceReset(LL_APB1_GRP1_PERIPH_ALL);
 	LL_APB2_GRP1_ForceReset(LL_APB2_GRP1_PERIPH_ALL);
-	LL_mDelay(1);
 	LL_APB1_GRP1_ReleaseReset(LL_APB1_GRP1_PERIPH_ALL);
 	LL_APB2_GRP1_ReleaseReset(LL_APB2_GRP1_PERIPH_ALL);
 }
 
 void System_TypeDef::GPIO_Init() {
-	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_AFIO);
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOB);
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOC);
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOD);
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_AFIO);
 	
 	LL_GPIO_InitTypeDef GPIOInit_Struct;
+	
+	// !IMPORTANT! always initialize init struct !IMPORTANT! //
+	LL_GPIO_StructInit(&GPIOInit_Struct);
 	
 	// Communication pins
 	
@@ -347,12 +351,18 @@ void System_TypeDef::ADC_Init() {
 		
 	LL_ADC_InitTypeDef ADCInit_Struct;
 	
+	// !IMPORTANT! always initialize init struct !IMPORTANT! //
+	LL_ADC_StructInit(&ADCInit_Struct);
+	
 	ADCInit_Struct.DataAlignment = LL_ADC_DATA_ALIGN_RIGHT;
 	ADCInit_Struct.SequencersScanMode = LL_ADC_SEQ_SCAN_DISABLE;
 	
 	LL_ADC_Init(ADC1, &ADCInit_Struct);
 	
 	LL_ADC_REG_InitTypeDef ADCREGInit_Struct;
+	
+	// !IMPORTANT! always initialize init struct !IMPORTANT! //
+	LL_ADC_REG_StructInit(&ADCREGInit_Struct);
 	
 	ADCREGInit_Struct.ContinuousMode = LL_ADC_REG_CONV_SINGLE;
 	ADCREGInit_Struct.DMATransfer = LL_ADC_REG_DMA_TRANSFER_NONE;
@@ -406,6 +416,9 @@ void System_TypeDef::TIM_Init() {
 	
 	LL_TIM_InitTypeDef TIMInit_Struct;
 	
+	// !IMPORTANT! always initialize init struct !IMPORTANT! //
+	LL_TIM_StructInit(&TIMInit_Struct);
+	
 	TIMInit_Struct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
 	TIMInit_Struct.CounterMode = LL_TIM_COUNTERDIRECTION_UP;
 	TIMInit_Struct.RepetitionCounter = 0;
@@ -419,6 +432,9 @@ void System_TypeDef::TIM_Init() {
 	LL_TIM_Init(LCD_BKLT_TIM, &TIMInit_Struct);
 	
 	LL_TIM_OC_InitTypeDef TIMOCInit_Struct;
+	
+	// !IMPORTANT! always initialize init struct !IMPORTANT! //
+	LL_TIM_OC_StructInit(&TIMOCInit_Struct);
 	
 	TIMOCInit_Struct.OCMode = LL_TIM_OCMODE_PWM1;
 	TIMOCInit_Struct.OCState = LL_TIM_OCSTATE_ENABLE;
@@ -455,6 +471,9 @@ void System_TypeDef::SPI_Init() {
 	
 	LL_SPI_InitTypeDef SPIInit_Struct;
 	
+	// !IMPORTANT! always initialize init struct !IMPORTANT! //
+	LL_SPI_StructInit(&SPIInit_Struct);
+	
 	SPIInit_Struct.Mode = LL_SPI_MODE_MASTER;
 	SPIInit_Struct.TransferDirection = LL_SPI_FULL_DUPLEX;
 	SPIInit_Struct.NSS = LL_SPI_NSS_SOFT;
@@ -463,14 +482,13 @@ void System_TypeDef::SPI_Init() {
 	SPIInit_Struct.BitOrder = LL_SPI_MSB_FIRST;
 	SPIInit_Struct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV2;
 	SPIInit_Struct.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
-	SPIInit_Struct.CRCPoly = 1;
+	SPIInit_Struct.CRCPoly = 1U;
 	
 	LL_SPI_Init(SPI1, &SPIInit_Struct);
 	LL_SPI_Init(SPI2, &SPIInit_Struct);
-			
+	
 	LL_SPI_Enable(SPI1);
 	LL_SPI_Enable(SPI2);
-	
 }
 void System_TypeDef::I2C_Init() {}
 void System_TypeDef::EXTI_Init() {}
