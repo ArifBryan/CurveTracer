@@ -3,7 +3,7 @@
 #include <stm32f1xx_ll_spi.h>
 #include <stm32f1xx_ll_utils.h>
 
-static const uint8_t initCmd[] = { 
+const uint8_t initCmd[] = { 
 	0xEF, 3, 0x03, 0x80, 0x02,
 	0xCF, 3, 0x00, 0xC1, 0x30,
 	0xED, 4, 0x64, 0x03, 0x12, 0x81,
@@ -51,14 +51,12 @@ void ILI9341_TypeDef::SendCommand(uint8_t cmd, uint8_t *data, uint8_t dataLen) {
 	
 	LL_GPIO_ResetOutputPin(dcGPIO, dcPIN);
 	LL_SPI_TransmitData8(spi, cmd);
-	while (!LL_SPI_IsActiveFlag_RXNE(spi)) ;
-	LL_SPI_ReceiveData8(spi);
+	while (LL_SPI_IsActiveFlag_BSY(spi)) ;
 	
 	LL_GPIO_SetOutputPin(dcGPIO, dcPIN);
 	for (uint8_t i = 0; i < dataLen; i++) {
 		LL_SPI_TransmitData8(spi, data[i]);
-		while (!LL_SPI_IsActiveFlag_RXNE(spi)) ;
-		LL_SPI_ReceiveData8(spi);
+		while (LL_SPI_IsActiveFlag_BSY(spi)) ;
 	}
 	LL_GPIO_SetOutputPin(csGPIO, csPIN);
 }
