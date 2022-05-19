@@ -14,6 +14,7 @@
 #include <stm32f1xx_ll_spi.h>
 #include <stm32f1xx_ll_exti.h>
 #include <string.h>
+#include <stdio.h>
 #include "uart_it.h"
 #include "ILI9341.h"
 

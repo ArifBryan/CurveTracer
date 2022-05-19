@@ -28,7 +28,10 @@ add_bsp_based_executable(
 		ILI9341.cpp
 		gfxfont.h
 		LL_GFX.h
-		LL_SPITFT.h
-		LL_SPITFT.cpp
+		glcdfont.c
+		LL_GFX.cpp
+		gfxfont.h
+		LL_GFX.h
 	GENERATE_BIN
 	GENERATE_MAP)
+set_source_files_properties(LL_SPITFT.h LL_SPITFT.cpp PROPERTIES HEADER_FILE_ONLY TRUE)

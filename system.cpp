@@ -122,6 +122,14 @@ void System_TypeDef::Handler() {
 	}
 	else if (Ticks() - sledTmr >= 500 && LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
 		LL_GPIO_ResetOutputPin(LED_STA_GPIO, LED_STA_PIN);
+		
+		char strbuff[200];
+		
+		lcd.setCursor(0, 45);
+		sprintf(strbuff, "Vin: %ldmV  \nT. : %d.%02dC", ReadVsenseVin(), (uint8_t)ReadDriverTemp(), (uint16_t)(ReadDriverTemp() * 100) % 100);
+		lcd.fillRect(40, 20, 110, 80, ILI9341_BLACK);
+		lcd.print(strbuff);
+		
 		sledTmr = Ticks();
 	}
 	

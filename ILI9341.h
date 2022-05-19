@@ -1,7 +1,8 @@
 #pragma once
 
 #include <stm32f1xx.h>
-//#include "Adafruit_GFX.h"
+#include <stm32f1xx_ll_gpio.h>
+#include "LL_GFX.h"
 
 #define ILI9341_TFTWIDTH 240  ///< ILI9341 max TFT width
 #define ILI9341_TFTHEIGHT 320 ///< ILI9341 max TFT height
@@ -85,8 +86,10 @@
 #define ILI9341_GREENYELLOW 0xAFE5 ///< 173, 255,  41
 #define ILI9341_PINK 0xFC18        ///< 255, 130, 198
 	
-struct ILI9341_TypeDef {
-	ILI9341_TypeDef(SPI_TypeDef *spi, GPIO_TypeDef *csGPIO, uint32_t csPIN, GPIO_TypeDef *dcGPIO, uint32_t dcPIN) {
+class ILI9341_TypeDef : public Adafruit_GFX {
+public:
+	ILI9341_TypeDef(SPI_TypeDef *spi, GPIO_TypeDef *csGPIO, uint32_t csPIN, GPIO_TypeDef *dcGPIO, uint32_t dcPIN) 
+		: Adafruit_GFX(ILI9341_TFTWIDTH, ILI9341_TFTHEIGHT){
 		this->spi = spi;
 		this->csGPIO = csGPIO;
 		this->dcGPIO = dcGPIO;
@@ -99,12 +102,64 @@ struct ILI9341_TypeDef {
 	void scrollTo(uint16_t y);
 	void setScrollMargins(uint16_t top, uint16_t bottom);
 	void setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
-	uint8_t readCommand(uint8_t reg, uint8_t index = 0);
-private:
-	void sendCommand(uint8_t cmd, uint8_t *data, uint8_t dataLen);
-	void sendCommand(uint8_t cmd) {
-		sendCommand(cmd, 0, 0);
+	void startWrite(void);
+	void endWrite(void);
+	void sendCommand(uint8_t commandByte, uint8_t *dataBytes, uint8_t numDataBytes);
+	void sendCommand(uint8_t commandByte) {
+		sendCommand(commandByte, 0, 0);
 	}
+	void sendCommand16(uint16_t commandWord, const uint8_t *dataBytes = 0, uint8_t numDataBytes = 0);
+	uint8_t readcommand8(uint8_t commandByte, uint8_t index = 0);
+	uint16_t readcommand16(uint16_t addr);
+	uint8_t readCommand(uint8_t reg, uint8_t index = 0);
+	void writePixel(int16_t x, int16_t y, uint16_t color);
+	void writePixels(uint16_t *colors, uint32_t len, bool block = true, bool bigEndian = false);
+	void writeColor(uint16_t color, uint32_t len);
+	void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+	void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
+	void writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
+	inline void writeFillRectPreclipped(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+	// Another new function, companion to the new non-blocking
+	// writePixels() variant.
+	void dmaWait(void);
+	// Used by writePixels() in some situations, but might have rare need in
+	// user code, so it's public...
+	bool dmaBusy(void) const; // true if DMA is used and busy, false otherwise
+	void swapBytes(uint16_t *src, uint32_t len, uint16_t *dest = NULL);
+	void drawPixel(int16_t x, int16_t y, uint16_t color);
+	void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+	void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
+	void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
+	void pushColor(uint16_t color);
+	using Adafruit_GFX::drawRGBBitmap; // Check base class first
+	void drawRGBBitmap(int16_t x, int16_t y, uint16_t *pcolors, int16_t w, int16_t h);
+
+	uint16_t color565(uint8_t r, uint8_t g, uint8_t b);
+
+	// Despite parallel additions, function names kept for compatibility:
+	void spiWrite(uint8_t b); // Write single byte as DATA
+	void writeCommand(uint8_t cmd); // Write single byte as COMMAND
+	uint8_t spiRead(void); // Read single byte of data
+	void write16(uint16_t w); // Write 16-bit value as DATA
+	void writeCommand16(uint16_t cmd); // Write 16-bit value as COMMAND
+	uint16_t read16(void); 
+	
+	void SPI_WRITE16(uint16_t w); // Not inline
+	void SPI_WRITE32(uint32_t l); // Not inline
+	
+	void SPI_CS_HIGH(void) {
+		LL_GPIO_SetOutputPin(csGPIO, csPIN);
+	}
+	void SPI_CS_LOW(void) {
+		LL_GPIO_ResetOutputPin(csGPIO, csPIN);
+	}
+	void SPI_DC_HIGH(void) {
+		LL_GPIO_SetOutputPin(dcGPIO, dcPIN);
+	}
+	void SPI_DC_LOW(void) {
+		LL_GPIO_ResetOutputPin(dcGPIO, dcPIN);
+	}
+private:
 	SPI_TypeDef *spi;
 	GPIO_TypeDef *csGPIO;
 	GPIO_TypeDef *dcGPIO;
