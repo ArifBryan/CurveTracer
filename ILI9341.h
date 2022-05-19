@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stm32f1xx.h>
+//#include "Adafruit_GFX.h"
 
 #define ILI9341_TFTWIDTH 240  ///< ILI9341 max TFT width
 #define ILI9341_TFTHEIGHT 320 ///< ILI9341 max TFT height
@@ -93,10 +94,16 @@ struct ILI9341_TypeDef {
 		this->dcPIN = dcPIN;
 	}
 	void Init(void);
+	void setRotation(uint8_t r);
+	void invertDisplay(uint8_t invert);
+	void scrollTo(uint16_t y);
+	void setScrollMargins(uint16_t top, uint16_t bottom);
+	void setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+	uint8_t readCommand(uint8_t reg, uint8_t index = 0);
 private:
-	void SendCommand(uint8_t cmd, uint8_t *data, uint8_t dataLen);
-	void SendCommand(uint8_t cmd) {
-		SendCommand(cmd, 0, 0);
+	void sendCommand(uint8_t cmd, uint8_t *data, uint8_t dataLen);
+	void sendCommand(uint8_t cmd) {
+		sendCommand(cmd, 0, 0);
 	}
 	SPI_TypeDef *spi;
 	GPIO_TypeDef *csGPIO;

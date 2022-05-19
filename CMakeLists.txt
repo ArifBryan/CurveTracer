@@ -26,5 +26,9 @@ add_bsp_based_executable(
 		serial.h
 		ILI9341.h
 		ILI9341.cpp
+		gfxfont.h
+		LL_GFX.h
+		LL_SPITFT.h
+		LL_SPITFT.cpp
 	GENERATE_BIN
 	GENERATE_MAP)
