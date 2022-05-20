@@ -159,6 +159,7 @@ public:
 	void SPI_DC_LOW(void) {
 		LL_GPIO_ResetOutputPin(dcGPIO, dcPIN);
 	}
+	
 private:
 	SPI_TypeDef *spi;
 	GPIO_TypeDef *csGPIO;

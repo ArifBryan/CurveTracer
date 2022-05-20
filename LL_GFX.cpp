@@ -128,140 +128,6 @@ void Adafruit_GFX::writeLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
 
 /**************************************************************************/
 /*!
-   @brief    Start a display-writing routine, overwrite in subclasses.
-*/
-/**************************************************************************/
-void Adafruit_GFX::startWrite() {}
-
-/**************************************************************************/
-/*!
-   @brief    Write a pixel, overwrite in subclasses if startWrite is defined!
-    @param   x   x coordinate
-    @param   y   y coordinate
-   @param    color 16-bit 5-6-5 Color to fill with
-*/
-/**************************************************************************/
-void Adafruit_GFX::writePixel(int16_t x, int16_t y, uint16_t color) {
-  drawPixel(x, y, color);
-}
-
-/**************************************************************************/
-/*!
-   @brief    Write a perfectly vertical line, overwrite in subclasses if
-   startWrite is defined!
-    @param    x   Top-most x coordinate
-    @param    y   Top-most y coordinate
-    @param    h   Height in pixels
-   @param    color 16-bit 5-6-5 Color to fill with
-*/
-/**************************************************************************/
-void Adafruit_GFX::writeFastVLine(int16_t x, int16_t y, int16_t h,
-                                  uint16_t color) {
-  // Overwrite in subclasses if startWrite is defined!
-  // Can be just writeLine(x, y, x, y+h-1, color);
-  // or writeFillRect(x, y, 1, h, color);
-  drawFastVLine(x, y, h, color);
-}
-
-/**************************************************************************/
-/*!
-   @brief    Write a perfectly horizontal line, overwrite in subclasses if
-   startWrite is defined!
-    @param    x   Left-most x coordinate
-    @param    y   Left-most y coordinate
-    @param    w   Width in pixels
-   @param    color 16-bit 5-6-5 Color to fill with
-*/
-/**************************************************************************/
-void Adafruit_GFX::writeFastHLine(int16_t x, int16_t y, int16_t w,
-                                  uint16_t color) {
-  // Overwrite in subclasses if startWrite is defined!
-  // Example: writeLine(x, y, x+w-1, y, color);
-  // or writeFillRect(x, y, w, 1, color);
-  drawFastHLine(x, y, w, color);
-}
-
-/**************************************************************************/
-/*!
-   @brief    Write a rectangle completely with one color, overwrite in
-   subclasses if startWrite is defined!
-    @param    x   Top left corner x coordinate
-    @param    y   Top left corner y coordinate
-    @param    w   Width in pixels
-    @param    h   Height in pixels
-   @param    color 16-bit 5-6-5 Color to fill with
-*/
-/**************************************************************************/
-void Adafruit_GFX::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h,
-                                 uint16_t color) {
-  // Overwrite in subclasses if desired!
-  fillRect(x, y, w, h, color);
-}
-
-/**************************************************************************/
-/*!
-   @brief    End a display-writing routine, overwrite in subclasses if
-   startWrite is defined!
-*/
-/**************************************************************************/
-void Adafruit_GFX::endWrite() {}
-
-/**************************************************************************/
-/*!
-   @brief    Draw a perfectly vertical line (this is often optimized in a
-   subclass!)
-    @param    x   Top-most x coordinate
-    @param    y   Top-most y coordinate
-    @param    h   Height in pixels
-   @param    color 16-bit 5-6-5 Color to fill with
-*/
-/**************************************************************************/
-void Adafruit_GFX::drawFastVLine(int16_t x, int16_t y, int16_t h,
-                                 uint16_t color) {
-  startWrite();
-  writeLine(x, y, x, y + h - 1, color);
-  endWrite();
-}
-
-/**************************************************************************/
-/*!
-   @brief    Draw a perfectly horizontal line (this is often optimized in a
-   subclass!)
-    @param    x   Left-most x coordinate
-    @param    y   Left-most y coordinate
-    @param    w   Width in pixels
-   @param    color 16-bit 5-6-5 Color to fill with
-*/
-/**************************************************************************/
-void Adafruit_GFX::drawFastHLine(int16_t x, int16_t y, int16_t w,
-                                 uint16_t color) {
-  startWrite();
-  writeLine(x, y, x + w - 1, y, color);
-  endWrite();
-}
-
-/**************************************************************************/
-/*!
-   @brief    Fill a rectangle completely with one color. Update in subclasses if
-   desired!
-    @param    x   Top left corner x coordinate
-    @param    y   Top left corner y coordinate
-    @param    w   Width in pixels
-    @param    h   Height in pixels
-   @param    color 16-bit 5-6-5 Color to fill with
-*/
-/**************************************************************************/
-void Adafruit_GFX::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
-                            uint16_t color) {
-  startWrite();
-  for (int16_t i = x; i < x + w; i++) {
-    writeFastVLine(i, y, h, color);
-  }
-  endWrite();
-}
-
-/**************************************************************************/
-/*!
    @brief    Fill the screen completely with one color. Update in subclasses if
    desired!
     @param    color 16-bit 5-6-5 Color to fill with
@@ -1044,28 +910,6 @@ void Adafruit_GFX::setTextSize(uint8_t s_x, uint8_t s_y) {
 
 /**************************************************************************/
 /*!
-    @brief      Set rotation setting for display
-    @param  x   0 thru 3 corresponding to 4 cardinal rotations
-*/
-/**************************************************************************/
-void Adafruit_GFX::setRotation(uint8_t x) {
-  rotation = (x & 3);
-  switch (rotation) {
-  case 0:
-  case 2:
-    _width = WIDTH;
-    _height = HEIGHT;
-    break;
-  case 1:
-  case 3:
-    _width = HEIGHT;
-    _height = WIDTH;
-    break;
-  }
-}
-
-/**************************************************************************/
-/*!
     @brief Set the font to display when print()ing, either custom or default
     @param  f  The GFXfont object, if NULL use built in 6x8 font
 */
@@ -1206,17 +1050,6 @@ void Adafruit_GFX::getTextBounds(const char *str, int16_t x, int16_t y,
     *y1 = miny;
     *h = maxy - miny + 1;
   }
-}
-
-/**************************************************************************/
-/*!
-    @brief      Invert the display (ideally using built-in hardware command)
-    @param   i  True if you want to invert, false to make 'normal'
-*/
-/**************************************************************************/
-void Adafruit_GFX::invertDisplay(bool i) {
-  // Do nothing, must be subclassed if supported by hardware
-  (void)i; // disable -Wunused-parameter warning
 }
 
 /***************************************************************************/

@@ -26,40 +26,40 @@ public:
 	// TRANSACTION API / CORE DRAW API
 	// These MAY be overridden by the subclass to provide device-specific
 	// optimized code.  Otherwise 'generic' versions are used.
-	virtual void startWrite(void);
-	virtual void writePixel(int16_t x, int16_t y, uint16_t color);
+	virtual void startWrite(void) = 0;
+	virtual void writePixel(int16_t x, int16_t y, uint16_t color) = 0;
 	virtual void writeFillRect(int16_t x,
 		int16_t y,
 		int16_t w,
 		int16_t h,
-		uint16_t color);
-	virtual void writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
-	virtual void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
+		uint16_t color) = 0;
+	virtual void writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) = 0;
+	virtual void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) = 0;
 	virtual void writeLine(int16_t x0,
 		int16_t y0,
 		int16_t x1,
 		int16_t y1,
 		uint16_t color);
-	virtual void endWrite(void);
+	virtual void endWrite(void) = 0;
 
 	// CONTROL API
 	// These MAY be overridden by the subclass to provide device-specific
 	// optimized code.  Otherwise 'generic' versions are used.
-	virtual void setRotation(uint8_t r);
-	virtual void invertDisplay(bool i);
+	virtual void setRotation(uint8_t r) = 0;
+	virtual void invertDisplay(uint8_t i) = 0;
 
 	// BASIC DRAW API
 	// These MAY be overridden by the subclass to provide device-specific
 	// optimized code.  Otherwise 'generic' versions are used.
 
 	// It's good to implement those, even if using transaction API
-	virtual void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
-	virtual void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
+	virtual void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) = 0;
+	virtual void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) = 0;
 	virtual void fillRect(int16_t x,
 		int16_t y,
 		int16_t w,
 		int16_t h,
-		uint16_t color);
+		uint16_t color) = 0;
 	virtual void fillScreen(uint16_t color);
 	// Optional and probably not necessary to change
 	virtual void drawLine(int16_t x0,

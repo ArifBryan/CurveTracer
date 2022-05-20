@@ -375,20 +375,16 @@ void ILI9341_TypeDef::endWrite() {
 
 void ILI9341_TypeDef::SPI_WRITE16(uint16_t data) {
 	LL_SPI_TransmitData8(spi, data >> 8);
-	while (LL_SPI_IsActiveFlag_BSY(spi)) ;
 	LL_SPI_TransmitData8(spi, data);
-	while (LL_SPI_IsActiveFlag_BSY(spi)) ;
+	while (!LL_SPI_IsActiveFlag_TXE(spi)) ;
 }
 
 void ILI9341_TypeDef::SPI_WRITE32(uint32_t data) {
 	LL_SPI_TransmitData8(spi, data >> 24);
-	while (LL_SPI_IsActiveFlag_BSY(spi)) ;
 	LL_SPI_TransmitData8(spi, data >> 16);
-	while (LL_SPI_IsActiveFlag_BSY(spi)) ;
 	LL_SPI_TransmitData8(spi, data >> 8);
-	while (LL_SPI_IsActiveFlag_BSY(spi)) ;
 	LL_SPI_TransmitData8(spi, data);
-	while (LL_SPI_IsActiveFlag_BSY(spi)) ;
+	while (!LL_SPI_IsActiveFlag_TXE(spi)) ;
 }
 
 void ILI9341_TypeDef::invertDisplay(uint8_t invert) {
@@ -401,7 +397,7 @@ uint16_t ILI9341_TypeDef::color565(uint8_t red, uint8_t green, uint8_t blue) {
 
 void ILI9341_TypeDef::spiWrite(uint8_t b) {
 	LL_SPI_TransmitData8(spi, b);
-	while (LL_SPI_IsActiveFlag_BSY(spi)) ;
+	while (!LL_SPI_IsActiveFlag_TXE(spi)) ;
 }
 
 void ILI9341_TypeDef::writeCommand(uint8_t cmd) {
@@ -412,7 +408,7 @@ void ILI9341_TypeDef::writeCommand(uint8_t cmd) {
 
 uint8_t ILI9341_TypeDef::spiRead(void) {
 	LL_SPI_TransmitData8(spi, 0);
-	while (LL_SPI_IsActiveFlag_BSY(spi)) ;
+	while (!LL_SPI_IsActiveFlag_RXNE(spi)) ;
 	return LL_SPI_ReceiveData8(spi);	
 }
 
@@ -460,7 +456,7 @@ void ILI9341_TypeDef::sendCommand(uint8_t cmd, uint8_t *data, uint8_t dataLen) {
 	LL_GPIO_SetOutputPin(dcGPIO, dcPIN);
 	for (uint8_t i = 0; i < dataLen; i++) {
 		LL_SPI_TransmitData8(spi, data[i]);
-		while (LL_SPI_IsActiveFlag_BSY(spi)) ;
+		while (!LL_SPI_IsActiveFlag_TXE(spi)) ;
 	}
 	LL_GPIO_SetOutputPin(csGPIO, csPIN);
 }

@@ -2,7 +2,7 @@
 #include "serial.h"
 
 #include "ILI9341.h"
-#include "Fonts/FreeSans12pt7b.h"
+#include "Fonts/FreeSans9pt7b.h"
 
 uint32_t tBeep;
 uint8_t lTouch;
@@ -13,10 +13,10 @@ uint8_t bklt = 25;
 
 void Startup_Handler() {
 	serial.Init();
-	LL_mDelay(500);
-	LL_TIM_OC_SetCompareCH3(LCD_BKLT_TIM, bklt);
-	LL_mDelay(200);
 	lcd.Init();
+	lcd.setRotation(1);
+	lcd.fillScreen(ILI9341_BLACK);
+	LL_TIM_OC_SetCompareCH3(LCD_BKLT_TIM, bklt);
 }
 
 void Shutdown_Handler() {
@@ -30,9 +30,7 @@ void OverTemperature_Handler() {
 
 int main() {
 	system.Init(Startup_Handler, Shutdown_Handler, OverTemperature_Handler);
-	lcd.setFont(&FreeSans12pt7b);
-	lcd.setRotation(1);
-	lcd.fillScreen(ILI9341_BLACK);
+	lcd.setFont(&FreeSans9pt7b);
 	lcd.setTextColor(ILI9341_WHITE);
 	lcd.setTextSize(1);
 	lcd.setCursor(0, 18);
