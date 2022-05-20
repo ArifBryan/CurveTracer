@@ -3,6 +3,7 @@
 
 #include "ILI9341.h"
 #include "Fonts/FreeSans9pt7b.h"
+#include "Fonts/FreeSans12pt7b.h"
 
 uint32_t tBeep;
 uint8_t lTouch;
@@ -13,6 +14,9 @@ uint8_t bklt = 25;
 
 void Startup_Handler() {
 	serial.Init();
+	
+	LL_TIM_OC_SetCompareCH3(LCD_BKLT_TIM, bklt);
+	LL_mDelay(500);
 	lcd.Init();
 	lcd.setRotation(1);
 	lcd.fillScreen(ILI9341_BLACK);
@@ -27,6 +31,8 @@ void Shutdown_Handler() {
 void OverTemperature_Handler() {
 	system.Shutdown();
 }
+
+LL_RCC_ClocksTypeDef clk;
 
 int main() {
 	system.Init(Startup_Handler, Shutdown_Handler, OverTemperature_Handler);
@@ -50,6 +56,8 @@ int main() {
 		}
 		
 		LL_TIM_OC_SetCompareCH3(LCD_BKLT_TIM, bklt);
+		
+		LL_RCC_GetSystemClocksFreq(&clk);
 		
 		system.Handler();
 		serial.Handler();

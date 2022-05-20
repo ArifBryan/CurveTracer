@@ -168,7 +168,7 @@ void System_TypeDef::RCC_Init() {
 	LL_UTILS_ClkInitTypeDef ClkInit_Struct;
 	
 	ClkInit_Struct.AHBCLKDivider = LL_RCC_SYSCLK_DIV_1;
-	ClkInit_Struct.APB1CLKDivider = LL_RCC_APB1_DIV_2;
+	ClkInit_Struct.APB1CLKDivider = LL_RCC_APB1_DIV_1;
 	ClkInit_Struct.APB2CLKDivider = LL_RCC_APB2_DIV_1;
 	
 	LL_PLL_ConfigSystemClock_HSE(8000000U, LL_UTILS_HSEBYPASS_OFF, &PLLInit_Struct, &ClkInit_Struct);
@@ -356,6 +356,7 @@ void System_TypeDef::GPIO_Init() {
 
 void System_TypeDef::ADC_Init() {
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_ADC1);
+	LL_RCC_SetADCClockSource(LL_RCC_ADC_CLKSRC_PCLK2_DIV_2);
 		
 	LL_ADC_InitTypeDef ADCInit_Struct;
 	
