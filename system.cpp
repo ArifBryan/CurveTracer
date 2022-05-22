@@ -16,7 +16,7 @@ uint8_t overTemp;
 
 System_TypeDef system;
 UART_IT_TypeDef uart1(USART1, &ticks);
-ILI9341_TypeDef lcd(SPI2, LCD_NSS_GPIO, LCD_NSS_PIN, LCD_DC_GPIO, LCD_DC_PIN);
+ILI9341_TypeDef lcd(SPI2, LCD_NSS_GPIO, LCD_NSS_PIN, LCD_DC_GPIO, LCD_DC_PIN, SPI2_TX_DMA, SPI2_TX_DMA_CH);
 
 // Interrupt & exception handler
 extern "C" void CSSFault_Handler() {
@@ -40,6 +40,10 @@ extern "C" void ADC1_EOS_Handler() {
 
 extern "C" void USART1_IRQHandler() {
 	uart1.IRQ_Handler();
+}
+
+extern "C" void SPI2_IRQHandler() {
+	lcd.SPI_IRQ_Handler();
 }
 
 void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_CallbackHandler)(void), void(*OverTemperature_CallbackHandler)(void)) {
@@ -66,6 +70,7 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 				I2C_Init();
 				TIM_Init();
 				EXTI_Init();
+				DMA_Init();
 				// Startup handler
 				Startup_CallbackHandler();
 				Shutdown_Callback = Shutdown_CallbackHandler;
@@ -125,10 +130,15 @@ void System_TypeDef::Handler() {
 		
 		char strbuff[200];
 		
-		lcd.setCursor(0, 45);
+		GFXcanvas16 canvas1(120, 120);
+		
+		canvas1.setFont(&FreeSans9pt7b);
+		canvas1.setTextSize(1);
+		canvas1.setCursor(0, 18);
 		sprintf(strbuff, "Vin: %ldmV  \nT. : %d.%02dC", ReadVsenseVin(), (uint8_t)ReadDriverTemp(), (uint16_t)(ReadDriverTemp() * 100) % 100);
-		lcd.fillRect(40, 20, 110, 80, ILI9341_BLACK);
-		lcd.print(strbuff);
+		canvas1.fillScreen(ILI9341_BLACK);
+		canvas1.print(strbuff);
+		lcd.drawRGBBitmap(0, 25, canvas1.getBuffer(), 120, 120);
 		
 		sledTmr = Ticks();
 	}
@@ -496,11 +506,37 @@ void System_TypeDef::SPI_Init() {
 	LL_SPI_Init(SPI1, &SPIInit_Struct);
 	LL_SPI_Init(SPI2, &SPIInit_Struct);
 	
+	NVIC_EnableIRQ(SPI1_IRQn);
+	NVIC_EnableIRQ(SPI2_IRQn);
+	
 	LL_SPI_Enable(SPI1);
 	LL_SPI_Enable(SPI2);
 }
 void System_TypeDef::I2C_Init() {}
+
 void System_TypeDef::EXTI_Init() {}
+
+void System_TypeDef::DMA_Init() {
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+	
+	LL_DMA_InitTypeDef DMAInit_Struct;
+	
+	// !IMPORTANT! always initialize init struct !IMPORTANT! //
+	LL_DMA_StructInit(&DMAInit_Struct);
+	
+	DMAInit_Struct.Mode = LL_DMA_MODE_NORMAL;
+	DMAInit_Struct.Direction = LL_DMA_DIRECTION_MEMORY_TO_PERIPH;
+	DMAInit_Struct.Priority = LL_DMA_PRIORITY_MEDIUM;
+	DMAInit_Struct.MemoryOrM2MDstAddress = 0;
+	DMAInit_Struct.MemoryOrM2MDstDataSize = LL_DMA_MDATAALIGN_BYTE;
+	DMAInit_Struct.MemoryOrM2MDstIncMode = LL_DMA_MEMORY_INCREMENT;
+	DMAInit_Struct.PeriphOrM2MSrcAddress = LL_SPI_DMA_GetRegAddr(SPI2);
+	DMAInit_Struct.PeriphOrM2MSrcDataSize = LL_DMA_PDATAALIGN_BYTE;
+	DMAInit_Struct.PeriphOrM2MSrcIncMode = LL_DMA_PERIPH_NOINCREMENT;
+	DMAInit_Struct.NbData = 0;
+	
+	LL_DMA_Init(SPI2_TX_DMA, SPI2_TX_DMA_CH, &DMAInit_Struct);
+}
 
 uint32_t System_TypeDef::Ticks() {
 	return ticks;

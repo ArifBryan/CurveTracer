@@ -54,13 +54,8 @@ void ILI9341_TypeDef::swapBytes(uint16_t *src, uint32_t len, uint16_t *dest) {
 	}
 }
 
-void ILI9341_TypeDef::writePixels(uint16_t *colors,
-	uint32_t len,
-	bool block,
-	bool bigEndian) {
-
-	if (!len)
-		return; // Avoid 0-byte transfers
+void ILI9341_TypeDef::writePixels(uint16_t *colors, uint32_t len, bool block, bool bigEndian) {
+	if (!len)return; // Avoid 0-byte transfers
 
 	  // avoid paramater-not-used complaints
 	(void)block;
@@ -69,21 +64,19 @@ void ILI9341_TypeDef::writePixels(uint16_t *colors,
 	// All other cases (bitbang SPI or non-DMA hard SPI or parallel),
 	// use a loop with the normal 16-bit data write function:
 
-	if (!bigEndian) {
-		while (len--) {
-			SPI_WRITE16(*colors++);
-		}
+	if (dma) {
+		DMA_StartTransfer(colors, len);
 	}
 	else {
-		// Well this is awkward. SPI_WRITE16() was designed for little-endian
-		// hosts and big-endian displays as that's nearly always the typical
-		// case. If the bigEndian flag was set, data is already in display's
-		// order...so each pixel needs byte-swapping before being issued.
-		// Rather than having a separate big-endian SPI_WRITE16 (adding more
-		// bloat), it's preferred if calling function is smart and only uses
-		// bigEndian where DMA is supported. But we gotta handle this...
-		while (len--) {
-			SPI_WRITE16(__builtin_bswap16(*colors++));
+		if (!bigEndian) {
+			while (len--) {
+				SPI_WRITE16(*colors++);
+			}
+		}
+		else {
+			while (len--) {
+				SPI_WRITE16(__builtin_bswap16(*colors++));
+			}
 		}
 	}
 }
@@ -91,9 +84,13 @@ void ILI9341_TypeDef::writePixels(uint16_t *colors,
 void ILI9341_TypeDef::writeColor(uint16_t color, uint32_t len) {
 	if (!len)
 		return; // Avoid 0-byte transfers
-
-	while (len--) {
-		SPI_WRITE16(color);
+	if (dma) {
+		DMA_StartTransfer(&color, len, 0);
+	}
+	else {
+		while (len--) {
+			SPI_WRITE16(color);
+		}
 	}
 }
 
@@ -355,35 +352,44 @@ void ILI9341_TypeDef::drawRGBBitmap(int16_t x, int16_t y, uint16_t *pcolors, int
 	pcolors += by1 * saveW + bx1; // Offset bitmap ptr to clipped top-left
 	startWrite();
 	setAddrWindow(x, y, w, h); // Clipped area
-	while (h--) {
-		// For each (clipped) scanline...
-		writePixels(pcolors, w); // Push one (clipped) row
-		pcolors += saveW; // Advance pointer by one full (unclipped) line
+	if (dma) {
+		DMA_StartTransfer(pcolors, w*h);
 	}
-	endWrite();
+	else {
+		while (h--) {
+			// For each (clipped) scanline...
+			writePixels(pcolors, w); // Push one (clipped) row
+			pcolors += saveW; // Advance pointer by one full (unclipped) line
+		}
+		endWrite();
+	}
 }
 
 ////////////////////////////////////////
 
 void ILI9341_TypeDef::startWrite() {
+	if (dma) {
+		while (dmaBusy()) ;
+	}
+	dmaBusyFlag = 0;
 	SPI_CS_LOW();
 }
 
 void ILI9341_TypeDef::endWrite() {
-	SPI_CS_HIGH();
+	if (!dmaBusy()) {
+		SPI_CS_HIGH();
+	}
 }
 
 void ILI9341_TypeDef::SPI_WRITE16(uint16_t data) {
-	LL_SPI_TransmitData8(spi, data >> 8);
-	LL_SPI_TransmitData8(spi, data);
+	LL_SPI_SetDataWidth(spi, LL_SPI_DATAWIDTH_16BIT);
+	LL_SPI_TransmitData16(spi, data);
 	while (!LL_SPI_IsActiveFlag_TXE(spi)) ;
 }
 
 void ILI9341_TypeDef::SPI_WRITE32(uint32_t data) {
-	LL_SPI_TransmitData8(spi, data >> 24);
-	LL_SPI_TransmitData8(spi, data >> 16);
-	LL_SPI_TransmitData8(spi, data >> 8);
-	LL_SPI_TransmitData8(spi, data);
+	SPI_WRITE16(data >> 16);
+	SPI_WRITE16(data);
 	while (!LL_SPI_IsActiveFlag_TXE(spi)) ;
 }
 
@@ -396,6 +402,7 @@ uint16_t ILI9341_TypeDef::color565(uint8_t red, uint8_t green, uint8_t blue) {
 }
 
 void ILI9341_TypeDef::spiWrite(uint8_t b) {
+	LL_SPI_SetDataWidth(spi, LL_SPI_DATAWIDTH_8BIT);
 	LL_SPI_TransmitData8(spi, b);
 	while (!LL_SPI_IsActiveFlag_TXE(spi)) ;
 }
@@ -407,6 +414,7 @@ void ILI9341_TypeDef::writeCommand(uint8_t cmd) {
 }
 
 uint8_t ILI9341_TypeDef::spiRead(void) {
+	LL_SPI_SetDataWidth(spi, LL_SPI_DATAWIDTH_8BIT);
 	LL_SPI_TransmitData8(spi, 0);
 	while (!LL_SPI_IsActiveFlag_RXNE(spi)) ;
 	return LL_SPI_ReceiveData8(spi);	
@@ -423,10 +431,10 @@ void ILI9341_TypeDef::writeCommand16(uint16_t cmd) {
 }
 
 uint16_t ILI9341_TypeDef::read16(void) {
-	uint16_t data = spiRead() << 8;
-	data |= spiRead();
-	
-	return data;
+	LL_SPI_SetDataWidth(spi, LL_SPI_DATAWIDTH_16BIT);
+	LL_SPI_TransmitData16(spi, 0);
+	while (!LL_SPI_IsActiveFlag_RXNE(spi)) ;	
+	return LL_SPI_ReceiveData16(spi);
 }
 
 /////////////////////////////////////////////////////
@@ -446,19 +454,66 @@ void ILI9341_TypeDef::Init() {
 	}
 }
 
-void ILI9341_TypeDef::sendCommand(uint8_t cmd, uint8_t *data, uint8_t dataLen) {
-	LL_GPIO_ResetOutputPin(csGPIO, csPIN);
-	
-	LL_GPIO_ResetOutputPin(dcGPIO, dcPIN);
-	LL_SPI_TransmitData8(spi, cmd);
-	while (LL_SPI_IsActiveFlag_BSY(spi)) ;
-	
-	LL_GPIO_SetOutputPin(dcGPIO, dcPIN);
-	for (uint8_t i = 0; i < dataLen; i++) {
-		LL_SPI_TransmitData8(spi, data[i]);
-		while (!LL_SPI_IsActiveFlag_TXE(spi)) ;
+void ILI9341_TypeDef::DMA_StartTransfer(uint16_t *data, uint32_t len, uint8_t increment) {
+	dmaBusyFlag = 1;
+	if (len > 65535) {
+		dmaRetrans = len - 65535;
+		len = 65535;
+		dmaRetransOffset = (uint32_t)(increment ? (data - len) : 0);
 	}
-	LL_GPIO_SetOutputPin(csGPIO, csPIN);
+	else {
+		dmaRetrans = 0;
+	}
+	LL_DMA_InitTypeDef DMAInit_Struct;
+	
+	// !IMPORTANT! always initialize init struct !IMPORTANT! //
+	LL_DMA_StructInit(&DMAInit_Struct);
+	
+	DMAInit_Struct.Mode = LL_DMA_MODE_NORMAL;
+	DMAInit_Struct.Direction = LL_DMA_DIRECTION_MEMORY_TO_PERIPH;
+	DMAInit_Struct.Priority = LL_DMA_PRIORITY_MEDIUM;
+	DMAInit_Struct.MemoryOrM2MDstAddress = (uint32_t)data;
+	DMAInit_Struct.MemoryOrM2MDstDataSize = LL_DMA_MDATAALIGN_HALFWORD;
+	DMAInit_Struct.MemoryOrM2MDstIncMode = (increment ? LL_DMA_MEMORY_INCREMENT : LL_DMA_MEMORY_NOINCREMENT);
+	DMAInit_Struct.PeriphOrM2MSrcAddress = LL_SPI_DMA_GetRegAddr(spi);
+	DMAInit_Struct.PeriphOrM2MSrcDataSize = LL_DMA_PDATAALIGN_HALFWORD;
+	DMAInit_Struct.PeriphOrM2MSrcIncMode = LL_DMA_PERIPH_NOINCREMENT;
+	DMAInit_Struct.NbData = len;
+	
+	LL_DMA_DisableChannel(dma, dmaCh);
+	LL_SPI_SetDataWidth(spi, LL_SPI_DATAWIDTH_16BIT);
+	LL_SPI_EnableDMAReq_TX(spi);
+	LL_DMA_Init(dma, dmaCh, &DMAInit_Struct);
+	LL_DMA_EnableChannel(dma, dmaCh);
+	LL_SPI_EnableIT_TXE(spi);
+}
+
+uint8_t ILI9341_TypeDef::dmaBusy() {
+	return dmaBusyFlag;
+}
+
+void ILI9341_TypeDef::SPI_IRQ_Handler(void) {
+	if (LL_SPI_IsActiveFlag_TXE(spi) && !LL_SPI_IsActiveFlag_BSY(spi)) {
+		if (dmaRetrans) {
+			DMA_StartTransfer((uint16_t*)LL_DMA_GetMemoryAddress(dma, dmaCh) + dmaRetransOffset, dmaRetrans, LL_DMA_GetMemoryIncMode(dma, dmaCh));
+		}
+		else {
+			SPI_CS_HIGH();
+			dmaBusyFlag = 0;
+			LL_SPI_DisableIT_TXE(spi);
+		}
+	}
+}
+
+void ILI9341_TypeDef::sendCommand(uint8_t cmd, uint8_t *data, uint8_t dataLen) {
+	SPI_CS_LOW();
+	SPI_DC_LOW();
+	spiWrite(cmd);
+	SPI_DC_HIGH();
+	for (uint8_t i = 0; i < dataLen; i++) {
+		spiWrite(data[i]);
+	}
+	SPI_CS_HIGH();
 }
 
 void ILI9341_TypeDef::setRotation(uint8_t m) {

@@ -1056,6 +1056,117 @@ void Adafruit_GFX::getTextBounds(const char *str, int16_t x, int16_t y,
 
 /**************************************************************************/
 /*!
+   @brief    Start a display-writing routine, overwrite in subclasses.
+*/
+/**************************************************************************/
+void Adafruit_GFX::startWrite() {}
+
+/**************************************************************************/
+/*!
+   @brief    Write a pixel, overwrite in subclasses if startWrite is defined!
+    @param   x   x coordinate
+    @param   y   y coordinate
+   @param    color 16-bit 5-6-5 Color to fill with
+*/
+/**************************************************************************/
+void Adafruit_GFX::writePixel(int16_t x, int16_t y, uint16_t color) {
+	drawPixel(x, y, color);
+}
+
+/**************************************************************************/
+/*!
+   @brief    Write a perfectly vertical line, overwrite in subclasses if
+   startWrite is defined!
+    @param    x   Top-most x coordinate
+    @param    y   Top-most y coordinate
+    @param    h   Height in pixels
+   @param    color 16-bit 5-6-5 Color to fill with
+*/
+/**************************************************************************/
+void Adafruit_GFX::writeFastVLine(int16_t x,
+	int16_t y,
+	int16_t h,
+	uint16_t color) {
+	// Overwrite in subclasses if startWrite is defined!
+	// Can be just writeLine(x, y, x, y+h-1, color);
+	// or writeFillRect(x, y, 1, h, color);
+	drawFastVLine(x, y, h, color);
+}
+
+/**************************************************************************/
+/*!
+   @brief    Write a perfectly horizontal line, overwrite in subclasses if
+   startWrite is defined!
+    @param    x   Left-most x coordinate
+    @param    y   Left-most y coordinate
+    @param    w   Width in pixels
+   @param    color 16-bit 5-6-5 Color to fill with
+*/
+/**************************************************************************/
+void Adafruit_GFX::writeFastHLine(int16_t x,
+	int16_t y,
+	int16_t w,
+	uint16_t color) {
+	// Overwrite in subclasses if startWrite is defined!
+	// Example: writeLine(x, y, x+w-1, y, color);
+	// or writeFillRect(x, y, w, 1, color);
+	drawFastHLine(x, y, w, color);
+}
+
+/**************************************************************************/
+/*!
+   @brief    Write a rectangle completely with one color, overwrite in
+   subclasses if startWrite is defined!
+    @param    x   Top left corner x coordinate
+    @param    y   Top left corner y coordinate
+    @param    w   Width in pixels
+    @param    h   Height in pixels
+   @param    color 16-bit 5-6-5 Color to fill with
+*/
+/**************************************************************************/
+void Adafruit_GFX::writeFillRect(int16_t x,
+	int16_t y,
+	int16_t w,
+	int16_t h,
+	uint16_t color) {
+	// Overwrite in subclasses if desired!
+	fillRect(x, y, w, h, color);
+}
+
+/**************************************************************************/
+/*!
+   @brief    End a display-writing routine, overwrite in subclasses if
+   startWrite is defined!
+*/
+/**************************************************************************/
+void Adafruit_GFX::endWrite() {}
+
+// CONTROL API
+// These MAY be overridden by the subclass to provide device-specific
+// optimized code.  Otherwise 'generic' versions are used.
+void Adafruit_GFX::setRotation(uint8_t r) {}
+void Adafruit_GFX::invertDisplay(uint8_t i) {}
+
+// BASIC DRAW API
+// These MAY be overridden by the subclass to provide device-specific
+// optimized code.  Otherwise 'generic' versions are used.
+
+// It's good to implement those, even if using transaction API
+void Adafruit_GFX::fillRect(int16_t x,
+	int16_t y,
+	int16_t w,
+	int16_t h,
+	uint16_t color) {
+	startWrite();
+	for (int16_t i = x; i < x + w; i++) {
+		writeFastVLine(i, y, h, color);
+	}
+	endWrite();
+}
+
+
+/**************************************************************************/
+/*!
    @brief    Create a simple drawn button UI element
 */
 /**************************************************************************/

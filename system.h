@@ -13,10 +13,12 @@
 #include <stm32f1xx_ll_i2c.h>
 #include <stm32f1xx_ll_spi.h>
 #include <stm32f1xx_ll_exti.h>
+#include <stm32f1xx_ll_dma.h>
 #include <string.h>
 #include <stdio.h>
 #include "uart_it.h"
 #include "ILI9341.h"
+#include "Fonts/FreeSans9pt7b.h"
 
 // GPIO pins
 #define VSENSE_5V_GPIO		GPIOA
@@ -67,6 +69,8 @@
 #define SPI2_MISO_PIN		LL_GPIO_PIN_14
 #define SPI2_MOSI_GPIO		GPIOB
 #define SPI2_MOSI_PIN		LL_GPIO_PIN_15
+#define SPI2_TX_DMA			DMA1
+#define SPI2_TX_DMA_CH		LL_DMA_CHANNEL_5
 
 #define INA226_CH1_INT_GPIO	GPIOB
 #define INA226_CH1_INT_PIN	LL_GPIO_PIN_4
@@ -150,6 +154,7 @@ private:
 	void SPI_Init(void);
 	void I2C_Init(void);
 	void EXTI_Init(void);
+	void DMA_Init(void);
 	void ADC_StartConv(void);
 	void SetFanSpeed(uint32_t spd);
 };

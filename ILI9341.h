@@ -2,6 +2,7 @@
 
 #include <stm32f1xx.h>
 #include <stm32f1xx_ll_gpio.h>
+#include <stm32f1xx_ll_dma.h>
 #include "LL_GFX.h"
 
 #define ILI9341_TFTWIDTH 240  ///< ILI9341 max TFT width
@@ -89,14 +90,27 @@
 class ILI9341_TypeDef : public Adafruit_GFX {
 public:
 	ILI9341_TypeDef(SPI_TypeDef *spi, GPIO_TypeDef *csGPIO, uint32_t csPIN, GPIO_TypeDef *dcGPIO, uint32_t dcPIN) 
-		: Adafruit_GFX(ILI9341_TFTWIDTH, ILI9341_TFTHEIGHT){
+	: Adafruit_GFX(ILI9341_TFTWIDTH, ILI9341_TFTHEIGHT){
 		this->spi = spi;
 		this->csGPIO = csGPIO;
 		this->dcGPIO = dcGPIO;
 		this->csPIN = csPIN;
 		this->dcPIN = dcPIN;
+		this->dma = 0;
+			
+	}
+	ILI9341_TypeDef(SPI_TypeDef *spi, GPIO_TypeDef *csGPIO, uint32_t csPIN, GPIO_TypeDef *dcGPIO, uint32_t dcPIN, DMA_TypeDef *dma, uint32_t dmaCh) 
+	: Adafruit_GFX(ILI9341_TFTWIDTH, ILI9341_TFTHEIGHT) {
+		this->spi = spi;
+		this->csGPIO = csGPIO;
+		this->dcGPIO = dcGPIO;
+		this->csPIN = csPIN;
+		this->dcPIN = dcPIN;
+		this->dma = dma;
+		this->dmaCh = dmaCh;
 	}
 	void Init(void);
+	void SPI_IRQ_Handler(void);
 	void setRotation(uint8_t r);
 	void invertDisplay(uint8_t invert);
 	void scrollTo(uint16_t y);
@@ -124,7 +138,7 @@ public:
 	void dmaWait(void);
 	// Used by writePixels() in some situations, but might have rare need in
 	// user code, so it's public...
-	bool dmaBusy(void) const; // true if DMA is used and busy, false otherwise
+	uint8_t dmaBusy(void); // true if DMA is used and busy, false otherwise
 	void swapBytes(uint16_t *src, uint32_t len, uint16_t *dest = NULL);
 	void drawPixel(int16_t x, int16_t y, uint16_t color);
 	void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
@@ -161,9 +175,15 @@ public:
 	}
 	
 private:
+	void DMA_StartTransfer(uint16_t *data, uint32_t len, uint8_t increment = 1);
 	SPI_TypeDef *spi;
+	DMA_TypeDef *dma;
+	uint32_t dmaCh;
 	GPIO_TypeDef *csGPIO;
 	GPIO_TypeDef *dcGPIO;
 	uint32_t csPIN;
 	uint32_t dcPIN;
+	volatile uint8_t dmaBusyFlag;
+	volatile uint32_t dmaRetransOffset;
+	volatile uint32_t dmaRetrans = 0;
 };

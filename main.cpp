@@ -2,8 +2,6 @@
 #include "serial.h"
 
 #include "ILI9341.h"
-#include "Fonts/FreeSans9pt7b.h"
-#include "Fonts/FreeSans12pt7b.h"
 
 uint32_t tBeep;
 uint8_t lTouch;
