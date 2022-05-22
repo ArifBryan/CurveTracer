@@ -12,12 +12,10 @@ uint8_t bklt = 25;
 
 void Startup_Handler() {
 	serial.Init();
-	
-	LL_TIM_OC_SetCompareCH3(LCD_BKLT_TIM, bklt);
-	LL_mDelay(500);
 	lcd.Init();
 	lcd.setRotation(1);
 	lcd.fillScreen(ILI9341_BLACK);
+	LL_mDelay(10);
 	LL_TIM_OC_SetCompareCH3(LCD_BKLT_TIM, bklt);
 }
 
