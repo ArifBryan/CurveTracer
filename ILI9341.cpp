@@ -493,7 +493,7 @@ uint8_t ILI9341_TypeDef::dmaBusy() {
 }
 
 void ILI9341_TypeDef::SPI_IRQ_Handler(void) {
-	if (LL_SPI_IsActiveFlag_TXE(spi) && !LL_SPI_IsActiveFlag_BSY(spi)) {
+	if (LL_SPI_IsActiveFlag_TXE(spi) && !LL_SPI_IsActiveFlag_BSY(spi) && dmaBusyFlag) {
 		if (dmaRetrans) {
 			DMA_StartTransfer((uint16_t*)LL_DMA_GetMemoryAddress(dma, dmaCh) + dmaRetransOffset, dmaRetrans, LL_DMA_GetMemoryIncMode(dma, dmaCh));
 		}
