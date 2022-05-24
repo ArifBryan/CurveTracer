@@ -17,6 +17,11 @@ uint8_t overTemp;
 System_TypeDef system;
 UART_IT_TypeDef uart1(USART1, &ticks);
 ILI9341_TypeDef lcd(SPI2, LCD_NSS_GPIO, LCD_NSS_PIN, LCD_DC_GPIO, LCD_DC_PIN, SPI2_TX_DMA, SPI2_TX_DMA_CH);
+I2CHandleTypeDef i2c1(I2C1);
+I2CHandleTypeDef i2c2(I2C2);
+INA226_TypeDef ina226Ch1(&i2c1, 0b1000000);
+INA226_TypeDef ina226Ch2(&i2c1, 0b1000001);
+INA226_TypeDef ina226Ch3(&i2c1, 0b1000010);
 
 // Interrupt & exception handler
 extern "C" void CSSFault_Handler() {
@@ -128,15 +133,21 @@ void System_TypeDef::Handler() {
 	else if (Ticks() - sledTmr >= 500 && LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
 		LL_GPIO_ResetOutputPin(LED_STA_GPIO, LED_STA_PIN);
 		
-		char strbuff[200];
+		float v1 = ina226Ch1.Read(INA226_VBUS) * 1.25;
+		float v2 = ina226Ch2.Read(INA226_VBUS) * 1.25;
+		float v3 = ina226Ch3.Read(INA226_VBUS) * 1.25;
 		
+		char strbuff[200];
 		GFXcanvas16 canvas1(120, 120);
 		
 		canvas1.setFont(&FreeSans9pt7b);
 		canvas1.setTextSize(1);
-		canvas1.setCursor(0, 18);
-		sprintf(strbuff, "Vin: %ldmV  \nT. : %d.%02dC", ReadVsenseVin(), (uint8_t)ReadDriverTemp(), (uint16_t)(ReadDriverTemp() * 100) % 100);
 		canvas1.fillScreen(ILI9341_BLACK);
+		
+		canvas1.setCursor(0, 18);
+		sprintf(strbuff, "Vin: %ldmV  \nT. : %d.%02dC\n", ReadVsenseVin(), (uint8_t)ReadDriverTemp(), (uint16_t)(ReadDriverTemp() * 100) % 100);
+		canvas1.print(strbuff);
+		sprintf(strbuff, "V1: %dmV\nV2: %dmV\nV3: %dmV", (uint16_t)v1, (uint16_t)v2, (uint16_t)v3);
 		canvas1.print(strbuff);
 		lcd.drawRGBBitmap(0, 25, canvas1.getBuffer(), 120, 120);
 		
@@ -512,7 +523,25 @@ void System_TypeDef::SPI_Init() {
 	LL_SPI_Enable(SPI1);
 	LL_SPI_Enable(SPI2);
 }
-void System_TypeDef::I2C_Init() {}
+void System_TypeDef::I2C_Init() {
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C1);
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C2);
+	
+	LL_I2C_InitTypeDef I2CInit_Struct;
+	
+	// !IMPORTANT! always initialize init struct !IMPORTANT! //
+	LL_I2C_StructInit(&I2CInit_Struct);
+	
+	I2CInit_Struct.ClockSpeed = 400000U;
+	I2CInit_Struct.DutyCycle = LL_I2C_DUTYCYCLE_2;
+	I2CInit_Struct.OwnAddress1 = 0x01;
+	I2CInit_Struct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
+	I2CInit_Struct.PeripheralMode = LL_I2C_MODE_I2C;
+	I2CInit_Struct.TypeAcknowledge = LL_I2C_ACK;
+	
+	i2c1.Init(&I2CInit_Struct);
+	i2c2.Init(&I2CInit_Struct);
+}
 
 void System_TypeDef::EXTI_Init() {}
 

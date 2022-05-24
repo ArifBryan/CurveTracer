@@ -32,6 +32,10 @@ add_bsp_based_executable(
 		LL_GFX.cpp
 		gfxfont.h
 		LL_GFX.h
+		INA226.cpp
+		INA226.h
+		I2CHandle.cpp
+		I2CHandle.h
 	GENERATE_BIN
 	GENERATE_MAP)
 set_source_files_properties(LL_SPITFT.h LL_SPITFT.cpp PROPERTIES HEADER_FILE_ONLY TRUE)

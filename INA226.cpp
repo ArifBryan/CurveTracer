@@ -1,0 +1,34 @@
+#include "INA226.h"
+#include <string.h>
+
+void INA226_TypeDef::Init() {
+	uint16_t cfg;
+	
+	cfg = INA226_CONFIG_MODE_VSHVBUSCONT;
+	cfg |= INA226_CONFIG_VSHCT_204us << 3;
+	cfg |= INA226_CONFIG_VBUSCT_204us << 6;
+	cfg |= INA226_CONFIG_AVG_16 << 9;
+	
+	Write(INA226_CONFIG, cfg);
+}
+
+void INA226_TypeDef::Write(uint8_t reg, uint8_t *data, uint8_t len) {
+	uint8_t tmp[len + 1];
+	tmp[0] = reg;
+	memcpy(tmp + 1, data, len);
+	i2c->Write(addr, tmp, len + 1);
+}
+
+void INA226_TypeDef::Write(uint8_t reg, uint16_t data) {
+	uint8_t tmp[3];
+	tmp[0] = reg;
+	tmp[1] = data >> 8;
+	tmp[2] = data;
+	i2c->Write(addr, tmp, 3);
+}
+
+uint16_t INA226_TypeDef::Read(uint8_t reg) {
+	uint8_t rxData[2];
+	i2c->Read(addr, &reg, 1, rxData, 2);
+	return (rxData[0] << 8) | rxData[1];
+}

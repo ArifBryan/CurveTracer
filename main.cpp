@@ -8,7 +8,7 @@ uint8_t lTouch;
 
 uint32_t vin, vs;
 float temp;
-uint8_t bklt = 25;
+uint8_t bklt = 50;
 
 void Startup_Handler() {
 	serial.Init();
@@ -17,6 +17,9 @@ void Startup_Handler() {
 	lcd.fillScreen(ILI9341_BLACK);
 	LL_mDelay(10);
 	LL_TIM_OC_SetCompareCH3(LCD_BKLT_TIM, bklt);
+	ina226Ch1.Init();
+	ina226Ch2.Init();
+	ina226Ch3.Init();
 }
 
 void Shutdown_Handler() {

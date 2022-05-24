@@ -16,9 +16,11 @@
 #include <stm32f1xx_ll_dma.h>
 #include <string.h>
 #include <stdio.h>
+#include "I2CHandle.h"
 #include "uart_it.h"
 #include "ILI9341.h"
 #include "Fonts/FreeSans9pt7b.h"
+#include "INA226.h"
 
 // GPIO pins
 #define VSENSE_5V_GPIO		GPIOA
@@ -162,3 +164,6 @@ private:
 extern System_TypeDef system;
 extern UART_IT_TypeDef uart1;
 extern ILI9341_TypeDef lcd;
+extern INA226_TypeDef ina226Ch1;
+extern INA226_TypeDef ina226Ch2;
+extern INA226_TypeDef ina226Ch3;
