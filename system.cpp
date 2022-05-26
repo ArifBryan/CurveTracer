@@ -105,15 +105,15 @@ void System_TypeDef::Handler() {
 	if (Ticks() - sysCheckTmr >= 100) {
 		// Fan control
 		if (ReadDriverTemp() > 33) {
-			SetFanSpeed((ReadDriverTemp() - 33) * 4);
+			SetFanSpeed((ReadDriverTemp() - 33) * 7);
 		}
 		
 		// Thermal supervisor
-		if (ReadDriverTemp() > 70 && !overTemp) {
+		if (ReadDriverTemp() >= 63 && !overTemp) {
 			overTemp = 1;
 			OverTemperature_Callback();
 		}
-		else if (ReadDriverTemp() <= 65) {
+		else if (ReadDriverTemp() < 60) {
 			overTemp = 0;
 		}
 		
@@ -145,9 +145,20 @@ void System_TypeDef::Handler() {
 		canvas1.fillScreen(ILI9341_BLACK);
 		
 		canvas1.setCursor(0, 18);
-		sprintf(strbuff, "Vin: %ldmV  \nT. : %d.%02dC\n", ReadVsenseVin(), (uint8_t)ReadDriverTemp(), (uint16_t)(ReadDriverTemp() * 100) % 100);
+		sprintf(strbuff, "Vin: %ldmV  \n", ReadVsenseVin());
+		canvas1.setTextColor(ReadVsenseVin() >= 23000 ? ILI9341_GREEN : ILI9341_RED);
 		canvas1.print(strbuff);
-		sprintf(strbuff, "V1: %dmV\nV2: %dmV\nV3: %dmV", (uint16_t)v1, (uint16_t)v2, (uint16_t)v3);
+		canvas1.setTextColor(ReadDriverTemp() >= 33 ? ILI9341_RED : ILI9341_GREEN);
+		sprintf(strbuff, "T. : %d.%02dC\n", (uint8_t)ReadDriverTemp(), (uint16_t)(ReadDriverTemp() * 100) % 100);
+		canvas1.print(strbuff);
+		canvas1.setTextColor(LL_GPIO_IsOutputPinSet(OPA548_CH1_ES_GPIO, OPA548_CH1_ES_PIN) ? ILI9341_GREEN : ILI9341_LIGHTGREY);
+		sprintf(strbuff, "V1: %dmV\n", (uint16_t)v1);
+		canvas1.print(strbuff);
+		canvas1.setTextColor(LL_GPIO_IsOutputPinSet(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN) ? ILI9341_GREEN : ILI9341_LIGHTGREY);
+		sprintf(strbuff, "V2: %dmV\n", (uint16_t)v2);
+		canvas1.print(strbuff);
+		canvas1.setTextColor(LL_GPIO_IsOutputPinSet(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN) ? ILI9341_GREEN : ILI9341_LIGHTGREY);
+		sprintf(strbuff, "V3: %dmV\n", (uint16_t)v3);
 		canvas1.print(strbuff);
 		lcd.drawRGBBitmap(0, 25, canvas1.getBuffer(), 120, 120);
 		
@@ -510,14 +521,19 @@ void System_TypeDef::SPI_Init() {
 	SPIInit_Struct.ClockPolarity = LL_SPI_POLARITY_LOW;
 	SPIInit_Struct.ClockPhase = LL_SPI_PHASE_1EDGE;
 	SPIInit_Struct.BitOrder = LL_SPI_MSB_FIRST;
-	SPIInit_Struct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV2;
 	SPIInit_Struct.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
 	SPIInit_Struct.CRCPoly = 1U;
+	SPIInit_Struct.DataWidth = LL_SPI_DATAWIDTH_16BIT;
+	SPIInit_Struct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV4;
 	
 	LL_SPI_Init(SPI1, &SPIInit_Struct);
+	
+	SPIInit_Struct.DataWidth = LL_SPI_DATAWIDTH_8BIT;
+	SPIInit_Struct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV2;
+	
 	LL_SPI_Init(SPI2, &SPIInit_Struct);
 	
-	NVIC_EnableIRQ(SPI1_IRQn);
+	//NVIC_EnableIRQ(SPI1_IRQn);
 	NVIC_EnableIRQ(SPI2_IRQn);
 	
 	LL_SPI_Enable(SPI1);

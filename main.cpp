@@ -20,6 +20,10 @@ void Startup_Handler() {
 	ina226Ch1.Init();
 	ina226Ch2.Init();
 	ina226Ch3.Init();
+	
+	LL_GPIO_SetOutputPin(OPA548_CH1_ES_GPIO, OPA548_CH1_ES_PIN);
+	LL_GPIO_SetOutputPin(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN);	
+	LL_GPIO_SetOutputPin(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN);
 }
 
 void Shutdown_Handler() {
@@ -28,10 +32,16 @@ void Shutdown_Handler() {
 }
 
 void OverTemperature_Handler() {
-	system.Shutdown();
+	//system.Shutdown();
+	
+	LL_GPIO_ResetOutputPin(OPA548_CH1_ES_GPIO, OPA548_CH1_ES_PIN);
+	LL_GPIO_ResetOutputPin(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN);
+	LL_GPIO_ResetOutputPin(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN);
 }
 
 LL_RCC_ClocksTypeDef clk;
+
+float pv1 = 0.0, pv2 = 0.5, pv3 = 0.8;
 
 int main() {
 	system.Init(Startup_Handler, Shutdown_Handler, OverTemperature_Handler);
@@ -45,12 +55,17 @@ int main() {
 			tBeep = system.Ticks();
 			lTouch = 1;
 			LL_GPIO_SetOutputPin(BEEPER_GPIO, BEEPER_PIN);
+			
+			LL_GPIO_TogglePin(OPA548_CH1_ES_GPIO, OPA548_CH1_ES_PIN);
+			LL_GPIO_TogglePin(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN);
+			LL_GPIO_TogglePin(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN);
 		}
 		else if (LL_GPIO_IsInputPinSet(XPT2046_IRQ_GPIO, XPT2046_IRQ_PIN) && lTouch) {
 			lTouch = 0;
 		}
 		if (system.Ticks() - tBeep >= 100) {
 			LL_GPIO_ResetOutputPin(BEEPER_GPIO, BEEPER_PIN);
+			
 			tBeep = system.Ticks() + 1;
 		}
 		
@@ -60,6 +75,21 @@ int main() {
 		
 		system.Handler();
 		serial.Handler();
+		
+		LL_GPIO_ResetOutputPin(AD5541_CH1_NSS_GPIO, AD5541_CH1_NSS_PIN);
+		LL_SPI_TransmitData16(SPI1, 0xFFFF * pv1);
+		while (LL_SPI_IsActiveFlag_BSY(SPI1)) ;
+		LL_GPIO_SetOutputPin(AD5541_CH1_NSS_GPIO, AD5541_CH1_NSS_PIN);
+	
+		LL_GPIO_ResetOutputPin(AD5541_CH2_NSS_GPIO, AD5541_CH2_NSS_PIN);
+		LL_SPI_TransmitData16(SPI1, 0xFFFF * pv2);
+		while (LL_SPI_IsActiveFlag_BSY(SPI1)) ;
+		LL_GPIO_SetOutputPin(AD5541_CH2_NSS_GPIO, AD5541_CH2_NSS_PIN);
+	
+		LL_GPIO_ResetOutputPin(AD5541_CH3_NSS_GPIO, AD5541_CH3_NSS_PIN);
+		LL_SPI_TransmitData16(SPI1, 0xFFFF * pv3);
+		while (LL_SPI_IsActiveFlag_BSY(SPI1)) ;
+		LL_GPIO_SetOutputPin(AD5541_CH3_NSS_GPIO, AD5541_CH3_NSS_PIN);
 		
 		vin = system.ReadVsenseVin();
 		vs = system.ReadVsense5V();
