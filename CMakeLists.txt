@@ -36,6 +36,12 @@ add_bsp_based_executable(
 		INA226.h
 		I2CHandle.cpp
 		I2CHandle.h
+		userInterface.cpp
+		userInterface.h
+		outputControl.cpp
+		outputControl.h
+		XPT2046.cpp
+		XPT2046.h
 	GENERATE_BIN
 	GENERATE_MAP)
 set_source_files_properties(LL_SPITFT.h LL_SPITFT.cpp PROPERTIES HEADER_FILE_ONLY TRUE)

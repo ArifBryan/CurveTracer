@@ -20,6 +20,7 @@
 #include "uart_it.h"
 #include "ILI9341.h"
 #include "Fonts/FreeSans9pt7b.h"
+#include "XPT2046.h"
 #include "INA226.h"
 
 // GPIO pins
@@ -76,10 +77,13 @@
 
 #define INA226_CH1_INT_GPIO	GPIOB
 #define INA226_CH1_INT_PIN	LL_GPIO_PIN_4
+#define INA226_CH1_INT_EXTI	LL_EXTI_LINE_4
 #define INA226_CH2_INT_GPIO	GPIOB
 #define INA226_CH2_INT_PIN	LL_GPIO_PIN_3
+#define INA226_CH2_INT_EXTI	LL_EXTI_LINE_3
 #define INA226_CH3_INT_GPIO	GPIOB
 #define INA226_CH3_INT_PIN	LL_GPIO_PIN_9
+#define INA226_CH3_INT_EXTI	LL_EXTI_LINE_9
 
 #define AD5541_CH1_NSS_GPIO	GPIOB
 #define AD5541_CH1_NSS_PIN	LL_GPIO_PIN_5
@@ -115,6 +119,7 @@
 
 #define XPT2046_IRQ_GPIO	GPIOC
 #define XPT2046_IRQ_PIN		LL_GPIO_PIN_8
+#define XPT2046_IRQ_EXTI	LL_EXTI_LINE_8
 
 #define LCD_NSS_GPIO		GPIOB
 #define LCD_NSS_PIN			LL_GPIO_PIN_12
@@ -164,6 +169,7 @@ private:
 extern System_TypeDef system;
 extern UART_IT_TypeDef uart1;
 extern ILI9341_TypeDef lcd;
+extern XPT2046_TypeDef ts;
 extern INA226_TypeDef ina226Ch1;
 extern INA226_TypeDef ina226Ch2;
 extern INA226_TypeDef ina226Ch3;

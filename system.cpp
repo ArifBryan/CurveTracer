@@ -17,6 +17,7 @@ uint8_t overTemp;
 System_TypeDef system;
 UART_IT_TypeDef uart1(USART1, &ticks);
 ILI9341_TypeDef lcd(SPI2, LCD_NSS_GPIO, LCD_NSS_PIN, LCD_DC_GPIO, LCD_DC_PIN, SPI2_TX_DMA, SPI2_TX_DMA_CH);
+XPT2046_TypeDef ts(SPI2, XPT2046_NSS_GPIO, XPT2046_NSS_PIN, XPT2046_IRQ_EXTI);
 I2CHandleTypeDef i2c1(I2C1);
 I2CHandleTypeDef i2c2(I2C2);
 INA226_TypeDef ina226Ch1(&i2c1, 0b1000000);
@@ -74,8 +75,8 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 				SPI_Init();
 				I2C_Init();
 				TIM_Init();
-				EXTI_Init();
 				DMA_Init();
+				EXTI_Init();
 				// Startup handler
 				Startup_CallbackHandler();
 				Shutdown_Callback = Shutdown_CallbackHandler;
@@ -132,35 +133,6 @@ void System_TypeDef::Handler() {
 	}
 	else if (Ticks() - sledTmr >= 500 && LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
 		LL_GPIO_ResetOutputPin(LED_STA_GPIO, LED_STA_PIN);
-		
-		float v1 = ina226Ch1.Read(INA226_VBUS) * 1.25;
-		float v2 = ina226Ch2.Read(INA226_VBUS) * 1.25;
-		float v3 = ina226Ch3.Read(INA226_VBUS) * 1.25;
-		
-		char strbuff[200];
-		GFXcanvas16 canvas1(120, 120);
-		
-		canvas1.setFont(&FreeSans9pt7b);
-		canvas1.setTextSize(1);
-		canvas1.fillScreen(ILI9341_BLACK);
-		
-		canvas1.setCursor(0, 18);
-		sprintf(strbuff, "Vin: %ldmV  \n", ReadVsenseVin());
-		canvas1.setTextColor(ReadVsenseVin() >= 23000 ? ILI9341_GREEN : ILI9341_RED);
-		canvas1.print(strbuff);
-		canvas1.setTextColor(ReadDriverTemp() >= 33 ? ILI9341_RED : ILI9341_GREEN);
-		sprintf(strbuff, "T. : %d.%02dC\n", (uint8_t)ReadDriverTemp(), (uint16_t)(ReadDriverTemp() * 100) % 100);
-		canvas1.print(strbuff);
-		canvas1.setTextColor(LL_GPIO_IsOutputPinSet(OPA548_CH1_ES_GPIO, OPA548_CH1_ES_PIN) ? ILI9341_GREEN : ILI9341_LIGHTGREY);
-		sprintf(strbuff, "V1: %dmV\n", (uint16_t)v1);
-		canvas1.print(strbuff);
-		canvas1.setTextColor(LL_GPIO_IsOutputPinSet(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN) ? ILI9341_GREEN : ILI9341_LIGHTGREY);
-		sprintf(strbuff, "V2: %dmV\n", (uint16_t)v2);
-		canvas1.print(strbuff);
-		canvas1.setTextColor(LL_GPIO_IsOutputPinSet(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN) ? ILI9341_GREEN : ILI9341_LIGHTGREY);
-		sprintf(strbuff, "V3: %dmV\n", (uint16_t)v3);
-		canvas1.print(strbuff);
-		lcd.drawRGBBitmap(0, 25, canvas1.getBuffer(), 120, 120);
 		
 		sledTmr = Ticks();
 	}
@@ -363,15 +335,19 @@ void System_TypeDef::GPIO_Init() {
 	
 	GPIOInit_Struct.Pin = XPT2046_IRQ_PIN;
 	LL_GPIO_Init(XPT2046_IRQ_GPIO, &GPIOInit_Struct);
+	LL_GPIO_AF_SetEXTISource(LL_GPIO_AF_EXTI_PORTC, LL_GPIO_AF_EXTI_LINE8);
 	
 	GPIOInit_Struct.Pin = INA226_CH1_INT_PIN;
 	LL_GPIO_Init(INA226_CH1_INT_GPIO, &GPIOInit_Struct);
+	LL_GPIO_AF_SetEXTISource(LL_GPIO_AF_EXTI_PORTB, LL_GPIO_AF_EXTI_LINE4);
 	
 	GPIOInit_Struct.Pin = INA226_CH2_INT_PIN;
 	LL_GPIO_Init(INA226_CH2_INT_GPIO, &GPIOInit_Struct);
+	LL_GPIO_AF_SetEXTISource(LL_GPIO_AF_EXTI_PORTB, LL_GPIO_AF_EXTI_LINE3);
 	
 	GPIOInit_Struct.Pin = INA226_CH3_INT_PIN;
 	LL_GPIO_Init(INA226_CH3_INT_GPIO, &GPIOInit_Struct);
+	LL_GPIO_AF_SetEXTISource(LL_GPIO_AF_EXTI_PORTB, LL_GPIO_AF_EXTI_LINE9);
 	
 	// Analog input pins
 	GPIOInit_Struct.Mode = LL_GPIO_MODE_ANALOG;
@@ -559,7 +535,29 @@ void System_TypeDef::I2C_Init() {
 	i2c2.Init(&I2CInit_Struct);
 }
 
-void System_TypeDef::EXTI_Init() {}
+void System_TypeDef::EXTI_Init() {
+	LL_EXTI_InitTypeDef EXTIInit_Struct;
+	
+	// !IMPORTANT! always initialize init struct !IMPORTANT! //
+	LL_EXTI_StructInit(&EXTIInit_Struct);
+	
+	EXTIInit_Struct.Mode = LL_EXTI_MODE_IT;
+	EXTIInit_Struct.LineCommand = ENABLE;
+	EXTIInit_Struct.Trigger = LL_EXTI_TRIGGER_FALLING;
+	
+	EXTIInit_Struct.Line_0_31 = INA226_CH1_INT_EXTI;
+	LL_EXTI_Init(&EXTIInit_Struct);
+	NVIC_EnableIRQ(EXTI4_IRQn);
+	EXTIInit_Struct.Line_0_31 = INA226_CH2_INT_EXTI;
+	LL_EXTI_Init(&EXTIInit_Struct);
+	NVIC_EnableIRQ(EXTI3_IRQn);
+	EXTIInit_Struct.Line_0_31 = INA226_CH3_INT_EXTI;
+	LL_EXTI_Init(&EXTIInit_Struct);
+	NVIC_EnableIRQ(EXTI9_5_IRQn);
+	
+	EXTIInit_Struct.Line_0_31 = XPT2046_IRQ_EXTI;
+	LL_EXTI_Init(&EXTIInit_Struct);
+}
 
 void System_TypeDef::DMA_Init() {
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);

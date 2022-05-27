@@ -489,7 +489,7 @@ void ILI9341_TypeDef::DMA_StartTransfer(uint16_t *data, uint32_t len, uint8_t in
 }
 
 uint8_t ILI9341_TypeDef::dmaBusy() {
-	return dmaBusyFlag;
+	return dmaBusyFlag || LL_SPI_IsActiveFlag_BSY(spi);
 }
 
 void ILI9341_TypeDef::SPI_IRQ_Handler(void) {
