@@ -72,6 +72,7 @@ uint8_t I2CHandleTypeDef::Read(uint8_t devAddr, uint8_t regAddr[], uint8_t regAd
 				tout -= LL_SYSTICK_IsActiveCounterFlag();
 			}		
 			status &= IsACK();
+			if (dataLen == 0) {return status;}
 			dataLen -= 2;
 			for (i = 0; i < dataLen; i++) {
 				while (!IsTransmmisionComplete() && tout > 0) {

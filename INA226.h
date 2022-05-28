@@ -1,6 +1,7 @@
 #pragma once
 
 #include "I2CHandle.h"
+#include <stm32f1xx_ll_dma.h>
 
 #define INA226_CONFIG	0x00
 #define INA226_VSHUNT	0x01
@@ -63,19 +64,32 @@
 #define INA226_MASKbit_LEN	0U
 
 struct INA226_TypeDef {
-	INA226_TypeDef(I2CHandleTypeDef *i2c, uint8_t addr, uint8_t interrupt = 0) {
+	INA226_TypeDef(I2CHandleTypeDef *i2c, uint8_t addr, DMA_TypeDef *dma = 0, uint32_t dmaRxCh = 0, uint32_t dmaTxCh = 0) {
 		this->i2c = i2c;
 		this->addr = addr << 1;
-		this->interrupt = interrupt;
+		this->dma = dma;
+		this->dmaRxCh = dmaRxCh;
+		this->dmaTxCh = dmaTxCh;
+		i2cPeriph = i2c->GetI2CPeriph();
 	}
 	void Init(void);
 	void Write(uint8_t reg, uint8_t *data, uint8_t len);
 	void Write(uint8_t reg, uint16_t data);
-	void IRQ_Handler(void);
+	void ReadData(void);
+	float GetVoltage(void);
+	float GetCurrent(void);
+	void DMARx_IRQ_Handler(void);
 	uint16_t Read(uint8_t reg);
 private:
 	I2CHandleTypeDef *i2c;
+	I2C_TypeDef *i2cPeriph;
 	uint8_t addr;
-	uint8_t interrupt;
-	uint8_t i2cBusy;
+	DMA_TypeDef *dma;
+	uint32_t dmaRxCh;
+	uint32_t dmaTxCh;
+	uint16_t currentCal = 1;
+	volatile uint8_t dmaBusy;
+	volatile uint8_t dmaBuffer[4];
+	volatile uint16_t vbus;
+	volatile uint16_t vshunt;
 };

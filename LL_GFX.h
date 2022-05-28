@@ -26,27 +26,27 @@ public:
 	// TRANSACTION API / CORE DRAW API
 	// These MAY be overridden by the subclass to provide device-specific
 	// optimized code.  Otherwise 'generic' versions are used.
-	virtual void startWrite(void);
-	virtual void writePixel(int16_t x, int16_t y, uint16_t color);
-	virtual void writeFillRect(int16_t x,
+	void startWrite(void);
+	void writePixel(int16_t x, int16_t y, uint16_t color);
+	void writeFillRect(int16_t x,
 		int16_t y,
 		int16_t w,
 		int16_t h,
 		uint16_t color);
-	virtual void writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
-	virtual void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
-	virtual void writeLine(int16_t x0,
+	void writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
+	void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
+	void writeLine(int16_t x0,
 		int16_t y0,
 		int16_t x1,
 		int16_t y1,
 		uint16_t color);
-	virtual void endWrite(void);
+	void endWrite(void);
 
 	// CONTROL API
 	// These MAY be overridden by the subclass to provide device-specific
 	// optimized code.  Otherwise 'generic' versions are used.
-	virtual void setRotation(uint8_t r);
-	virtual void invertDisplay(uint8_t i);
+	void setRotation(uint8_t r);
+	void invertDisplay(uint8_t i);
 
 	// BASIC DRAW API
 	// These MAY be overridden by the subclass to provide device-specific
@@ -315,6 +315,8 @@ public:
 	/************************************************************************/
 	int16_t getCursorY(void) const { return cursor_y; }
 	
+	GFXfont* getGfxFont(void) const { return gfxFont; };
+	
 	virtual void write(uint8_t);
 	void print(const char *str) {
 		while (*str > 0) {
@@ -361,7 +363,7 @@ public:
 		uint16_t outline,
 		uint16_t fill,
 		uint16_t textcolor,
-		char *label,
+		const char *label,
 		uint8_t textsize);
 	void initButton(Adafruit_GFX *gfx,
 		int16_t x,
@@ -371,7 +373,7 @@ public:
 		uint16_t outline,
 		uint16_t fill,
 		uint16_t textcolor,
-		char *label,
+		const char *label,
 		uint8_t textsize_x,
 		uint8_t textsize_y);
 	// New/alt initButton() uses upper-left corner & size
@@ -383,7 +385,7 @@ public:
 		uint16_t outline,
 		uint16_t fill,
 		uint16_t textcolor,
-		char *label,
+		const char *label,
 		uint8_t textsize);
 	void initButtonUL(Adafruit_GFX *gfx,
 		int16_t x1,
@@ -393,7 +395,7 @@ public:
 		uint16_t outline,
 		uint16_t fill,
 		uint16_t textcolor,
-		char *label,
+		const char *label,
 		uint8_t textsize_x,
 		uint8_t textsize_y);
 	void drawButton(bool inverted = false);

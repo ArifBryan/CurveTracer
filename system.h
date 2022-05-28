@@ -14,12 +14,13 @@
 #include <stm32f1xx_ll_spi.h>
 #include <stm32f1xx_ll_exti.h>
 #include <stm32f1xx_ll_dma.h>
+#include <stm32f1xx_ll_iwdg.h>
+#include <stm32f1xx_ll_system.h>
 #include <string.h>
 #include <stdio.h>
 #include "I2CHandle.h"
 #include "uart_it.h"
 #include "ILI9341.h"
-#include "Fonts/FreeSans9pt7b.h"
 #include "XPT2046.h"
 #include "INA226.h"
 
@@ -53,6 +54,9 @@
 #define I2C1_SCL_PIN		LL_GPIO_PIN_6
 #define I2C1_SDA_GPIO		GPIOB
 #define I2C1_SDA_PIN		LL_GPIO_PIN_7
+#define I2C1_DMA			DMA1
+#define I2C1_DMA_TX_CH		LL_DMA_CHANNEL_6
+#define I2C1_DMA_RX_CH		LL_DMA_CHANNEL_7
 
 #define I2C2_SCL_GPIO		GPIOB
 #define I2C2_SCL_PIN		LL_GPIO_PIN_10
@@ -72,8 +76,8 @@
 #define SPI2_MISO_PIN		LL_GPIO_PIN_14
 #define SPI2_MOSI_GPIO		GPIOB
 #define SPI2_MOSI_PIN		LL_GPIO_PIN_15
-#define SPI2_TX_DMA			DMA1
-#define SPI2_TX_DMA_CH		LL_DMA_CHANNEL_5
+#define SPI2_DMA			DMA1
+#define SPI2_DMA_TX_CH		LL_DMA_CHANNEL_5
 
 #define INA226_CH1_INT_GPIO	GPIOB
 #define INA226_CH1_INT_PIN	LL_GPIO_PIN_4
@@ -163,7 +167,7 @@ private:
 	void I2C_Init(void);
 	void EXTI_Init(void);
 	void DMA_Init(void);
-	void ADC_StartConv(void);
+	void IWDG_Init(void);
 	void SetFanSpeed(uint32_t spd);
 };
 
@@ -171,6 +175,8 @@ extern System_TypeDef system;
 extern UART_IT_TypeDef uart1;
 extern ILI9341_TypeDef lcd;
 extern XPT2046_TypeDef ts;
+extern I2CHandleTypeDef i2c1;
+extern I2CHandleTypeDef i2c2;
 extern INA226_TypeDef ina226Ch1;
 extern INA226_TypeDef ina226Ch2;
 extern INA226_TypeDef ina226Ch3;

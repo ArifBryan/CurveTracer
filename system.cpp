@@ -18,11 +18,11 @@ uint8_t startup = 1;
 
 System_TypeDef system;
 UART_IT_TypeDef uart1(USART1, &ticks);
-ILI9341_TypeDef lcd(SPI2, LCD_NSS_GPIO, LCD_NSS_PIN, LCD_DC_GPIO, LCD_DC_PIN, SPI2_TX_DMA, SPI2_TX_DMA_CH);
+ILI9341_TypeDef lcd(SPI2, LCD_NSS_GPIO, LCD_NSS_PIN, LCD_DC_GPIO, LCD_DC_PIN, SPI2_DMA, SPI2_DMA_TX_CH);
 XPT2046_TypeDef ts(SPI2, XPT2046_NSS_GPIO, XPT2046_NSS_PIN, 1);
 I2CHandleTypeDef i2c1(I2C1);
 I2CHandleTypeDef i2c2(I2C2);
-INA226_TypeDef ina226Ch1(&i2c1, 0b1000000);
+INA226_TypeDef ina226Ch1(&i2c1, 0b1000000, I2C1_DMA, I2C1_DMA_RX_CH);
 INA226_TypeDef ina226Ch2(&i2c1, 0b1000001);
 INA226_TypeDef ina226Ch3(&i2c1, 0b1000010);
 
@@ -64,6 +64,7 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 	// Peripheral init
 	RCC_Init();
 	GPIO_Init();
+	//IWDG_Init();
 	LL_GPIO_SetOutputPin(PWR_LATCH_GPIO, PWR_LATCH_PIN);
 	ADC_Init();
 	LL_mDelay(10);
@@ -85,11 +86,15 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 				TIM_Init();
 				DMA_Init();
 				EXTI_Init();
+				// Watchdog reset
+				LL_IWDG_ReloadCounter(IWDG);
 				// Startup handler
 				Startup_CallbackHandler();
 				Shutdown_Callback = Shutdown_CallbackHandler;
 				OverTemperature_Callback = OverTemperature_CallbackHandler;
 				LL_mDelay(100);
+				// Watchdog reset
+				LL_IWDG_ReloadCounter(IWDG);
 				while (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) ;
 				pwrBtnTmr = Ticks();
 				break;
@@ -120,6 +125,11 @@ void System_TypeDef::Handler() {
 		
 		sledTmr = Ticks();
 	}
+	
+	// Watchdog reset
+	LL_IWDG_ReloadCounter(IWDG);
+	
+	// Clear startup flag
 	startup = 0;
 }
 
@@ -418,13 +428,6 @@ void System_TypeDef::ADC_Init() {
 	LL_ADC_REG_StartConversionSWStart(ADC1);
 }
 
-void System_TypeDef::ADC_StartConv() {
-	if (adcDataIdx == 3) {
-		adcDataIdx = 0;
-		LL_ADC_REG_StartConversionSWStart(ADC1);
-	}
-}
-
 uint32_t System_TypeDef::ReadVsense5V() {
 	return adcData[1] * 1.4681;
 }
@@ -541,7 +544,7 @@ void System_TypeDef::SPI_Init() {
 	
 	LL_SPI_Init(SPI2, &SPIInit_Struct);
 	
-	//NVIC_EnableIRQ(SPI1_IRQn);
+	NVIC_EnableIRQ(SPI1_IRQn);
 	NVIC_EnableIRQ(SPI2_IRQn);
 	
 	LL_SPI_Enable(SPI1);
@@ -562,9 +565,12 @@ void System_TypeDef::I2C_Init() {
 	I2CInit_Struct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
 	I2CInit_Struct.PeripheralMode = LL_I2C_MODE_I2C;
 	I2CInit_Struct.TypeAcknowledge = LL_I2C_ACK;
-	
+		
 	i2c1.Init(&I2CInit_Struct);
 	i2c2.Init(&I2CInit_Struct);
+
+	i2c1.DMARequestRX(1);
+	//i2c1.DMARequestTX(1);
 }
 
 void System_TypeDef::EXTI_Init() {
@@ -599,18 +605,47 @@ void System_TypeDef::DMA_Init() {
 	// !IMPORTANT! always initialize init struct !IMPORTANT! //
 	LL_DMA_StructInit(&DMAInit_Struct);
 	
+	// SPI2 TX DMA
 	DMAInit_Struct.Mode = LL_DMA_MODE_NORMAL;
 	DMAInit_Struct.Direction = LL_DMA_DIRECTION_MEMORY_TO_PERIPH;
 	DMAInit_Struct.Priority = LL_DMA_PRIORITY_MEDIUM;
 	DMAInit_Struct.MemoryOrM2MDstAddress = 0;
-	DMAInit_Struct.MemoryOrM2MDstDataSize = LL_DMA_MDATAALIGN_BYTE;
+	DMAInit_Struct.MemoryOrM2MDstDataSize = LL_DMA_MDATAALIGN_HALFWORD;
 	DMAInit_Struct.MemoryOrM2MDstIncMode = LL_DMA_MEMORY_INCREMENT;
 	DMAInit_Struct.PeriphOrM2MSrcAddress = LL_SPI_DMA_GetRegAddr(SPI2);
-	DMAInit_Struct.PeriphOrM2MSrcDataSize = LL_DMA_PDATAALIGN_BYTE;
+	DMAInit_Struct.PeriphOrM2MSrcDataSize = LL_DMA_PDATAALIGN_HALFWORD;
 	DMAInit_Struct.PeriphOrM2MSrcIncMode = LL_DMA_PERIPH_NOINCREMENT;
 	DMAInit_Struct.NbData = 0;
 	
-	LL_DMA_Init(SPI2_TX_DMA, SPI2_TX_DMA_CH, &DMAInit_Struct);
+	LL_DMA_Init(SPI2_DMA, SPI2_DMA_TX_CH, &DMAInit_Struct);
+	
+	// I2C1 TX DMA
+	DMAInit_Struct.MemoryOrM2MDstDataSize = LL_DMA_MDATAALIGN_BYTE;
+	DMAInit_Struct.PeriphOrM2MSrcDataSize = LL_DMA_PDATAALIGN_BYTE;
+	DMAInit_Struct.Direction = LL_DMA_DIRECTION_MEMORY_TO_PERIPH;
+	DMAInit_Struct.PeriphOrM2MSrcAddress = LL_I2C_DMA_GetRegAddr(I2C1);
+	DMAInit_Struct.NbData = 0;
+	
+	LL_DMA_Init(I2C1_DMA, I2C1_DMA_TX_CH, &DMAInit_Struct);
+	
+	// I2C1 RX DMA
+	DMAInit_Struct.Direction = LL_DMA_DIRECTION_PERIPH_TO_MEMORY;
+	DMAInit_Struct.PeriphOrM2MSrcAddress = LL_I2C_DMA_GetRegAddr(I2C1);
+	DMAInit_Struct.NbData = 0;
+	
+	LL_DMA_Init(I2C1_DMA, I2C1_DMA_RX_CH, &DMAInit_Struct);
+	
+	NVIC_EnableIRQ(DMA1_Channel6_IRQn);
+	NVIC_EnableIRQ(DMA1_Channel7_IRQn);
+}
+
+void System_TypeDef::IWDG_Init() {
+	LL_DBGMCU_APB1_GRP1_FreezePeriph(LL_DBGMCU_APB1_GRP1_IWDG_STOP);
+	LL_IWDG_EnableWriteAccess(IWDG);
+	LL_IWDG_SetPrescaler(IWDG, LL_IWDG_PRESCALER_16);
+	LL_IWDG_SetReloadCounter(IWDG, 0xFFF);
+	LL_IWDG_Enable(IWDG);
+	LL_IWDG_DisableWriteAccess(IWDG);
 }
 
 uint32_t System_TypeDef::Ticks() {

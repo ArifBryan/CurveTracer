@@ -1191,7 +1191,7 @@ Adafruit_GFX_Button::Adafruit_GFX_Button(void) { _gfx = 0; }
 void Adafruit_GFX_Button::initButton(Adafruit_GFX *gfx, int16_t x, int16_t y,
                                      uint16_t w, uint16_t h, uint16_t outline,
                                      uint16_t fill, uint16_t textcolor,
-                                     char *label, uint8_t textsize) {
+                                     const char *label, uint8_t textsize) {
   // Tweak arguments and pass to the newer initButtonUL() function...
   initButtonUL(gfx, x - (w / 2), y - (h / 2), w, h, outline, fill, textcolor,
                label, textsize);
@@ -1217,7 +1217,7 @@ void Adafruit_GFX_Button::initButton(Adafruit_GFX *gfx, int16_t x, int16_t y,
 void Adafruit_GFX_Button::initButton(Adafruit_GFX *gfx, int16_t x, int16_t y,
                                      uint16_t w, uint16_t h, uint16_t outline,
                                      uint16_t fill, uint16_t textcolor,
-                                     char *label, uint8_t textsize_x,
+                                     const char *label, uint8_t textsize_x,
                                      uint8_t textsize_y) {
   // Tweak arguments and pass to the newer initButtonUL() function...
   initButtonUL(gfx, x - (w / 2), y - (h / 2), w, h, outline, fill, textcolor,
@@ -1243,7 +1243,7 @@ void Adafruit_GFX_Button::initButton(Adafruit_GFX *gfx, int16_t x, int16_t y,
 void Adafruit_GFX_Button::initButtonUL(Adafruit_GFX *gfx, int16_t x1,
                                        int16_t y1, uint16_t w, uint16_t h,
                                        uint16_t outline, uint16_t fill,
-                                       uint16_t textcolor, char *label,
+                                       uint16_t textcolor, const char *label,
                                        uint8_t textsize) {
   initButtonUL(gfx, x1, y1, w, h, outline, fill, textcolor, label, textsize,
                textsize);
@@ -1269,7 +1269,7 @@ void Adafruit_GFX_Button::initButtonUL(Adafruit_GFX *gfx, int16_t x1,
 void Adafruit_GFX_Button::initButtonUL(Adafruit_GFX *gfx, int16_t x1,
                                        int16_t y1, uint16_t w, uint16_t h,
                                        uint16_t outline, uint16_t fill,
-                                       uint16_t textcolor, char *label,
+                                       uint16_t textcolor, const char *label,
                                        uint8_t textsize_x, uint8_t textsize_y) {
   _x1 = x1;
   _y1 = y1;
@@ -1295,6 +1295,8 @@ void Adafruit_GFX_Button::initButtonUL(Adafruit_GFX *gfx, int16_t x1,
 /**************************************************************************/
 void Adafruit_GFX_Button::drawButton(bool inverted) {
   uint16_t fill, outline, text;
+  int16_t  text_x, text_y;  // position of the text outline
+  uint16_t text_w, text_h;  // size of the text outline
 
   if (!inverted) {
     fill = _fillcolor;
@@ -1310,10 +1312,28 @@ void Adafruit_GFX_Button::drawButton(bool inverted) {
   _gfx->fillRoundRect(_x1, _y1, _w, _h, r, fill);
   _gfx->drawRoundRect(_x1, _y1, _w, _h, r, outline);
 
-  _gfx->setCursor(_x1 + (_w / 2) - (strlen(_label) * 3 * _textsize_x),
-                  _y1 + (_h / 2) - (4 * _textsize_y));
+	_gfx->setTextSize(_textsize_x, _textsize_y);
+	// if a custom font is used, calculate the text cursor from the 
+	// font's data and the string
+	if (_gfx->getGfxFont()) {
+		// give the string and virtual cursor and get the enclosing rectangle
+		_gfx->getTextBounds(_label,
+			_x1,
+			_y1+_h,
+			&text_x,
+			&text_y,
+			&text_w,
+			&text_h);
+		// with this rectangle set the cursor to center the text in the button
+		_gfx->setCursor((_x1 + ((_w - text_w) / 2) - 1), (_y1 + ((_h + text_h) / 2)));
+	}
+	else {
+		// Default font
+		_gfx->setCursor(_x1 + (_w / 2) - (strlen(_label) * 3 * _textsize_x),
+			_y1 + (_h / 2) - (4 * _textsize_y));
+	}
+	
   _gfx->setTextColor(text);
-  _gfx->setTextSize(_textsize_x, _textsize_y);
   _gfx->print(_label);
 }
 
@@ -1337,7 +1357,7 @@ bool Adafruit_GFX_Button::contains(int16_t x, int16_t y) {
    @returns  True if was not-pressed before, now is.
 */
 /**************************************************************************/
-bool Adafruit_GFX_Button::justPressed() { return (currstate && !laststate); }
+bool Adafruit_GFX_Button::justPressed() { return (currstate && (!laststate)); }
 
 /**************************************************************************/
 /*!
@@ -1345,7 +1365,7 @@ bool Adafruit_GFX_Button::justPressed() { return (currstate && !laststate); }
    @returns  True if was pressed before, now is not.
 */
 /**************************************************************************/
-bool Adafruit_GFX_Button::justReleased() { return (!currstate && laststate); }
+bool Adafruit_GFX_Button::justReleased() { return ((!currstate) && laststate); }
 
 // -------------------------------------------------------------------------
 

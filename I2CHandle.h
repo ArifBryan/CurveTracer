@@ -78,6 +78,7 @@ public:
 	}
 	uint8_t Read(uint8_t addr, uint8_t reg[], uint8_t regLen, uint8_t data[], uint16_t dataLen, uint16_t tout = 100);
 	uint8_t Write(uint8_t addr, uint8_t data[], uint16_t dataLen, uint16_t tout = 100);
+	I2C_TypeDef* GetI2CPeriph() {return i2cdev;}
 private:
 	I2C_TypeDef *i2cdev;
 };

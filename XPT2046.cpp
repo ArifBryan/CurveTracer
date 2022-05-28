@@ -6,6 +6,12 @@ void XPT2046_TypeDef::Init() {
 	pointPos.y = 0;
 	pointPos.z = 0;
 	spiTransCount = 0;
+	pCalMin.x = 0;
+	pCalMin.y = 0;
+	pCalMin.z = 0;
+	pCalMax.x = 4096;
+	pCalMax.y = 4096;
+	pCalMax.z = 0;
 }
 
 void XPT2046_TypeDef::SPI_IRQ_Handler() {
@@ -65,11 +71,18 @@ void XPT2046_TypeDef::StartConversion() {
 void XPT2046_TypeDef::GetPosition(Point_TypeDef *point) {
 	switch (rotation) {
 	case 1:
+		point->y = 4095 - pointPos.x;
+		point->x = 4095 - pointPos.y;
+		break;
+	case 2:
 		point->x = 4095 - pointPos.x;
 		point->y = 4095 - pointPos.y;
 		break;
 	}
 	point->z = pointPos.z;
+	
+	point->x = (point->x - pCalMin.x) / (4096 / (pCalMax.x - pCalMin.x));
+	point->y = (point->y - pCalMin.y) / (4096 / (pCalMax.y - pCalMin.y));
 	
 	pointPos.x = 0;
 	pointPos.y = 0;
@@ -83,7 +96,7 @@ uint8_t XPT2046_TypeDef::IsTouched() {
 void XPT2046_TypeDef::SetCalibration(Point_TypeDef pMin, Point_TypeDef pMax) {
 	pCalMin = pMin;
 	pCalMax = pMax;
-	zThreshold = (pMin.z <= pMax.z ? pMin.z : pMax.z) / 2;
+	zThreshold = (pMin.z <= pMax.z ? pMin.z : pMax.z) * 0.75;
 }
 
 void XPT2046_TypeDef::SetRotation(uint8_t r) {
