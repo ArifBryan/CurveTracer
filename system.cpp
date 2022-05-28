@@ -1,4 +1,5 @@
 #include "system.h"
+#include "userInterface.h"
 
 #define UVLO_BYPASS		1
 #define PWRCTL_BYPASS	0
@@ -6,18 +7,19 @@
 void(*Shutdown_Callback)(void);
 void(*OverTemperature_Callback)(void);
 extern "C" volatile uint32_t ticks;
-uint32_t pwrBtnTmr;
+volatile uint32_t pwrBtnTmr;
 uint32_t sledTmr;
-uint32_t sysCheckTmr;
+volatile uint32_t sysCheckTmr;
 volatile uint16_t adcData[3];
 volatile uint8_t adcDataIdx;
-uint8_t overTemp;
+volatile uint8_t overTemp;
+uint8_t startup = 1;
 
 
 System_TypeDef system;
 UART_IT_TypeDef uart1(USART1, &ticks);
 ILI9341_TypeDef lcd(SPI2, LCD_NSS_GPIO, LCD_NSS_PIN, LCD_DC_GPIO, LCD_DC_PIN, SPI2_TX_DMA, SPI2_TX_DMA_CH);
-XPT2046_TypeDef ts(SPI2, XPT2046_NSS_GPIO, XPT2046_NSS_PIN, XPT2046_IRQ_EXTI);
+XPT2046_TypeDef ts(SPI2, XPT2046_NSS_GPIO, XPT2046_NSS_PIN, 1);
 I2CHandleTypeDef i2c1(I2C1);
 I2CHandleTypeDef i2c2(I2C2);
 INA226_TypeDef ina226Ch1(&i2c1, 0b1000000);
@@ -38,6 +40,11 @@ extern "C" void CSSFault_Handler() {
 	NVIC_SystemReset();
 }
 
+extern "C" void Ticks10ms_Handler() {
+	system.Ticks10ms_IRQ_Handler();
+	ui.Ticks10ms_IRQ_Handler();
+}
+
 extern "C" void ADC1_EOS_Handler() {
 	adcData[adcDataIdx++] = LL_ADC_REG_ReadConversionData12(ADC1);
 	if (adcDataIdx == 3){adcDataIdx = 0; }
@@ -50,6 +57,7 @@ extern "C" void USART1_IRQHandler() {
 
 extern "C" void SPI2_IRQHandler() {
 	lcd.SPI_IRQ_Handler();
+	ts.SPI_IRQ_Handler();
 }
 
 void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_CallbackHandler)(void), void(*OverTemperature_CallbackHandler)(void)) {
@@ -101,7 +109,33 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 	}
 }
 
-void System_TypeDef::Handler() {
+void System_TypeDef::Handler() {	
+	// Status LED
+	if (Ticks() - sledTmr >= 100 && !LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
+		LL_GPIO_SetOutputPin(LED_STA_GPIO, LED_STA_PIN);
+		sledTmr = Ticks();
+	}
+	else if (Ticks() - sledTmr >= 500 && LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
+		LL_GPIO_ResetOutputPin(LED_STA_GPIO, LED_STA_PIN);
+		
+		sledTmr = Ticks();
+	}
+	startup = 0;
+}
+
+void System_TypeDef::Ticks10ms_IRQ_Handler() {
+	// Power off button
+	if (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN) && !startup) {
+		if (Ticks() - pwrBtnTmr >= 200) {
+			LL_GPIO_SetOutputPin(BEEPER_GPIO, BEEPER_PIN);
+			LL_mDelay(50);
+			LL_GPIO_ResetOutputPin(BEEPER_GPIO, BEEPER_PIN);
+			Shutdown();
+		}
+	}
+	else {
+		pwrBtnTmr = Ticks();
+	}
 	// ADC Vsense, Tsense sampling
 	if (Ticks() - sysCheckTmr >= 100) {
 		// Fan control
@@ -124,30 +158,6 @@ void System_TypeDef::Handler() {
 		}
 		
 		sysCheckTmr = Ticks();
-	}
-	
-	// Status LED
-	if (Ticks() - sledTmr >= 100 && !LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
-		LL_GPIO_SetOutputPin(LED_STA_GPIO, LED_STA_PIN);
-		sledTmr = Ticks();
-	}
-	else if (Ticks() - sledTmr >= 500 && LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
-		LL_GPIO_ResetOutputPin(LED_STA_GPIO, LED_STA_PIN);
-		
-		sledTmr = Ticks();
-	}
-	
-	// Power off button
-	if (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) {
-		if (Ticks() - pwrBtnTmr >= 200) {
-			LL_GPIO_SetOutputPin(BEEPER_GPIO, BEEPER_PIN);
-			LL_mDelay(50);
-			LL_GPIO_ResetOutputPin(BEEPER_GPIO, BEEPER_PIN);
-			Shutdown();
-		}
-	}
-	else {
-		pwrBtnTmr = Ticks();
 	}
 }
 
@@ -430,12 +440,14 @@ float System_TypeDef::ReadDriverTemp() {
 void System_TypeDef::TIM_Init() {
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM4);
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
 	
 	LL_TIM_InitTypeDef TIMInit_Struct;
 	
 	// !IMPORTANT! always initialize init struct !IMPORTANT! //
 	LL_TIM_StructInit(&TIMInit_Struct);
 	
+	// PWM generation
 	TIMInit_Struct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
 	TIMInit_Struct.CounterMode = LL_TIM_COUNTERDIRECTION_UP;
 	TIMInit_Struct.RepetitionCounter = 0;
@@ -471,6 +483,26 @@ void System_TypeDef::TIM_Init() {
 	
 	LL_TIM_EnableCounter(FAN_TIM);
 	LL_TIM_EnableCounter(LCD_BKLT_TIM);
+	
+	// Interrupt timer
+	TIMInit_Struct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV4;
+	TIMInit_Struct.CounterMode = LL_TIM_COUNTERDIRECTION_UP;
+	TIMInit_Struct.RepetitionCounter = 0;
+	
+	TIMInit_Struct.Prescaler = 18000;
+	TIMInit_Struct.Autoreload = 40;
+	LL_TIM_Init(TIM3, &TIMInit_Struct);
+	
+	TIMOCInit_Struct.OCMode = LL_TIM_OCMODE_ACTIVE;
+	TIMOCInit_Struct.OCState = LL_TIM_OCSTATE_DISABLE;
+	TIMOCInit_Struct.OCNState = LL_TIM_OCSTATE_DISABLE;
+	TIMOCInit_Struct.CompareValue = TIMInit_Struct.Autoreload;
+	LL_TIM_OC_Init(TIM3, LL_TIM_CHANNEL_CH1, &TIMOCInit_Struct);
+	
+	LL_TIM_EnableIT_CC1(TIM3);
+	
+	NVIC_EnableIRQ(TIM3_IRQn);
+	LL_TIM_EnableCounter(TIM3);
 }
 
 void System_TypeDef::SetFanSpeed(uint32_t spd) {
@@ -556,7 +588,7 @@ void System_TypeDef::EXTI_Init() {
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
 	
 	EXTIInit_Struct.Line_0_31 = XPT2046_IRQ_EXTI;
-	LL_EXTI_Init(&EXTIInit_Struct);
+	//LL_EXTI_Init(&EXTIInit_Struct);
 }
 
 void System_TypeDef::DMA_Init() {

@@ -3,7 +3,11 @@
 #include "userInterface.h"
 #include "outputControl.h"
 
+#include "SysprogsProfiler.h"
+
 void Startup_Handler() {
+	//InitializeInstrumentingProfiler();
+	
 	serial.Init();
 	ui.Init();
 	outCtl.Init();

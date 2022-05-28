@@ -27,22 +27,25 @@ struct Point_TypeDef {
 };
 
 struct XPT2046_TypeDef {
-	XPT2046_TypeDef(SPI_TypeDef *spi, GPIO_TypeDef *csGPIO, uint32_t csPIN, uint32_t EXTI_Line = 0) {
+	XPT2046_TypeDef(SPI_TypeDef *spi, GPIO_TypeDef *csGPIO, uint32_t csPIN, uint8_t spiInterrupt = 0, uint32_t EXTI_Line = 0) {
 		this->spi = spi;
 		this->csGPIO = csGPIO;
 		this->csPIN = csPIN;
 		this->extiLine = EXTI_Line;
+		this->spiInterrupt = spiInterrupt;
 	}
 	void Init(void);
 	void StartConversion(void);
-	void SetCalibration(Point_TypeDef p1, Point_TypeDef p2, Point_TypeDef p3, Point_TypeDef p4);
+	void SetCalibration(Point_TypeDef pMin, Point_TypeDef pMax);
 	void GetPosition(Point_TypeDef *point);
+	uint8_t IsTouched();
 	void SetRotation(uint8_t r);
 	void SPI_IRQ_Handler();
 private:
 	uint8_t IsSPIBusy(void);
 	void Write(uint8_t data);
-	uint16_t Read(void);
+	uint16_t Read16(void);
+	uint8_t Read8(void);
 	void StartWrite(void);
 	void EndWrite(void);	
 	
@@ -52,8 +55,10 @@ private:
 	uint32_t extiLine;
 	uint32_t spiLastSpeed;
 	uint32_t spiLastDataWidth;
+	uint8_t spiInterrupt;
+	volatile uint8_t spiTransCount;
 	uint8_t rotation;
-	
-	Point_TypeDef pointPos;
-	Point_TypeDef pointCal;
+	volatile Point_TypeDef pointPos;
+	Point_TypeDef pCalMin, pCalMax;
+	uint16_t zThreshold;
 };

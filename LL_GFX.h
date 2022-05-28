@@ -317,9 +317,10 @@ public:
 	
 	virtual void write(uint8_t);
 	void print(const char *str) {
-		do {
+		while (*str > 0) {
 			write((char)*str);
-		} while ((*str++) > 0);
+			str++;
+		}
 	}
 	
 protected:

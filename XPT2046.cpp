@@ -5,23 +5,61 @@ void XPT2046_TypeDef::Init() {
 	pointPos.x = 0;
 	pointPos.y = 0;
 	pointPos.z = 0;
+	spiTransCount = 0;
+}
+
+void XPT2046_TypeDef::SPI_IRQ_Handler() {
+	if(LL_SPI_IsActiveFlag_TXE(spi) && !LL_SPI_IsActiveFlag_BSY(spi) && spiTransCount){
+		spiTransCount--;
+		switch (spiTransCount) {
+		case 6:
+			Write(0);
+			break;
+		case 5:
+			pointPos.z = Read8() << 5;
+			Write(XPT2046_READ_XPOS);
+			break;
+		case 4:
+			pointPos.z |= Read8() >> 3;
+			Write(0);
+			break;
+		case 3:
+			pointPos.x = Read8() << 5;
+			Write(XPT2046_READ_YPOS);
+			break;
+		case 2:
+			pointPos.x |= Read8() >> 3;
+			Write(0);
+			break;
+		case 1:
+			pointPos.y = Read8() << 5;
+			Write(0);
+			break;
+		case 0:
+			pointPos.y |= Read8() >> 3;
+			EndWrite();
+			LL_SPI_DisableIT_TXE(spi);
+			break;
+		}
+	}
 }
 
 void XPT2046_TypeDef::StartConversion() {
 	StartWrite();
-	uint16_t lzPos = pointPos.z;
-	Write(XPT2046_READ_Z1POS);
-	pointPos.z = Read();
-	if (pointPos.z > 50) {
-		Write(XPT2046_READ_XPOS);
-		pointPos.x = Read();
-		Write(XPT2046_READ_YPOS);
-		pointPos.y = Read();
+	if (spiInterrupt) {
+		Write(XPT2046_READ_Z1POS);
+		spiTransCount = 7;
+		LL_SPI_EnableIT_TXE(spi);
 	}
 	else {
-		pointPos.z = lzPos;
+		Write(XPT2046_READ_Z1POS);
+		pointPos.z = Read16() >> 3;
+		Write(XPT2046_READ_XPOS);
+		pointPos.x = Read16() >> 3;
+		Write(XPT2046_READ_YPOS);
+		pointPos.y = Read16() >> 3;
+		EndWrite();
 	}
-	EndWrite();
 }
 
 void XPT2046_TypeDef::GetPosition(Point_TypeDef *point) {
@@ -31,32 +69,59 @@ void XPT2046_TypeDef::GetPosition(Point_TypeDef *point) {
 		point->y = 4095 - pointPos.y;
 		break;
 	}
+	point->z = pointPos.z;
+	
+	pointPos.x = 0;
+	pointPos.y = 0;
+	pointPos.z = 0;
+}
+
+uint8_t XPT2046_TypeDef::IsTouched() {
+	return pointPos.z > zThreshold;
+}
+
+void XPT2046_TypeDef::SetCalibration(Point_TypeDef pMin, Point_TypeDef pMax) {
+	pCalMin = pMin;
+	pCalMax = pMax;
+	zThreshold = (pMin.z <= pMax.z ? pMin.z : pMax.z) / 2;
 }
 
 void XPT2046_TypeDef::SetRotation(uint8_t r) {
 	rotation = r;
-	switch (rotation) {
-	case 1:
-		pointPos.x = 4095 - pointPos.x;
-		pointPos.y = 4095 - pointPos.y;
-		break;
-	}
 }
 
-uint16_t XPT2046_TypeDef::Read() {
-	// !IMPORTANT! Flush buffer before read operation !IMPORTANT! //
-	LL_SPI_ReceiveData16(spi);
+uint16_t XPT2046_TypeDef::Read16() {
+	if (!spiInterrupt) {
+		// !IMPORTANT! Flush buffer before read operation !IMPORTANT! //
+		LL_SPI_ReceiveData16(spi);
 	
-	LL_SPI_SetDataWidth(spi, LL_SPI_DATAWIDTH_16BIT);
-	LL_SPI_TransmitData16(spi, 0);
-	while (LL_SPI_IsActiveFlag_BSY(spi)) ;
-	return LL_SPI_ReceiveData16(spi) >> 3;
+		LL_SPI_SetDataWidth(spi, LL_SPI_DATAWIDTH_16BIT);
+		LL_SPI_TransmitData16(spi, 0);
+		while (LL_SPI_IsActiveFlag_BSY(spi)) ;
+	}
+	return LL_SPI_ReceiveData16(spi);
+}
+
+uint8_t XPT2046_TypeDef::Read8() {
+	if (!spiInterrupt) {
+		// !IMPORTANT! Flush buffer before read operation !IMPORTANT! //
+		LL_SPI_ReceiveData8(spi);
+	
+		LL_SPI_SetDataWidth(spi, LL_SPI_DATAWIDTH_8BIT);
+		LL_SPI_TransmitData8(spi, 0);
+		while (LL_SPI_IsActiveFlag_BSY(spi)) ;
+	}
+	return LL_SPI_ReceiveData8(spi);
 }
 
 void XPT2046_TypeDef::Write(uint8_t data) {
 	LL_SPI_SetDataWidth(spi, LL_SPI_DATAWIDTH_8BIT);
+	// !IMPORTANT! Flush buffer before read operation !IMPORTANT! //
+	LL_SPI_ReceiveData8(spi);
 	LL_SPI_TransmitData8(spi, data);
-	while (LL_SPI_IsActiveFlag_BSY(spi)) ;
+	if (!spiInterrupt) {
+		while (LL_SPI_IsActiveFlag_BSY(spi)) ;
+	}
 }
 
 uint8_t XPT2046_TypeDef::IsSPIBusy() {

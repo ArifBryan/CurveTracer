@@ -9,6 +9,7 @@ struct UserInterface_TypeDef {
 	void Beep(uint32_t t, uint8_t cnt = 1);
 	uint8_t IsTouched(void);
 	void GetTouchPosition(uint16_t *x, uint16_t *y);
+	void Ticks10ms_IRQ_Handler();
 };
 
 extern UserInterface_TypeDef ui;

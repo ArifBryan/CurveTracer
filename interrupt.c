@@ -3,7 +3,9 @@
 #include <stm32f1xx_ll_adc.h>
 #include <stm32f1xx_ll_usart.h>
 #include <stm32f1xx_ll_exti.h>
+#include <stm32f1xx_ll_tim.h>
 
+void Ticks10ms_Handler(void);
 void CSSFault_Handler(void);
 void ADC1_EOS_Handler(void);
 void EXTI3_Handler(void);
@@ -21,6 +23,13 @@ void NMI_Handler() {
 	if (LL_RCC_IsActiveFlag_HSECSS()) {
 		CSSFault_Handler();
 		LL_RCC_ClearFlag_HSECSS();
+	}
+}
+
+void TIM3_IRQHandler() {
+	if (LL_TIM_IsActiveFlag_CC1(TIM3)) {
+		Ticks10ms_Handler();
+		LL_TIM_ClearFlag_CC1(TIM3);
 	}
 }
 

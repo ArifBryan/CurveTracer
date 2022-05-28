@@ -6,19 +6,8 @@ find_bsp(
 	ID com.sysprogs.arm.stm32
 	VERSION 2022.01
 	MCU STM32F103RE
-	FRAMEWORKS com.sysprogs.arm.stm32.ll com.sysprogs.embedded.semihosting_and_profiler
-	FWCONFIGURATION
-		com.sysprogs.bspoptions.stm32.ll_driver=USE_FULL_LL_DRIVER
-		com.sysprogs.efp.semihosting.buffer_size=4096
-		com.sysprogs.efp.semihosting.stdio=1
-		com.sysprogs.efp.semihosting.blocking_mode=1
-		com.sysprogs.efp.profiling.semihosting_driver=1
-		com.sysprogs.efp.profiling.counter=
-		com.sysprogs.efp.profiling.address_validators=
-		com.sysprogs.efp.profiling.nosampling=0
-		com.sysprogs.efp.profiling.debugger_check=
-		com.sysprogs.efp.profiling.rtos=USE_FREERTOS_IF_FOUND
-		com.sysprogs.efp.profiling.hold_interrupts=
+	FRAMEWORKS com.sysprogs.arm.stm32.ll
+	FWCONFIGURATION com.sysprogs.bspoptions.stm32.ll_driver=USE_FULL_LL_DRIVER
 	HWREGISTER_LIST_FILE STM32F1xxxx/DeviceDefinitions/stm32f103xe.xml
 	DISABLE_GNU_EXTENSIONS)
 
@@ -54,6 +43,5 @@ add_bsp_based_executable(
 		XPT2046.cpp
 		XPT2046.h
 	GENERATE_BIN
-	GENERATE_MAP
-	OUTPUT_RELOCATION_RECORDS)
+	GENERATE_MAP)
 set_source_files_properties(LL_SPITFT.h LL_SPITFT.cpp PROPERTIES HEADER_FILE_ONLY TRUE)

@@ -152,6 +152,7 @@ struct System_TypeDef {
 	uint32_t ReadVsenseVin(void);
 	float ReadDriverTemp(void);
 	uint32_t Ticks(void);
+	void Ticks10ms_IRQ_Handler();
 private:
 	void RCC_Init(void);
 	void GPIO_Init(void);
