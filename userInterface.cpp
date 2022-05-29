@@ -133,7 +133,7 @@ void UserInterface_TypeDef::Handler() {
 			canvas.setFont(&FreeSans9pt7b);
 			canvas.fillScreen(ILI9341_DARKGREEN);
 			canvas.setCursor(35, 17);
-			canvas.setTextColor(system.ReadDriverTemp() >= 33 ? (system.OverTemperature() ? ILI9341_RED : ILI9341_ORANGE) : ILI9341_WHITE);
+			canvas.setTextColor(system.ReadDriverTemp() >= 31 ? (system.OverTemperature() ? ILI9341_RED : ILI9341_ORANGE) : ILI9341_WHITE);
 			sprintf(strbuff, "%d.%02dC\n", (uint8_t)system.ReadDriverTemp(), (uint16_t)(system.ReadDriverTemp() * 100) % 100);
 			canvas.print(strbuff);
 			lcd.drawRGBBitmap(220, 0, canvas.getBuffer(), 100, 25);

@@ -22,7 +22,7 @@ ILI9341_TypeDef lcd(SPI2, LCD_NSS_GPIO, LCD_NSS_PIN, LCD_DC_GPIO, LCD_DC_PIN, SP
 XPT2046_TypeDef ts(SPI2, XPT2046_NSS_GPIO, XPT2046_NSS_PIN, 1);
 I2CHandleTypeDef i2c1(I2C1);
 I2CHandleTypeDef i2c2(I2C2);
-INA226_TypeDef ina226Ch1(&i2c1, 0b1000000, I2C1_DMA, I2C1_DMA_RX_CH);
+INA226_TypeDef ina226Ch1(&i2c1, 0b1000000);//, I2C1_DMA, I2C1_DMA_RX_CH);
 INA226_TypeDef ina226Ch2(&i2c1, 0b1000001);
 INA226_TypeDef ina226Ch3(&i2c1, 0b1000010);
 
@@ -149,16 +149,16 @@ void System_TypeDef::Ticks10ms_IRQ_Handler() {
 	// ADC Vsense, Tsense sampling
 	if (Ticks() - sysCheckTmr >= 100) {
 		// Fan control
-		if (ReadDriverTemp() > 33) {
-			SetFanSpeed((ReadDriverTemp() - 33) * 7);
+		if (ReadDriverTemp() > 31) {
+			SetFanSpeed((ReadDriverTemp() - 31) * 15);
 		}
 		
 		// Thermal supervisor
-		if (ReadDriverTemp() >= 63 && !overTemp) {
+		if (ReadDriverTemp() >= 45 && !overTemp) {
 			overTemp = 1;
 			OverTemperature_Callback();
 		}
-		else if (ReadDriverTemp() < 60) {
+		else if (ReadDriverTemp() < 40) {
 			overTemp = 0;
 		}
 		
