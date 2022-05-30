@@ -33,7 +33,7 @@ void UserInterface_TypeDef::Init() {
 	lcd.setRotation(1);
 	lcd.fillScreen(ILI9341_WHITE);
 	LL_mDelay(10);
-	SetBrightness(25);
+	SetBrightness(30);
 	lcd.setFont(&FreeSans9pt7b);
 	{
 		lcd.drawRGBBitmap(130, 72, (uint16_t*)ctLogoBitmap, ctLogoBitmapWidth, ctLogoBitmapHeight);
@@ -44,7 +44,7 @@ void UserInterface_TypeDef::Init() {
 		canvas.setCursor(10, 17);
 		canvas.setFont(&FreeSansOblique9pt7b);
 		canvas.print("SCT-2001");
-		canvas.setCursor(0, 40);
+		canvas.setCursor(0, 41);
 		canvas.setFont(&FreeSans9pt7b);
 		canvas.print("CurveTracer");
 		lcd.drawRGBBitmap(103, 110, canvas.getBuffer(), 150, 60);
