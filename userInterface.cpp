@@ -71,8 +71,8 @@ void UserInterface_TypeDef::Init() {
 	max.z = min.z;
 	
 	ts.SetCalibration(min, max);
-	btn1.initButton(&lcd, 270, 60, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "OFF", 1, 1);
-	btn2.initButton(&lcd, 270, 110, 75, 45, ILI9341_DARKGREY, ILI9341_DARKCYAN, ILI9341_WHITE, "OFF", 1, 1);
+	btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "OFF", 1, 1);
+	btn2.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKGREY, ILI9341_DARKCYAN, ILI9341_WHITE, "RESET", 1, 1);
 	btn1.drawButton();
 	btn2.drawButton();
 }
@@ -117,6 +117,9 @@ void UserInterface_TypeDef::Handler() {
 			btn1.setLabel("ON");
 			btn1.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
 		}
+	}
+	if (btn2.justPressed()) {
+		system.Shutdown();
 	}
 	
 	if (btn1.justPressed() || btn1.justReleased()) {
