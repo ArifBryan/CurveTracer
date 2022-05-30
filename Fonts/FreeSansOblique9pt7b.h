@@ -1,4 +1,4 @@
-const uint8_t FreeSansOblique9pt7bBitmaps[] PROGMEM = {
+const uint8_t FreeSansOblique9pt7bBitmaps[] = {
     0x10, 0x84, 0x22, 0x10, 0x84, 0x42, 0x10, 0x08, 0x00, 0xDE, 0xE5, 0x20,
     0x06, 0x40, 0x88, 0x13, 0x06, 0x43, 0xFE, 0x32, 0x04, 0x40, 0x98, 0x32,
     0x1F, 0xF0, 0x98, 0x22, 0x04, 0xC0, 0x02, 0x01, 0xF8, 0x6B, 0x99, 0x33,
@@ -115,7 +115,7 @@ const uint8_t FreeSansOblique9pt7bBitmaps[] PROGMEM = {
     0x10, 0x88, 0xC6, 0x18, 0x88, 0x42, 0x10, 0x88, 0xC0, 0x70, 0x4E, 0x41,
     0xC0};
 
-const GFXglyph FreeSansOblique9pt7bGlyphs[] PROGMEM = {
+const GFXglyph FreeSansOblique9pt7bGlyphs[] = {
     {0, 0, 0, 5, 0, 1},         // 0x20 ' '
     {0, 5, 13, 5, 2, -12},      // 0x21 '!'
     {9, 5, 4, 6, 3, -12},       // 0x22 '"'
@@ -212,7 +212,7 @@ const GFXglyph FreeSansOblique9pt7bGlyphs[] PROGMEM = {
     {1354, 5, 17, 6, 0, -12},   // 0x7D '}'
     {1365, 9, 3, 11, 2, -7}};   // 0x7E '~'
 
-const GFXfont FreeSansOblique9pt7b PROGMEM = {
+const GFXfont FreeSansOblique9pt7b = {
     (uint8_t *)FreeSansOblique9pt7bBitmaps,
     (GFXglyph *)FreeSansOblique9pt7bGlyphs, 0x20, 0x7E, 22};
 

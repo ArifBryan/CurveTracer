@@ -53,6 +53,7 @@ add_bsp_based_executable(
 		outputControl.h
 		XPT2046.cpp
 		XPT2046.h
+		ctLogoBitmap.h
 	GENERATE_BIN
 	GENERATE_MAP
 	OUTPUT_RELOCATION_RECORDS)

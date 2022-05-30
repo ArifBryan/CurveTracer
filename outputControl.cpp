@@ -100,3 +100,11 @@ void OutputControl_TypeDef::SetOutputState(uint8_t state) {
 		LL_GPIO_ResetOutputPin(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN);
 	}
 }
+
+uint8_t OutputControl_TypeDef::IsOutputEnabled() {
+	uint8_t t = 1;
+	t &= LL_GPIO_IsOutputPinSet(OPA548_CH1_ES_GPIO, OPA548_CH1_ES_PIN);
+	t &= LL_GPIO_IsOutputPinSet(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN);
+	t &= LL_GPIO_IsOutputPinSet(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN);
+	return t;
+}

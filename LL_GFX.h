@@ -364,7 +364,8 @@ public:
 		uint16_t fill,
 		uint16_t textcolor,
 		const char *label,
-		uint8_t textsize);
+		uint8_t textsize,
+		uint8_t radius);
 	void initButton(Adafruit_GFX *gfx,
 		int16_t x,
 		int16_t y,
@@ -375,7 +376,8 @@ public:
 		uint16_t textcolor,
 		const char *label,
 		uint8_t textsize_x,
-		uint8_t textsize_y);
+		uint8_t textsize_y,
+		uint8_t radius);
 	// New/alt initButton() uses upper-left corner & size
 	void initButtonUL(Adafruit_GFX *gfx,
 		int16_t x1,
@@ -386,7 +388,8 @@ public:
 		uint16_t fill,
 		uint16_t textcolor,
 		const char *label,
-		uint8_t textsize);
+		uint8_t textsize,
+		uint8_t radius);
 	void initButtonUL(Adafruit_GFX *gfx,
 		int16_t x1,
 		int16_t y1,
@@ -397,7 +400,8 @@ public:
 		uint16_t textcolor,
 		const char *label,
 		uint8_t textsize_x,
-		uint8_t textsize_y);
+		uint8_t textsize_y,
+		uint8_t radius);
 	void drawButton(bool inverted = false);
 	bool contains(int16_t x, int16_t y);
 
@@ -422,6 +426,14 @@ public:
 	*/
 	/**********************************************************************/
 	bool isPressed(void) { return currstate; }
+	void setLabel(const char *label) {
+		strncpy(_label, label, 9);
+	}
+	void setColor(uint16_t outline, uint16_t fill, uint16_t textcolor) {
+		_outlinecolor = outline;
+		_fillcolor = fill;
+		_textcolor = textcolor;
+	}
 
 private:
 	Adafruit_GFX *_gfx;
@@ -430,6 +442,7 @@ private:
 	uint8_t _textsize_x;
 	uint8_t _textsize_y;
 	uint16_t _outlinecolor, _fillcolor, _textcolor;
+	uint8_t _radius;
 	char _label[10];
 
 	bool currstate, laststate;

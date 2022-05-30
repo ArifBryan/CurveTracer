@@ -1,6 +1,9 @@
 #include "userInterface.h"
 #include "system.h"
 #include "Fonts/FreeSans9pt7b.h"
+#include "Fonts/FreeSansBold9pt7b.h"
+#include "Fonts/FreeSansOblique9pt7b.h"
+#include "ctLogoBitmap.h"
 #include "outputControl.h"
 
 UserInterface_TypeDef ui;
@@ -32,14 +35,32 @@ void UserInterface_TypeDef::Init() {
 	LL_mDelay(10);
 	SetBrightness(25);
 	lcd.setFont(&FreeSans9pt7b);
-	GFXcanvas16 canvas(320, 25);
-	canvas.setFont(&FreeSans9pt7b);
-	canvas.fillScreen(ILI9341_DARKGREEN);
-	canvas.setTextColor(ILI9341_WHITE);
-	canvas.setTextSize(1);
-	canvas.setCursor(0, 17);
-	canvas.print("SysVal");
-	lcd.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 25);
+	{
+		lcd.drawRGBBitmap(130, 72, (uint16_t*)ctLogoBitmap, ctLogoBitmapWidth, ctLogoBitmapHeight);
+		GFXcanvas16 canvas(150, 60);
+		canvas.fillScreen(ILI9341_WHITE);
+		canvas.setTextColor(ILI9341_DARKGREY);
+		canvas.setTextSize(1);
+		canvas.setCursor(10, 17);
+		canvas.setFont(&FreeSansOblique9pt7b);
+		canvas.print("SCT-2001");
+		canvas.setCursor(0, 40);
+		canvas.setFont(&FreeSans9pt7b);
+		canvas.print("CurveTracer");
+		lcd.drawRGBBitmap(103, 110, canvas.getBuffer(), 150, 60);
+		LL_mDelay(2000);
+		lcd.fillScreen(ILI9341_WHITE);
+	}
+	{
+		GFXcanvas16 canvas(320, 25);
+		canvas.setFont(&FreeSans9pt7b);
+		canvas.fillScreen(ILI9341_DARKGREEN);
+		canvas.setTextColor(ILI9341_WHITE);
+		canvas.setTextSize(1);
+		canvas.setCursor(5, 17);
+		canvas.print("SysVal");
+		lcd.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 25);
+	}
 	
 	Point_TypeDef min, max;
 	min.x = 0;
@@ -50,8 +71,8 @@ void UserInterface_TypeDef::Init() {
 	max.z = min.z;
 	
 	ts.SetCalibration(min, max);
-	btn1.initButton(&lcd, 270, 60, 75, 45, ILI9341_DARKGREY, ILI9341_DARKCYAN, ILI9341_WHITE, "ON", 1);
-	btn2.initButton(&lcd, 270, 110, 75, 45, ILI9341_DARKGREY, ILI9341_DARKCYAN, ILI9341_WHITE, "OFF", 1);
+	btn1.initButton(&lcd, 270, 60, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "OFF", 1, 1);
+	btn2.initButton(&lcd, 270, 110, 75, 45, ILI9341_DARKGREY, ILI9341_DARKCYAN, ILI9341_WHITE, "OFF", 1, 1);
 	btn1.drawButton();
 	btn2.drawButton();
 }
@@ -86,11 +107,16 @@ void UserInterface_TypeDef::Handler() {
 	
 	if (btn1.justPressed()) {
 		Beep(50);
-		outCtl.SetOutputState(1);
-	}
-	if (btn2.justPressed()) {
-		Beep(50);
-		outCtl.SetOutputState(0);
+		if (outCtl.IsOutputEnabled()) {
+			outCtl.SetOutputState(0);
+			btn1.setLabel("OFF");
+			btn1.setColor(ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE);
+		}
+		else {			
+			outCtl.SetOutputState(1);
+			btn1.setLabel("ON");
+			btn1.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
+		}
 	}
 	
 	if (btn1.justPressed() || btn1.justReleased()) {

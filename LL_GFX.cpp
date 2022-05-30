@@ -1191,10 +1191,11 @@ Adafruit_GFX_Button::Adafruit_GFX_Button(void) { _gfx = 0; }
 void Adafruit_GFX_Button::initButton(Adafruit_GFX *gfx, int16_t x, int16_t y,
                                      uint16_t w, uint16_t h, uint16_t outline,
                                      uint16_t fill, uint16_t textcolor,
-                                     const char *label, uint8_t textsize) {
+                                     const char *label, uint8_t textsize,
+	                                 uint8_t radius) {
   // Tweak arguments and pass to the newer initButtonUL() function...
   initButtonUL(gfx, x - (w / 2), y - (h / 2), w, h, outline, fill, textcolor,
-               label, textsize);
+               label, textsize, radius);
 }
 
 /**************************************************************************/
@@ -1218,10 +1219,10 @@ void Adafruit_GFX_Button::initButton(Adafruit_GFX *gfx, int16_t x, int16_t y,
                                      uint16_t w, uint16_t h, uint16_t outline,
                                      uint16_t fill, uint16_t textcolor,
                                      const char *label, uint8_t textsize_x,
-                                     uint8_t textsize_y) {
+                                     uint8_t textsize_y, uint8_t radius) {
   // Tweak arguments and pass to the newer initButtonUL() function...
   initButtonUL(gfx, x - (w / 2), y - (h / 2), w, h, outline, fill, textcolor,
-               label, textsize_x, textsize_y);
+               label, textsize_x, textsize_y, radius);
 }
 
 /**************************************************************************/
@@ -1244,9 +1245,9 @@ void Adafruit_GFX_Button::initButtonUL(Adafruit_GFX *gfx, int16_t x1,
                                        int16_t y1, uint16_t w, uint16_t h,
                                        uint16_t outline, uint16_t fill,
                                        uint16_t textcolor, const char *label,
-                                       uint8_t textsize) {
+                                       uint8_t textsize, uint8_t radius) {
   initButtonUL(gfx, x1, y1, w, h, outline, fill, textcolor, label, textsize,
-               textsize);
+               textsize, radius);
 }
 
 /**************************************************************************/
@@ -1270,7 +1271,7 @@ void Adafruit_GFX_Button::initButtonUL(Adafruit_GFX *gfx, int16_t x1,
                                        int16_t y1, uint16_t w, uint16_t h,
                                        uint16_t outline, uint16_t fill,
                                        uint16_t textcolor, const char *label,
-                                       uint8_t textsize_x, uint8_t textsize_y) {
+                                       uint8_t textsize_x, uint8_t textsize_y, uint8_t radius) {
   _x1 = x1;
   _y1 = y1;
   _w = w;
@@ -1284,6 +1285,7 @@ void Adafruit_GFX_Button::initButtonUL(Adafruit_GFX *gfx, int16_t x1,
   strncpy(_label, label, 9);
   _label[9] = 0; // strncpy does not place a null at the end.
                  // When 'label' is >9 characters, _label is not terminated.
+  _radius = radius;
 }
 
 /**************************************************************************/
@@ -1308,7 +1310,7 @@ void Adafruit_GFX_Button::drawButton(bool inverted) {
     text = _fillcolor;
   }
 
-  uint8_t r = min(_w, _h) / 4; // Corner radius
+  uint8_t r = _radius * min(_w, _h) / 10; // Corner radius
   _gfx->fillRoundRect(_x1, _y1, _w, _h, r, fill);
   _gfx->drawRoundRect(_x1, _y1, _w, _h, r, outline);
 
