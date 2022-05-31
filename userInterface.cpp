@@ -10,6 +10,7 @@ UserInterface_TypeDef ui;
 
 char strbuff[200];
 
+uint8_t uiUpdate = 1;
 uint32_t uiTimer;
 uint8_t uiUpdateIndex;
 volatile uint32_t beepTimer;
@@ -35,32 +36,9 @@ void UserInterface_TypeDef::Init() {
 	LL_mDelay(10);
 	SetBrightness(30);
 	lcd.setFont(&FreeSans9pt7b);
-	{
-		lcd.drawRGBBitmap(130, 72, (uint16_t*)ctLogoBitmap, ctLogoBitmapWidth, ctLogoBitmapHeight);
-		GFXcanvas16 canvas(150, 60);
-		canvas.fillScreen(ILI9341_WHITE);
-		canvas.setTextColor(ILI9341_DARKGREY);
-		canvas.setTextSize(1);
-		canvas.setCursor(10, 17);
-		canvas.setFont(&FreeSansOblique9pt7b);
-		canvas.print("SCT-2001");
-		canvas.setCursor(0, 41);
-		canvas.setFont(&FreeSans9pt7b);
-		canvas.print("CurveTracer");
-		lcd.drawRGBBitmap(103, 110, canvas.getBuffer(), 150, 60);
-		LL_mDelay(2000);
-		lcd.fillScreen(ILI9341_WHITE);
-	}
-	{
-		GFXcanvas16 canvas(320, 25);
-		canvas.setFont(&FreeSans9pt7b);
-		canvas.fillScreen(ILI9341_DARKGREEN);
-		canvas.setTextColor(ILI9341_WHITE);
-		canvas.setTextSize(1);
-		canvas.setCursor(5, 17);
-		canvas.print("SysVal");
-		lcd.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 25);
-	}
+	SplashScreen();
+	LL_mDelay(2000);
+	lcd.fillScreen(ILI9341_WHITE);
 	
 	Point_TypeDef min, max;
 	min.x = 0;
@@ -72,9 +50,7 @@ void UserInterface_TypeDef::Init() {
 	
 	ts.SetCalibration(min, max);
 	btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "OFF", 1, 1);
-	btn2.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKGREY, ILI9341_DARKCYAN, ILI9341_WHITE, "RESET", 1, 1);
-	btn1.drawButton();
-	btn2.drawButton();
+	btn2.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "RESET", 1, 1);
 }
 
 void UserInterface_TypeDef::Handler() {
@@ -119,20 +95,38 @@ void UserInterface_TypeDef::Handler() {
 		}
 	}
 	if (btn2.justPressed()) {
+		Beep(50);
+	}
+	if (btn2.justReleased()) {
 		system.Shutdown();
 	}
 	
-	if (btn1.justPressed() || btn1.justReleased()) {
+	if (btn1.justPressed() || btn1.justReleased() || uiUpdate) {
 		btn1.drawButton(btn1.isPressed());
 	}
-	if (btn2.justPressed() || btn2.justReleased()) {
+	if (btn2.justPressed() || btn2.justReleased() || uiUpdate) {
 		btn2.drawButton(btn2.isPressed());
 	}
 	
 	// Display
-	if (system.Ticks() - uiTimer >= 250) {
-		if (uiUpdateIndex == 0) {
+	if (system.Ticks() - uiTimer >= 250 || uiUpdate) {
+		uiUpdate = 0;
+		if (uiUpdateIndex == 0 || system.IsStartup()) {
 			uiUpdateIndex = 1;
+			
+			GFXcanvas16 canvas(320, 25);
+			canvas.setFont(&FreeSans9pt7b);
+			canvas.fillScreen(ILI9341_DARKCYAN);
+			canvas.setCursor(5, 17);
+			canvas.print("SysVar");
+			canvas.setCursor(267, 17);
+			canvas.setTextColor(system.OverTemperature() ? ILI9341_RED : ILI9341_WHITE);
+			sprintf(strbuff, "%d.%dC\n", (uint8_t)system.ReadDriverTemp(), (uint16_t)(system.ReadDriverTemp() * 10) % 10);
+			canvas.print(strbuff);
+			lcd.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 25);
+		}
+		if (uiUpdateIndex == 1 || system.IsStartup()) {
+			uiUpdateIndex = 0;
 			float v1 = ina226Ch1.GetVoltage();
 			float v2 = ina226Ch2.GetVoltage();
 			float v3 = ina226Ch3.GetVoltage();
@@ -153,22 +147,36 @@ void UserInterface_TypeDef::Handler() {
 			canvas.setTextColor(LL_GPIO_IsOutputPinSet(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN) ? ILI9341_DARKGREEN : ILI9341_DARKGREY);
 			sprintf(strbuff, "V3: %dmV\n", (uint16_t)v3);
 			canvas.print(strbuff);
-			lcd.drawRGBBitmap(0, 25, canvas.getBuffer(), 120, 120);
-		}
-		else if (uiUpdateIndex == 1) {
-			uiUpdateIndex = 0;
-			
-			GFXcanvas16 canvas(100, 25);
-			canvas.setFont(&FreeSans9pt7b);
-			canvas.fillScreen(ILI9341_DARKGREEN);
-			canvas.setCursor(35, 17);
-			canvas.setTextColor(system.ReadDriverTemp() >= 31 ? (system.OverTemperature() ? ILI9341_RED : ILI9341_ORANGE) : ILI9341_WHITE);
-			sprintf(strbuff, "%d.%02dC\n", (uint8_t)system.ReadDriverTemp(), (uint16_t)(system.ReadDriverTemp() * 100) % 100);
-			canvas.print(strbuff);
-			lcd.drawRGBBitmap(220, 0, canvas.getBuffer(), 100, 25);
+			lcd.drawRGBBitmap(5, 25, canvas.getBuffer(), 120, 120);
 		}
 		
 		uiTimer = system.Ticks();
+	}
+}
+
+void UserInterface_TypeDef::SplashScreen() {
+	{
+		lcd.drawRGBBitmap(130, 72, (uint16_t*)ctLogoBitmap, ctLogoBitmapWidth, ctLogoBitmapHeight);
+		GFXcanvas16 canvas(150, 60);
+		canvas.fillScreen(ILI9341_WHITE);
+		canvas.setTextColor(ILI9341_DARKGREY);
+		canvas.setCursor(10, 17);
+		canvas.setFont(&FreeSansOblique9pt7b);
+		canvas.print("SCT-2001");
+		canvas.setCursor(0, 41);
+		canvas.setFont(&FreeSans9pt7b);
+		canvas.print("CurveTracer");
+		lcd.drawRGBBitmap(103, 110, canvas.getBuffer(), 150, 60);
+	}
+	{
+		GFXcanvas16 canvas(250, 25);
+		canvas.setFont(&FreeSans9pt7b);
+		canvas.fillScreen(ILI9341_WHITE);
+		canvas.setTextColor(ILI9341_DARKGREY);
+		canvas.setCursor(0, 17);
+		sprintf(strbuff, "v%d.%d%c (%s)", FW_VER_MAJOR, FW_VER_MINOR, FW_VER_REV, FW_VER_DATE);
+		canvas.print(strbuff);
+		lcd.drawRGBBitmap(67, 213, canvas.getBuffer(), 250, 25);
 	}
 }
 

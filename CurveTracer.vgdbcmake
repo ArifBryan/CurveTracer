@@ -105,7 +105,6 @@
       <Enabled>true</Enabled>
       <SelectedAnalyzers>
         <string>alpha.cplusplus.IteratorRange</string>
-        <string>alpha.deadcode.UnreachableCode</string>
         <string>alpha.security.ArrayBoundV2</string>
         <string>apiModeling.google.GTest</string>
         <string>core.builtin.BuiltinFunctions</string>

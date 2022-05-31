@@ -24,6 +24,11 @@ extern "C" void EXTI9_Handler() {
 	
 }
 
+void I2C1_TransComplete_Handler() {
+	ina226Ch1.I2C_TransComplete_Handler();
+	ina226Ch2.I2C_TransComplete_Handler();
+	ina226Ch3.I2C_TransComplete_Handler();
+}
 extern "C" void SPI1_IRQHandler() {
 	if (LL_SPI_IsActiveFlag_TXE(SPI1) && !LL_SPI_IsActiveFlag_BSY(SPI1) && spiDACTransCount) {
 		spiDACTransCount--;
@@ -46,14 +51,6 @@ extern "C" void SPI1_IRQHandler() {
 	}
 }
 
-extern "C" void DMA1CH7_TC_Handler() {
-	ina226Ch1.DMARx_IRQ_Handler();
-}
-	
-extern "C" void DMA1CH6_TC_Handler() {
-	
-}
-
 void OutputControl_TypeDef::Init() {
 	ina226Ch1.Init();
 	ina226Ch2.Init();
@@ -61,7 +58,7 @@ void OutputControl_TypeDef::Init() {
 }
 
 void OutputControl_TypeDef::Handler() {
-	if (system.Ticks() - ctrlTimer >= 500) {
+	if (system.Ticks() - ctrlTimer >= 100 || system.IsStartup()) {
 		ina226Ch1.ReadData();
 		ina226Ch2.ReadData();
 		ina226Ch3.ReadData();

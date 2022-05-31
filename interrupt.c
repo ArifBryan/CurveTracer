@@ -13,9 +13,6 @@ void EXTI3_Handler(void);
 void EXTI4_Handler(void);
 void EXTI8_Handler(void);
 void EXTI9_Handler(void);
-void DMA1CH6_TC_Handler(void);
-void DMA1CH7_TC_Handler(void);
-
 volatile uint32_t ticks;
 
 void SysTick_Handler() {
@@ -26,20 +23,6 @@ void NMI_Handler() {
 	if (LL_RCC_IsActiveFlag_HSECSS()) {
 		CSSFault_Handler();
 		LL_RCC_ClearFlag_HSECSS();
-	}
-}
-
-void DMA1_Channel6_IRQHandler() {
-	if (LL_DMA_IsActiveFlag_TC6(DMA1)) {
-		DMA1CH6_TC_Handler();
-		LL_DMA_ClearFlag_TC6(DMA1);
-	}
-}
-
-void DMA1_Channel7_IRQHandler() {
-	if (LL_DMA_IsActiveFlag_TC7(DMA1)) {
-		DMA1CH7_TC_Handler();
-		LL_DMA_ClearFlag_TC7(DMA1);
 	}
 }
 

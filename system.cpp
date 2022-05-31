@@ -2,7 +2,7 @@
 #include "userInterface.h"
 
 #define UVLO_BYPASS		1
-#define PWRCTL_BYPASS	0
+#define PWRCTL_BYPASS	1
 
 void(*Shutdown_Callback)(void);
 void(*OverTemperature_Callback)(void);
@@ -13,7 +13,7 @@ volatile uint32_t sysCheckTmr;
 volatile uint16_t adcData[3];
 volatile uint8_t adcDataIdx;
 volatile uint8_t overTemp;
-uint8_t startup = 1;
+uint8_t startup;
 
 
 System_TypeDef system;
@@ -22,7 +22,7 @@ ILI9341_TypeDef lcd(SPI2, LCD_NSS_GPIO, LCD_NSS_PIN, LCD_DC_GPIO, LCD_DC_PIN, SP
 XPT2046_TypeDef ts(SPI2, XPT2046_NSS_GPIO, XPT2046_NSS_PIN, 1);
 I2CHandleTypeDef i2c1(I2C1);
 I2CHandleTypeDef i2c2(I2C2);
-INA226_TypeDef ina226Ch1(&i2c1, 0b1000000);//, I2C1_DMA, I2C1_DMA_RX_CH);
+INA226_TypeDef ina226Ch1(&i2c1, 0b1000000, 1);
 INA226_TypeDef ina226Ch2(&i2c1, 0b1000001);
 INA226_TypeDef ina226Ch3(&i2c1, 0b1000010);
 
@@ -59,6 +59,12 @@ extern "C" void SPI2_IRQHandler() {
 	lcd.SPI_IRQ_Handler();
 	ts.SPI_IRQ_Handler();
 }
+
+extern "C" void I2C1_EV_IRQHandler() {
+	i2c1.I2C_EV_IRQ_Handler();
+}
+
+extern void I2C1_TransComplete_Handler();
 
 void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_CallbackHandler)(void), void(*OverTemperature_CallbackHandler)(void)) {
 	// Peripheral init
@@ -114,7 +120,10 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 	}
 }
 
-void System_TypeDef::Handler() {	
+void System_TypeDef::Handler() {
+	// Startup flag
+	startup = (startup > 0 ? 2 : 1);
+	
 	// Status LED
 	if (Ticks() - sledTmr >= 100 && !LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
 		LL_GPIO_SetOutputPin(LED_STA_GPIO, LED_STA_PIN);
@@ -128,9 +137,10 @@ void System_TypeDef::Handler() {
 	
 	// Watchdog reset
 	LL_IWDG_ReloadCounter(IWDG);
-	
-	// Clear startup flag
-	startup = 0;
+}
+
+uint8_t System_TypeDef::IsStartup() {
+	return startup < 2;
 }
 
 void System_TypeDef::Ticks10ms_IRQ_Handler() {
@@ -164,7 +174,9 @@ void System_TypeDef::Ticks10ms_IRQ_Handler() {
 		
 		// Power supervisor
 		if (ReadVsenseVin() < 23000 && !UVLO_BYPASS) {
-			Shutdown();
+			if (!PWRCTL_BYPASS) {
+				Shutdown();
+			}
 		}
 		
 		sysCheckTmr = Ticks();
@@ -566,11 +578,10 @@ void System_TypeDef::I2C_Init() {
 	I2CInit_Struct.PeripheralMode = LL_I2C_MODE_I2C;
 	I2CInit_Struct.TypeAcknowledge = LL_I2C_ACK;
 		
-	i2c1.Init(&I2CInit_Struct);
+	i2c1.Init(&I2CInit_Struct, I2C1_TransComplete_Handler);
 	i2c2.Init(&I2CInit_Struct);
-
-	i2c1.DMARequestRX(1);
-	//i2c1.DMARequestTX(1);
+	
+	NVIC_EnableIRQ(I2C1_EV_IRQn);
 }
 
 void System_TypeDef::EXTI_Init() {

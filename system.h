@@ -24,6 +24,12 @@
 #include "XPT2046.h"
 #include "INA226.h"
 
+// Firmware version
+#define FW_VER_MAJOR	1
+#define FW_VER_MINOR	10
+#define FW_VER_REV		'a'
+#define FW_VER_DATE		__DATE__
+
 // GPIO pins
 #define VSENSE_5V_GPIO		GPIOA
 #define VSENSE_5V_PIN		LL_GPIO_PIN_1
@@ -156,6 +162,7 @@ struct System_TypeDef {
 	uint32_t ReadVsenseVin(void);
 	float ReadDriverTemp(void);
 	uint32_t Ticks(void);
+	uint8_t IsStartup(void);
 	void Ticks10ms_IRQ_Handler();
 private:
 	void RCC_Init(void);

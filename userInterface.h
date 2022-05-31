@@ -10,6 +10,8 @@ struct UserInterface_TypeDef {
 	uint8_t IsTouched(void);
 	void GetTouchPosition(uint16_t *x, uint16_t *y);
 	void Ticks10ms_IRQ_Handler();
+private:
+	void SplashScreen(void);
 };
 
 extern UserInterface_TypeDef ui;
