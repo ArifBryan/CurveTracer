@@ -76,6 +76,7 @@ struct INA226_TypeDef {
 	float GetVoltage(void);
 	float GetCurrent(void);
 	void I2C_TransComplete_Handler(void);
+	uint8_t IsReadComplete(void);
 	uint16_t Read(uint8_t reg);
 private:
 	I2CHandleTypeDef *i2c;
@@ -88,4 +89,5 @@ private:
 	volatile uint8_t dataBuffer[2];
 	volatile uint8_t readCount;
 	volatile uint8_t regBuffer;
+	volatile uint8_t readDone;
 };

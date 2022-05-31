@@ -6,6 +6,7 @@ OutputControl_TypeDef outCtl;
 uint32_t ctrlTimer;
 volatile uint8_t spiDACTransCount;
 volatile uint16_t spiDACBuffer[3];
+volatile uint8_t adcReadChIndex;
 
 float pv1 = 0, pv2 = 0.5, pv3 = 1.0;
 
@@ -24,10 +25,30 @@ extern "C" void EXTI9_Handler() {
 	
 }
 
+// I2C1 transmission complete callback
 void I2C1_TransComplete_Handler() {
 	ina226Ch1.I2C_TransComplete_Handler();
 	ina226Ch2.I2C_TransComplete_Handler();
 	ina226Ch3.I2C_TransComplete_Handler();
+	switch (adcReadChIndex) {
+	case 0:
+		if (ina226Ch1.IsReadComplete()) {
+			adcReadChIndex = 1;
+			ina226Ch2.ReadData();
+		}
+		break;
+	case 1:
+		if (ina226Ch2.IsReadComplete()) {
+			adcReadChIndex = 2;
+			ina226Ch3.ReadData();
+		}
+		break;
+	case 2:
+		if (ina226Ch3.IsReadComplete()) {
+			adcReadChIndex = 0; 
+		}
+		break;
+	}
 }
 extern "C" void SPI1_IRQHandler() {
 	if (LL_SPI_IsActiveFlag_TXE(SPI1) && !LL_SPI_IsActiveFlag_BSY(SPI1) && spiDACTransCount) {
@@ -60,8 +81,6 @@ void OutputControl_TypeDef::Init() {
 void OutputControl_TypeDef::Handler() {
 	if (system.Ticks() - ctrlTimer >= 100 || system.IsStartup()) {
 		ina226Ch1.ReadData();
-		ina226Ch2.ReadData();
-		ina226Ch3.ReadData();
 		
 		SetDACValue(1, 0xFFFF * pv1);
 		SetDACValue(2, 0xFFFF * pv2);

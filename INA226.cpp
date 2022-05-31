@@ -15,12 +15,21 @@ void INA226_TypeDef::Init() {
 void INA226_TypeDef::I2C_TransComplete_Handler() {
 	if (readCount == 2) {
 		vbus = (dataBuffer[0] << 8) | dataBuffer[1];
+		regBuffer = INA226_VSHUNT;
+		i2c->Read(addr, (uint8_t*)&regBuffer, 1, (uint8_t*)dataBuffer, 2);
+		readCount = 1;
+	}
+	else if (readCount == 1) {
+		vshunt = (dataBuffer[0] << 8) | dataBuffer[1];
 		readCount = 0;
+		readDone = 1;
 	}
 }
 
 void INA226_TypeDef::ReadData() {
+	i2c->WaitTransmission();
 	if (interrupt) {
+		readDone = 0;
 		readCount = 2;
 		regBuffer = INA226_VBUS;
 		i2c->Read(addr, (uint8_t*)&regBuffer, 1, (uint8_t*)dataBuffer, 2);
@@ -29,6 +38,13 @@ void INA226_TypeDef::ReadData() {
 		vbus = Read(INA226_VBUS);
 		vshunt = Read(INA226_VSHUNT);
 	}
+}
+
+uint8_t INA226_TypeDef::IsReadComplete() {
+	if (interrupt) {
+		return readDone;		
+	}
+	return 1;
 }
 
 float INA226_TypeDef::GetVoltage() {

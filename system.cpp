@@ -23,8 +23,8 @@ XPT2046_TypeDef ts(SPI2, XPT2046_NSS_GPIO, XPT2046_NSS_PIN, 1);
 I2CHandleTypeDef i2c1(I2C1);
 I2CHandleTypeDef i2c2(I2C2);
 INA226_TypeDef ina226Ch1(&i2c1, 0b1000000, 1);
-INA226_TypeDef ina226Ch2(&i2c1, 0b1000001);
-INA226_TypeDef ina226Ch3(&i2c1, 0b1000010);
+INA226_TypeDef ina226Ch2(&i2c1, 0b1000001, 1);
+INA226_TypeDef ina226Ch3(&i2c1, 0b1000010, 1);
 
 // Interrupt & exception handler
 extern "C" void CSSFault_Handler() {
