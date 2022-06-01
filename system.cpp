@@ -2,7 +2,7 @@
 #include "userInterface.h"
 
 #define UVLO_BYPASS		1
-#define PWRCTL_BYPASS	1
+#define PWRCTL_BYPASS	0
 
 void(*Shutdown_Callback)(void);
 void(*OverTemperature_Callback)(void);
@@ -145,7 +145,7 @@ uint8_t System_TypeDef::IsStartup() {
 
 void System_TypeDef::Ticks10ms_IRQ_Handler() {
 	// Power off button
-	if (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN) && !startup) {
+	if (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN) && !IsStartup()) {
 		if (Ticks() - pwrBtnTmr >= 200) {
 			LL_GPIO_SetOutputPin(BEEPER_GPIO, BEEPER_PIN);
 			LL_mDelay(50);
