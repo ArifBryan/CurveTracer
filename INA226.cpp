@@ -1,15 +1,19 @@
 #include "INA226.h"
 #include <string.h>
 
-void INA226_TypeDef::Init() {
+void INA226_TypeDef::Init(uint8_t vShuntConvTime, uint8_t vBusConvTime, uint8_t avg) {
 	uint16_t cfg;
 	
 	cfg = INA226_CONFIG_MODE_VSHVBUSCONT;
-	cfg |= INA226_CONFIG_VSHCT_204us << 3;
-	cfg |= INA226_CONFIG_VBUSCT_204us << 6;
-	cfg |= INA226_CONFIG_AVG_16 << 9;
+	cfg |= vShuntConvTime << 3;
+	cfg |= vBusConvTime << 6;
+	cfg |= avg << 9;
 	
 	Write(INA226_CONFIG, cfg);
+}
+
+void INA226_TypeDef::SetCurrentCal(float currentCal) {
+	this->currentCal = currentCal;
 }
 
 void INA226_TypeDef::I2C_TransComplete_Handler() {
@@ -52,7 +56,7 @@ float INA226_TypeDef::GetVoltage() {
 }
 
 float INA226_TypeDef::GetCurrent() {
-	return vshunt * currentCal;
+	return vshunt * 0.0025 / currentCal;
 }
 
 void INA226_TypeDef::Write(uint8_t reg, uint8_t *data, uint8_t len) {

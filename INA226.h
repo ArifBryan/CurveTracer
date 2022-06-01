@@ -69,10 +69,11 @@ struct INA226_TypeDef {
 		this->addr = addr << 1;
 		this->interrupt = interrupt;
 	}
-	void Init(void);
+	void Init(uint8_t vShuntConvTime, uint8_t vBusConvTime, uint8_t avg);
 	void Write(uint8_t reg, uint8_t *data, uint8_t len);
 	void Write(uint8_t reg, uint16_t data);
 	void ReadData(void);
+	void SetCurrentCal(float currentCal);
 	float GetVoltage(void);
 	float GetCurrent(void);
 	void I2C_TransComplete_Handler(void);
@@ -82,10 +83,10 @@ private:
 	I2CHandleTypeDef *i2c;
 	I2C_TypeDef *i2cPeriph;
 	uint8_t addr;
-	uint16_t currentCal = 1;
+	float currentCal = 1;
 	uint8_t interrupt;
 	volatile uint16_t vbus;
-	volatile uint16_t vshunt;
+	volatile int16_t vshunt;
 	volatile uint8_t dataBuffer[2];
 	volatile uint8_t readCount;
 	volatile uint8_t regBuffer;

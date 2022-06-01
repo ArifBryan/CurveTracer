@@ -2,6 +2,7 @@
 #include "serial.h"
 #include "userInterface.h"
 #include "outputControl.h"
+#include "curveTracer.h"
 
 #include "SysprogsProfiler.h"
 
@@ -11,6 +12,7 @@ void Startup_Handler() {
 	serial.Init();
 	ui.Init();
 	outCtl.Init();
+	curveTracer.Init();
 }
 
 void Shutdown_Handler() {
@@ -18,15 +20,16 @@ void Shutdown_Handler() {
 }
 
 void OverTemperature_Handler() {
-	outCtl.SetOutputState(0);
+	outCtl.DisableAllOutputs();
 }
 
 int main() {
-	system.Init(Startup_Handler, Shutdown_Handler, OverTemperature_Handler);
+	sys.Init(Startup_Handler, Shutdown_Handler, OverTemperature_Handler);
 	while (1) {		
-		system.Handler();
+		sys.Handler();
 		serial.Handler();
 		ui.Handler();
-		outCtl.Handler();		
+		outCtl.Handler();
+		curveTracer.Handler();
 	}
 }

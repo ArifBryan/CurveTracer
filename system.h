@@ -23,10 +23,11 @@
 #include "ILI9341.h"
 #include "XPT2046.h"
 #include "INA226.h"
+#include <math.h>
 
 // Firmware version
 #define FW_VER_MAJOR	1
-#define FW_VER_MINOR	10
+#define FW_VER_MINOR	20
 #define FW_VER_REV		'a'
 #define FW_VER_DATE		__DATE__
 
@@ -178,7 +179,7 @@ private:
 	void SetFanSpeed(uint32_t spd);
 };
 
-extern System_TypeDef system;
+extern System_TypeDef sys;
 extern UART_IT_TypeDef uart1;
 extern ILI9341_TypeDef lcd;
 extern XPT2046_TypeDef ts;

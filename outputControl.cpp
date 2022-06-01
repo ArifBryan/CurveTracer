@@ -1,5 +1,5 @@
 #include "outputControl.h"
-#include <system.h>
+#include "system.h"
 
 OutputControl_TypeDef outCtl;
 
@@ -8,7 +8,10 @@ volatile uint8_t spiDACTransCount;
 volatile uint16_t spiDACBuffer[3];
 volatile uint8_t adcReadChIndex;
 
-float pv1 = 0, pv2 = 0.5, pv3 = 1.0;
+#define LOOP_INTERVAL	0.01
+#define LOOP_INTERVALms LOOP_INTERVAL * 1000
+
+#define CH_STABLE_CNT	5
 
 // INA226 CH1 IRQ line
 extern "C" void EXTI4_Handler() {
@@ -73,21 +76,52 @@ extern "C" void SPI1_IRQHandler() {
 }
 
 void OutputControl_TypeDef::Init() {
-	ina226Ch1.Init();
-	ina226Ch2.Init();
-	ina226Ch3.Init();
+	ina226Ch1.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_204us, INA226_CONFIG_AVG_64);
+	ina226Ch2.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_204us, INA226_CONFIG_AVG_64);
+	ina226Ch3.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_204us, INA226_CONFIG_AVG_64);
+	
+	ina226Ch1.SetCurrentCal(0.1);
+	ina226Ch2.SetCurrentCal(0.1);
+	ina226Ch3.SetCurrentCal(0.1);
+	
+	ch1.pidV.SetConstants(1.5, 0.0057, 0.2, LOOP_INTERVAL);
+	ch1.pidI.SetConstants(2.5, 0.02, 0.1, LOOP_INTERVAL);
+	ch1.pidV.SetOutputRange(0, 0xFFFF);
+	ch1.pidI.SetOutputRange(0, 0xFFFF);
+	
+	ch2.pidV.SetConstants(1.5, 0.0057, 0.2, LOOP_INTERVAL);
+	ch2.pidI.SetConstants(2.5, 0.02, 0.1, LOOP_INTERVAL);
+	ch2.pidV.SetOutputRange(0, 0xFFFF);
+	ch2.pidI.SetOutputRange(0, 0xFFFF);
+	
+	ch3.pidV.SetConstants(1.5, 0.0057, 0.2, LOOP_INTERVAL);
+	ch3.pidI.SetConstants(1.5, 0.01, 0.1, LOOP_INTERVAL);
+	ch3.pidV.SetOutputRange(0, 0xFFFF);
+	ch3.pidI.SetOutputRange(0, 0xFFFF);
+	
+	ch1.SetVoltage(1500);
+	ch1.SetCurrent(500);
+	ch2.SetVoltage(1500);
+	ch2.SetCurrent(500);
+	ch3.SetVoltage(1500);
+	ch3.SetCurrent(500);
 }
 
 void OutputControl_TypeDef::Handler() {
-	if (system.Ticks() - ctrlTimer >= 100 || system.IsStartup()) {
+	if (sys.Ticks() - ctrlTimer >= LOOP_INTERVALms || sys.IsStartup()) {
 		ina226Ch1.ReadData();
 		
-		SetDACValue(1, 0xFFFF * pv1);
-		SetDACValue(2, 0xFFFF * pv2);
-		SetDACValue(3, 0xFFFF * pv3);
+		ch1.Handler();
+		ch2.Handler();
+		ch3.Handler();
+		
+		SetDACValue(1, ch1.mv);
+		SetDACValue(2, ch2.mv);
+		SetDACValue(3, ch3.mv);
+		
 		WriteDACValues();
 		
-		ctrlTimer = system.Ticks();
+		ctrlTimer = sys.Ticks();
 	}
 }
 
@@ -104,23 +138,85 @@ void OutputControl_TypeDef::WriteDACValues() {
 	}
 }
 
-void OutputControl_TypeDef::SetOutputState(uint8_t state) {
-	if (state) {
-		LL_GPIO_SetOutputPin(OPA548_CH1_ES_GPIO, OPA548_CH1_ES_PIN);
-		LL_GPIO_SetOutputPin(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN);	
-		LL_GPIO_SetOutputPin(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN);
+void OutputControl_TypeDef::DisableAllOutputs() {
+	LL_GPIO_ResetOutputPin(OPA548_CH1_ES_GPIO, OPA548_CH1_ES_PIN);	
+	LL_GPIO_ResetOutputPin(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN);	
+	LL_GPIO_ResetOutputPin(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN);	
+}
+
+void Channel_TypeDef::Handler() {
+	vMeas = ina226->GetVoltage();
+	iMeas = ina226->GetCurrent();
+	
+	if (GetState()) {
+		if (iMeas > iSet) {
+			mode = CH_MODE_CURRENT;
+		}
+		else if (vMeas >= vSet || abs(iMeas) < iSet * 0.01) {
+			mode = CH_MODE_VOLTAGE;
+		}
+			
+		pidV.Calculate(vSet, vMeas);
+		pidI.Calculate(iSet, iMeas);
+		
+		if (mode == CH_MODE_VOLTAGE) {
+			mv = pidV.GetOutput();
+			if (abs(pidV.GetError()) > 5) {
+				stableCounter = CH_STABLE_CNT;
+			}
+			else {
+				stableCounter = (stableCounter > 0 ? stableCounter - 1 : stableCounter);
+			}
+		}
+		else {
+			mv = pidI.GetOutput();
+			pidV.Reset();
+			if (abs(pidV.GetError()) > 5) {
+				stableCounter = CH_STABLE_CNT;
+			}
+			else {
+				stableCounter = (stableCounter > 0 ? stableCounter - 1 : stableCounter);
+			}
+		}
 	}
 	else {
-		LL_GPIO_ResetOutputPin(OPA548_CH1_ES_GPIO, OPA548_CH1_ES_PIN);
-		LL_GPIO_ResetOutputPin(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN);
-		LL_GPIO_ResetOutputPin(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN);
+		pidV.Reset();
+		pidI.Reset();
+		mode = CH_MODE_FLOATING;
+		mv = 0;
 	}
 }
 
-uint8_t OutputControl_TypeDef::IsOutputEnabled() {
-	uint8_t t = 0;
-	t |= LL_GPIO_IsOutputPinSet(OPA548_CH1_ES_GPIO, OPA548_CH1_ES_PIN);
-	t |= LL_GPIO_IsOutputPinSet(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN);
-	t |= LL_GPIO_IsOutputPinSet(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN);
-	return t;
+uint8_t Channel_TypeDef::IsStable() {
+	return stableCounter == 0;
+}
+
+void Channel_TypeDef::SetVoltage(float vSet) {
+	this->vSet = vSet;
+	stableCounter = CH_STABLE_CNT;
+}
+void Channel_TypeDef::SetCurrent(float iSet) {
+	this->iSet = iSet;
+	stableCounter = CH_STABLE_CNT;
+}
+
+float Channel_TypeDef::GetVoltage() {
+	return vMeas;
+}
+float Channel_TypeDef::GetCurrent() {
+	return iMeas;
+}
+
+void Channel_TypeDef::SetState(uint8_t en) {
+	if (en) {
+		LL_GPIO_SetOutputPin(gpio, pin);
+		mode = CH_MODE_CURRENT;
+		stableCounter = CH_STABLE_CNT;
+	}
+	else {
+		LL_GPIO_ResetOutputPin(gpio, pin);
+	}
+}
+uint8_t Channel_TypeDef::GetState() {
+	return LL_GPIO_IsOutputPinSet(gpio, pin);
 }

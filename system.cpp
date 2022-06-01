@@ -16,7 +16,7 @@ volatile uint8_t overTemp;
 uint8_t startup;
 
 
-System_TypeDef system;
+System_TypeDef sys;
 UART_IT_TypeDef uart1(USART1, &ticks);
 ILI9341_TypeDef lcd(SPI2, LCD_NSS_GPIO, LCD_NSS_PIN, LCD_DC_GPIO, LCD_DC_PIN, SPI2_DMA, SPI2_DMA_TX_CH);
 XPT2046_TypeDef ts(SPI2, XPT2046_NSS_GPIO, XPT2046_NSS_PIN, 1);
@@ -41,7 +41,7 @@ extern "C" void CSSFault_Handler() {
 }
 
 extern "C" void Ticks10ms_Handler() {
-	system.Ticks10ms_IRQ_Handler();
+	sys.Ticks10ms_IRQ_Handler();
 	ui.Ticks10ms_IRQ_Handler();
 }
 

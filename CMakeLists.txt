@@ -54,6 +54,10 @@ add_bsp_based_executable(
 		XPT2046.cpp
 		XPT2046.h
 		ctLogoBitmap.h
+		PID.h
+		PID.cpp
+		curveTracer.h
+		curveTracer.cpp
 	GENERATE_BIN
 	GENERATE_MAP
 	OUTPUT_RELOCATION_RECORDS)
