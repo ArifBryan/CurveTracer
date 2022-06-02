@@ -2,7 +2,7 @@
 #include "userInterface.h"
 
 #define UVLO_BYPASS		1
-#define PWRCTL_BYPASS	0
+#define PWRCTL_BYPASS	1
 
 void(*Shutdown_Callback)(void);
 void(*OverTemperature_Callback)(void);

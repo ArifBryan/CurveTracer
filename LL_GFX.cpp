@@ -1326,6 +1326,9 @@ void Adafruit_GFX_Button::drawButton(bool inverted) {
 			&text_y,
 			&text_w,
 			&text_h);
+		if (strlen(_label) == 1 && _label[0] == '-') {
+			text_h += 9;
+		}
 		// with this rectangle set the cursor to center the text in the button
 		_gfx->setCursor((_x1 + ((_w - text_w) / 2) - 1), (_y1 + ((_h + text_h) / 2)));
 	}
