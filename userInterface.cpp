@@ -12,6 +12,7 @@ UserInterface_TypeDef ui;
 
 char strbuff[200];
 
+uint8_t uiRedraw = 1;
 uint8_t uiUpdate = 1;
 uint32_t uiTimer;
 uint8_t uiUpdateIndex;
@@ -19,7 +20,7 @@ volatile uint32_t beepTimer;
 uint32_t beepTime;
 volatile uint8_t beepCount;
 uint32_t touchTimer;
-uint8_t screenIndex;
+uint8_t uiMenuIndex;
 uint8_t editVar;
 
 float vstart, vend, vstep, irange;
@@ -118,25 +119,29 @@ void UserInterface_TypeDef::Handler() {
 	keypad.Handler();
 	
 	// Display
-	if (sys.Ticks() - uiTimer >= 250 || uiUpdate) {
-		ScreenMenu();
-		uiUpdate = 0;
+	if (sys.IsStartup()) {
+		uiRedraw = 1;
+	}
+	if (sys.Ticks() - uiTimer >= 250 || uiRedraw) {
+		uiUpdate = 1;
+		
 		uiTimer = sys.Ticks();
 	}
+	ScreenMenu();
 }
 
 
 void UserInterface_TypeDef::SetScreenMenu(uint8_t index) {
-	screenIndex = index;
+	uiMenuIndex = index;
 	uiUpdateIndex = 0;
-	uiUpdate = 1;
+	uiRedraw = 1;
 	lcd.fillRect(0, 25, 320, 215, ILI9341_WHITE);
 }
 
 void UserInterface_TypeDef::ButtonHandler() {	
 	if (keypad.IsEnabled()) {
 		if (keypad.IsOKPressed()) {
-			switch (screenIndex) {
+			switch (uiMenuIndex) {
 			case 0:
 				switch (editVar) {
 				case 1:
@@ -180,14 +185,14 @@ void UserInterface_TypeDef::ButtonHandler() {
 		if (keypad.IsPressed()) {
 			Beep(50);
 			if (keypad.IsOKPressed() || keypad.IsCancelPressed()) {
-				uiUpdate = 1;
+				uiRedraw = 1;
 				editVar = 0;
 				keypad.Disable();
 			}
 		}
 	}
 	if(!keypad.IsEnabled()) {
-		switch (screenIndex) {
+		switch (uiMenuIndex) {
 		case 0:
 			if (btn1.justPressed()) {
 				Beep(50);
@@ -293,7 +298,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 				Beep(50);
 				
 				curveTracer.SetupChannel(&outCtl.ch1, &outCtl.ch2, &outCtl.ch3);
-				curveTracer.SetupParams(vstart, vend, vstep, 100);
+				curveTracer.SetupParams(vstart, vend, vstep, irange, 100);
 				curveTracer.Start();
 				plot.ResetLinePlot();
 				SetScreenMenu(2);
@@ -304,12 +309,14 @@ void UserInterface_TypeDef::ButtonHandler() {
 			}
 			break;
 		case 2:
-			if (curveTracer.IsSamplingDone()) {
+			if (curveTracer.IsSamplingDone() && curveTracer.IsNewSample()) {
 				btn1.setLabel("START");
 				btn1.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
 				btn1.drawButton(btn1.isPressed());
 				ui.Beep(50, 2);
-				curveTracer.IsSamplingDone(1);
+			}
+			if (curveTracer.IsNewSample(1)) {
+				uiUpdate = 1;
 			}
 			if (btn1.justPressed()) {
 				Beep(50);
@@ -355,14 +362,13 @@ void UserInterface_TypeDef::ButtonHandler() {
 }
 
 void UserInterface_TypeDef::ScreenMenu() {
-	if (uiUpdateIndex == 0 || sys.IsStartup()) {
-		uiUpdateIndex = 1;
+	if (uiRedraw || uiUpdate) {
 			
 		GFXcanvas16 canvas(320, 25);
 		canvas.setFont(&FreeSans9pt7b);
 		canvas.fillScreen(ILI9341_DARKCYAN);
 		canvas.setCursor(5, 17);
-		switch (screenIndex) {
+		switch (uiMenuIndex) {
 		case 0:
 			canvas.print("Source & Measure");
 			break;
@@ -380,14 +386,9 @@ void UserInterface_TypeDef::ScreenMenu() {
 		lcd.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 25);
 	}
 	if (!keypad.IsEnabled()) {
-		if (screenIndex == 2) {
-			if (curveTracer.IsNewSample(1) && curveTracer.IsSampling()) {
-				plot.DrawLine(curveTracer.data[curveTracer.GetSampleCount() - 1].v,	curveTracer.data[curveTracer.GetSampleCount() - 1].i);
-			}
-		}
-		switch (screenIndex) {
+		switch (uiMenuIndex) {
 		case 0:
-			if (uiUpdate) {
+			if (uiRedraw) {
 				if (outCtl.ch1.GetState() || outCtl.ch2.GetState() || outCtl.ch3.GetState()) {
 					btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "ON", 1, 1);
 				}
@@ -418,8 +419,7 @@ void UserInterface_TypeDef::ScreenMenu() {
 				canvas.print("CH3");
 				lcd.drawRGBBitmap(3, 27, canvas.getBuffer(), 40, 100);
 			}
-			if (uiUpdateIndex == 1 || sys.IsStartup()) {
-				uiUpdateIndex = 0;
+			if (uiRedraw || uiUpdate) {
 				
 				if (outCtl.ch1.GetState()) {
 					text1.Draw((int16_t)outCtl.ch1.GetVoltage());
@@ -448,7 +448,7 @@ void UserInterface_TypeDef::ScreenMenu() {
 			}
 			break;
 		case 1:
-			if (uiUpdate) {
+			if (uiRedraw) {
 				btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "START", 1, 1);
 				btn2.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "SMU", 1, 1);
 				text1.Init(60, 30, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
@@ -474,17 +474,17 @@ void UserInterface_TypeDef::ScreenMenu() {
 				canvas.print("Range");
 				lcd.drawRGBBitmap(3, 27, canvas.getBuffer(), 60, 100);
 				
-				text1.Draw(vstart);
-				text2.Draw(vend);
+				text1.Draw((int16_t)vstart);
+				text2.Draw((int16_t)vend);
 				text3.Draw(vstep);
-				text4.Draw(irange);
+				text4.Draw((int16_t)irange);
 			}
-			if (uiUpdate == 1 || sys.IsStartup()) {
+			if (uiRedraw || uiUpdate) {
 				
 			}
 			break;
 		case 2:
-			if (uiUpdate) {
+			if (uiRedraw) {
 				if (curveTracer.IsSampling()) {
 					btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "STOP", 1, 1);
 				}
@@ -501,12 +501,18 @@ void UserInterface_TypeDef::ScreenMenu() {
 				plot.Init(20, 35, 195, 188, "mV", "mA", vstart, vend, 0, irange);
 				plot.SetPlotColor(ILI9341_ORANGE);
 			}
-			if (uiUpdate == 1 || sys.IsStartup()) {
-				
+			if (uiRedraw || uiUpdate) {
+				if (curveTracer.GetSampleCount() > 0) {
+					plot.DrawLine(
+						curveTracer.data[curveTracer.GetSampleCount() - 1].v, 
+						curveTracer.data[curveTracer.GetSampleCount() - 1].i);
+				}
 			}
 			break;
 		}
 	}
+	uiRedraw = 0;
+	uiUpdate = 0;
 }
 
 // Plot
@@ -519,7 +525,10 @@ void Plot_TypeDef::DrawPoint(float xVal, float yVal) {
 		xVal = xVal / (xMax - xMin);
 		yVal = yVal / (yMax - yMin);
 		
-		lcd.drawPixel(gx + xVal * w, gy - yVal * h, plotColor);
+		uint16_t x = round(gx + xVal * w);
+		uint16_t y = round(gy - yVal * h);
+		
+		lcd.drawPixel(x, y, plotColor);
 	}
 }
 void Plot_TypeDef::DrawLine(float x1Val, float y1Val) {
@@ -530,14 +539,18 @@ void Plot_TypeDef::DrawLine(float x1Val, float y1Val) {
 		y1Val -= yMin;
 		x1Val = x1Val / (xMax - xMin);
 		y1Val = y1Val / (yMax - yMin);
+		
+		uint16_t x = round(gx + x1Val * w);
+		uint16_t y = round(gy - y1Val * h);
+		
 		if (lPoint[0] == 0 && lPoint[1] == 0) {
-			lPoint[0] = gx + x1Val * w;
-			lPoint[1] = gy - y1Val * h;
+			lPoint[0] = x;
+			lPoint[1] = y;
 		}
 		
-		lcd.drawLine(lPoint[0], lPoint[1], gx + x1Val * w, gy - y1Val * h, plotColor);
-		lPoint[0] = gx + x1Val * w;
-		lPoint[1] = gy - y1Val * h;
+		lcd.drawLine(lPoint[0], lPoint[1], x, y, plotColor);
+		lPoint[0] = x;
+		lPoint[1] = y;
 	}
 }
 void Plot_TypeDef::DrawLine(float x1Val, float y1Val, float x2Val, float y2Val) {

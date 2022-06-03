@@ -17,16 +17,17 @@ void CurveTracer_TypeDef::Handler() {
 			data[samplePtr].i = pA->GetCurrent();
 			data[samplePtr].v = pA->GetVoltage() - pRef->GetVoltage();
 			samplePtr++;
-			if (samplePtr < sampleLen) {
-				vSample += vStep;
-				pA->SetVoltage(pRef->GetSetVoltage() + vSample);
-			}
-			else {
+			if (samplePtr >= sampleLen || data[samplePtr - 1].i > iLim) {
 				run = 0;
 				pRef->SetVoltage(OUT_MIN_V);
 				pA->SetVoltage(OUT_MIN_V);
 				pB->SetVoltage(OUT_MIN_V);
 				outCtl.DisableAllOutputs();
+				end = 1;
+			}
+			else if (samplePtr < sampleLen) {
+				vSample += vStep;
+				pA->SetVoltage(pRef->GetSetVoltage() + vSample);
 			}
 			newSample = 1;
 		}
@@ -37,6 +38,7 @@ void CurveTracer_TypeDef::Handler() {
 
 void CurveTracer_TypeDef::Start() {
 	run = 1;
+	end = 0;
 	samplePtr = 0;
 	vSample = vStart;
 	pRef->SetVoltage(OUT_MIN_V);
@@ -61,13 +63,8 @@ uint8_t CurveTracer_TypeDef::IsNewSample(uint8_t clear) {
 	return t;
 }
 
-uint8_t CurveTracer_TypeDef::IsSamplingDone(uint8_t clear) {
-	uint8_t t = run == 0 && samplePtr >= sampleLen && sampleLen > 0;
-	if (t && clear) {
-		samplePtr = 0;
-	}
-	
-	return t;
+uint8_t CurveTracer_TypeDef::IsSamplingDone() {
+	return end;
 }
 
 uint8_t CurveTracer_TypeDef::IsSampling() {

@@ -18,27 +18,28 @@ struct CurveTracer_TypeDef {
 		pA = pointA;
 		pB = pointB;
 	}
-	void SetupParams(float vStart, float vEnd, float vStep, uint32_t tSample) {
+	void SetupParams(float vStart, float vEnd, float vStep, float iLim, uint32_t tSample) {
 		this->vStart = vStart;
 		this->vEnd = vEnd;
 		this->vStep = vStep;
 		this->tSample = (tSample < CT_MIN_SAMPLE_TIME ? CT_MIN_SAMPLE_TIME : tSample);
-		sampleLen = abs(vStart - vEnd) / vStep;
+		this->iLim = iLim;
+		sampleLen = abs(vStart - vEnd) / vStep + 1;
 	}
 	uint32_t GetSampleLength(void) {return sampleLen;}
 	uint32_t GetSampleCount(void) {return samplePtr;}
 	void Start(void);
 	void Stop(void);
 	uint8_t IsSampling(void);
-	uint8_t IsSamplingDone(uint8_t clear);
-	uint8_t IsSamplingDone() {return IsSamplingDone(0);}
+	uint8_t IsSamplingDone();
 	uint8_t IsNewSample(uint8_t clear);
 	uint8_t IsNewSample() {return IsNewSample(0);}
 	SampleData_TypeDef data[1000];
 private:
 	uint8_t run;
+	uint8_t end;
 	Channel_TypeDef *pRef, *pA, *pB;
-	float vStart, vEnd, vStep;
+	float vStart, vEnd, vStep, iLim;
 	float vSample, iSample;
 	uint32_t tSample;
 	uint32_t samplePtr;
