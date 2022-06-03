@@ -381,7 +381,7 @@ void UserInterface_TypeDef::ScreenMenu() {
 	}
 	if (!keypad.IsEnabled()) {
 		if (screenIndex == 2) {
-			if (curveTracer.IsNewSample(1)) {
+			if (curveTracer.IsNewSample(1) && curveTracer.IsSampling()) {
 				plot.DrawLine(curveTracer.data[curveTracer.GetSampleCount() - 1].v,	curveTracer.data[curveTracer.GetSampleCount() - 1].i);
 			}
 		}
