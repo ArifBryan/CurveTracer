@@ -153,16 +153,16 @@ void UserInterface_TypeDef::ButtonHandler() {
 				btn1.setLabel("OFF");
 				btn1.setColor(ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE);
 			}
-			else {			
+			else {
+				outCtl.ch1.SetVoltage(1500);
+				outCtl.ch2.SetVoltage(13500);
+				outCtl.ch3.SetVoltage(21500);
 				outCtl.ch1.SetState(1);
 				outCtl.ch2.SetState(1);
 				outCtl.ch3.SetState(1);
 			
 				btn1.setLabel("ON");
 				btn1.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
-			
-				lcd.fillRect(19, 40, 191, 182, ILI9341_WHITE);
-				curveTracer.Start();
 			}
 		}
 		

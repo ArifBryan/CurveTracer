@@ -161,7 +161,7 @@ void Channel_TypeDef::Handler() {
 		
 		if (mode == CH_MODE_VOLTAGE) {
 			mv = pidV.GetOutput();
-			if (abs(pidV.GetError()) > 1.5) {
+			if (abs(pidV.GetError()) > 1.25) {
 				stableCounter = CH_STABLE_CNT;
 			}
 			else {
@@ -171,7 +171,7 @@ void Channel_TypeDef::Handler() {
 		else {
 			mv = pidI.GetOutput();
 			pidV.Reset();
-			if (abs(pidV.GetError()) > 1.5) {
+			if (abs(pidV.GetError()) > 1.25) {
 				stableCounter = CH_STABLE_CNT;
 			}
 			else {

@@ -62,7 +62,9 @@ void CurveTracer_TypeDef::Start() {
 	nextStep = 1;
 	tracerCounter = 0;
 	traceVoltage = 2100;
+	outCtl.ch1.SetVoltage(1500);
 	outCtl.ch2.SetVoltage(traceVoltage);
+	outCtl.ch3.SetVoltage(1500);
 	outCtl.ch1.SetState(1);
 	outCtl.ch2.SetState(1);
 	outCtl.ch3.SetState(1);
