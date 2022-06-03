@@ -100,11 +100,11 @@ void OutputControl_TypeDef::Init() {
 	ch3.pidI.SetOutputRange(0, 0xFFFF);
 	
 	ch1.SetVoltage(1500);
-	ch1.SetCurrent(500);
+	ch1.SetCurrent(1000);
 	ch2.SetVoltage(1500);
-	ch2.SetCurrent(500);
+	ch2.SetCurrent(1000);
 	ch3.SetVoltage(1500);
-	ch3.SetCurrent(500);
+	ch3.SetCurrent(1000);
 }
 
 void OutputControl_TypeDef::Handler() {
@@ -161,7 +161,7 @@ void Channel_TypeDef::Handler() {
 		
 		if (mode == CH_MODE_VOLTAGE) {
 			mv = pidV.GetOutput();
-			if (abs(pidV.GetError()) > 5) {
+			if (abs(pidV.GetError()) > 1.5) {
 				stableCounter = CH_STABLE_CNT;
 			}
 			else {
@@ -171,7 +171,7 @@ void Channel_TypeDef::Handler() {
 		else {
 			mv = pidI.GetOutput();
 			pidV.Reset();
-			if (abs(pidV.GetError()) > 5) {
+			if (abs(pidV.GetError()) > 1.5) {
 				stableCounter = CH_STABLE_CNT;
 			}
 			else {

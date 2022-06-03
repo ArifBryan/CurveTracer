@@ -58,6 +58,8 @@ add_bsp_based_executable(
 		PID.cpp
 		curveTracer.h
 		curveTracer.cpp
+		curveTracer.cpp
+		curveTracer.h
 	GENERATE_BIN
 	GENERATE_MAP
 	OUTPUT_RELOCATION_RECORDS)
