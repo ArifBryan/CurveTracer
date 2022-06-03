@@ -27,7 +27,7 @@
 
 // Firmware version
 #define FW_VER_MAJOR	1
-#define FW_VER_MINOR	30
+#define FW_VER_MINOR	40
 #define FW_VER_REV		'a'
 #define FW_VER_DATE		__DATE__
 

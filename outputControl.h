@@ -4,6 +4,11 @@
 #include "system.h"
 #include "PID.h"
 
+#define OUT_MIN_V	 1500
+#define OUT_MAX_V	21500
+#define OUT_MIN_I	-1000
+#define OUT_MAX_I	 1000
+
 #define CH_MODE_FLOATING	0
 #define CH_MODE_VOLTAGE		1
 #define CH_MODE_CURRENT		2
@@ -17,6 +22,8 @@ struct Channel_TypeDef {
 	void Handler(void);
 	void SetVoltage(float vSet);
 	void SetCurrent(float iSet);
+	float GetSetVoltage(void) {return vSet;}
+	float GetSetCurrent(void) {return iSet;}
 	float GetVoltage(void);
 	float GetCurrent(void);
 	void SetState(uint8_t en);

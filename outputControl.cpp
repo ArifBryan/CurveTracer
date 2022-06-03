@@ -11,7 +11,7 @@ volatile uint8_t adcReadChIndex;
 #define LOOP_INTERVAL	0.01
 #define LOOP_INTERVALms LOOP_INTERVAL * 1000
 
-#define CH_STABLE_CNT	5
+#define CH_STABLE_CNT	8
 
 // INA226 CH1 IRQ line
 extern "C" void EXTI4_Handler() {
@@ -192,11 +192,11 @@ uint8_t Channel_TypeDef::IsStable() {
 }
 
 void Channel_TypeDef::SetVoltage(float vSet) {
-	this->vSet = vSet;
+	this->vSet = (vSet < OUT_MIN_V ? OUT_MIN_V : (vSet > OUT_MAX_V ? OUT_MAX_V : vSet));
 	stableCounter = CH_STABLE_CNT;
 }
 void Channel_TypeDef::SetCurrent(float iSet) {
-	this->iSet = iSet;
+	this->iSet = (iSet < OUT_MIN_I ? OUT_MIN_I : (iSet > OUT_MAX_I ? OUT_MAX_I : iSet));
 	stableCounter = CH_STABLE_CNT;
 }
 
