@@ -81,7 +81,7 @@ void OutputControl_TypeDef::Init() {
 	ina226Ch3.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_204us, INA226_CONFIG_AVG_128);
 	
 	ina226Ch1.SetCurrentCal(0.05);
-	ina226Ch2.SetCurrentCal(0.05);
+	ina226Ch2.SetCurrentCal(0.0521);
 	ina226Ch3.SetCurrentCal(0.05);
 	
 	ch1.pidV.SetConstants(1.5, 0.005, 0.2, LOOP_INTERVAL);
