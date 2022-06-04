@@ -47,6 +47,7 @@ void CurveTracer_TypeDef::Start() {
 	pRef->SetState(1);
 	pA->SetState(1);
 	pB->SetState(1);
+	tracerTimer = sys.Ticks();
 }
 
 void CurveTracer_TypeDef::Stop() {

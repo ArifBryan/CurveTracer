@@ -4,7 +4,7 @@
 #include "system.h"
 
 struct Plot_TypeDef {
-	void Init(uint16_t xPos, uint16_t yPos, uint16_t w, uint16_t h, const char* xLabel, const char* yLabel, float xMin, float xMax, float yMin, float yMax);
+	void Init(uint16_t xPos, uint16_t yPos, uint16_t w, uint16_t h, const char* xLabel, const char* yLabel, float xMin, float xMax, float yMin, float yMax, uint8_t xDiv, uint8_t yDiv);
 	void SetPlotColor(uint16_t color) {
 		plotColor = color;
 	}

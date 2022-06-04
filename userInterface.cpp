@@ -14,6 +14,7 @@ char strbuff[200];
 
 uint8_t uiRedraw = 1;
 uint8_t uiUpdate = 1;
+uint8_t uiNotify;
 uint32_t uiTimer;
 uint8_t uiUpdateIndex;
 volatile uint32_t beepTimer;
@@ -314,6 +315,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 				btn1.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
 				btn1.drawButton(btn1.isPressed());
 				ui.Beep(50, 2);
+				uiNotify = 1;
 			}
 			if (curveTracer.IsNewSample(1)) {
 				uiUpdate = 1;
@@ -332,11 +334,14 @@ void UserInterface_TypeDef::ButtonHandler() {
 					btn1.setLabel("START");
 					btn1.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
 				}
+				uiNotify = 1;
 			}
 			if (btn3.justPressed()) {
 				Beep(50);
 				curveTracer.Stop();
 				plot.Clear();
+				uiRedraw = 1;
+				uiNotify = 1;
 			}
 		
 			if (!keypad.IsEnabled()) {
@@ -362,23 +367,31 @@ void UserInterface_TypeDef::ButtonHandler() {
 }
 
 void UserInterface_TypeDef::ScreenMenu() {
-	if (uiRedraw || uiUpdate) {
-			
+	if (uiRedraw || uiUpdate || uiNotify) {
 		GFXcanvas16 canvas(320, 25);
 		canvas.setFont(&FreeSans9pt7b);
-		canvas.fillScreen(ILI9341_DARKCYAN);
-		canvas.setCursor(5, 17);
 		switch (uiMenuIndex) {
 		case 0:
-			canvas.print("Source & Measure");
+			canvas.fillScreen(ILI9341_DARKCYAN);
+			sprintf(strbuff, "Source & Measure");
 			break;
 		case 1:
-			canvas.print("Trace Setup");
+			canvas.fillScreen(ILI9341_DARKCYAN);
+			sprintf(strbuff, "Trace Setup");
 			break;
 		case 2:
-			canvas.print("Trace");
+			if (curveTracer.IsSampling()) {
+				canvas.fillScreen(ILI9341_DARKGREEN);
+				sprintf(strbuff, "Trace - Running");
+			}
+			else {
+				canvas.fillScreen(ILI9341_DARKCYAN);
+				sprintf(strbuff, "Trace");
+			}
 			break;
 		}
+		canvas.setCursor(5, 17);
+		canvas.print(strbuff);
 		canvas.setCursor(267, 17);
 		canvas.setTextColor(sys.OverTemperature() ? ILI9341_RED : ILI9341_WHITE);
 		sprintf(strbuff, "%d.%dC\n", (uint8_t)sys.ReadDriverTemp(), (uint16_t)(sys.ReadDriverTemp() * 10) % 10);
@@ -498,7 +511,7 @@ void UserInterface_TypeDef::ScreenMenu() {
 				btn2.drawButton(btn2.isPressed());
 				btn3.drawButton(btn3.isPressed());
 				
-				plot.Init(20, 35, 195, 188, "mV", "mA", vstart, vend, 0, irange);
+				plot.Init(20, 36, 195, 188, "mV", "mA", vstart, vend, 0, irange, 10, 10);
 				plot.SetPlotColor(ILI9341_ORANGE);
 			}
 			if (uiRedraw || uiUpdate) {
@@ -513,6 +526,7 @@ void UserInterface_TypeDef::ScreenMenu() {
 	}
 	uiRedraw = 0;
 	uiUpdate = 0;
+	uiNotify = 0;
 }
 
 // Plot
@@ -524,9 +538,11 @@ void Plot_TypeDef::DrawPoint(float xVal, float yVal) {
 		yVal -= yMin;
 		xVal = xVal / (xMax - xMin);
 		yVal = yVal / (yMax - yMin);
-		
+				
 		uint16_t x = round(gx + xVal * w);
 		uint16_t y = round(gy - yVal * h);
+		
+		if ((x < xPos || x > xPos + w) || (y < yPos || y > yPos + h)) {return;}
 		
 		lcd.drawPixel(x, y, plotColor);
 	}
@@ -543,11 +559,12 @@ void Plot_TypeDef::DrawLine(float x1Val, float y1Val) {
 		uint16_t x = round(gx + x1Val * w);
 		uint16_t y = round(gy - y1Val * h);
 		
+		if ((x < xPos || x > xPos + w) || (y < yPos || y > yPos + h)) {return;}
+		
 		if (lPoint[0] == 0 && lPoint[1] == 0) {
 			lPoint[0] = x;
 			lPoint[1] = y;
 		}
-		
 		lcd.drawLine(lPoint[0], lPoint[1], x, y, plotColor);
 		lPoint[0] = x;
 		lPoint[1] = y;
@@ -566,8 +583,18 @@ void Plot_TypeDef::DrawLine(float x1Val, float y1Val, float x2Val, float y2Val) 
 		y2Val -= yMin;
 		x2Val = x2Val / (xMax - xMin);
 		y2Val = y2Val / (yMax - yMin);
+			
+		uint16_t x1 = round(gx + x1Val * w);
+		uint16_t y1 = round(gy - y1Val * h);
+			
+		uint16_t x2 = round(gx + x2Val * w);
+		uint16_t y2 = round(gy - y2Val * h);
+			
 		
-		lcd.drawLine(gx + x1Val * w, gy - y1Val * h, gx + x2Val * w, gy - y2Val * h, plotColor);
+		if ((x1 < xPos || x1 > xPos + w) || (y1 < yPos || y1 > yPos + h)) {return;}
+		if ((x2 < xPos || x2 > xPos + w) || (y2 < yPos || y2 > yPos + h)) {return;}
+		
+		lcd.drawLine(x1, y1, x2, y2, plotColor);
 	}
 }
 void Plot_TypeDef::ResetLinePlot() {
@@ -577,7 +604,7 @@ void Plot_TypeDef::ResetLinePlot() {
 void Plot_TypeDef::Clear() {
 	lcd.fillRect(xPos + 1, yPos, w, h, ILI9341_WHITE);
 }
-void Plot_TypeDef::Init(uint16_t xPos, uint16_t yPos, uint16_t w, uint16_t h, const char* xLabel, const char* yLabel, float xMin, float xMax, float yMin, float yMax) {
+void Plot_TypeDef::Init(uint16_t xPos, uint16_t yPos, uint16_t w, uint16_t h, const char* xLabel, const char* yLabel, float xMin, float xMax, float yMin, float yMax, uint8_t xDiv, uint8_t yDiv) {
 	uint16_t tw, th;
 	int16_t x1, y1;
 	char txt[9];
@@ -596,10 +623,10 @@ void Plot_TypeDef::Init(uint16_t xPos, uint16_t yPos, uint16_t w, uint16_t h, co
 	
 	lcd.setFont(0);
 	lcd.setTextColor(ILI9341_DARKGREY);
-	lcd.setCursor(xPos - 5, yPos - 9);
-	lcd.print(yLabel);
 	lcd.drawFastHLine(xPos, yPos + h, w, ILI9341_DARKGREY);
 	lcd.drawFastVLine(xPos, yPos, h, ILI9341_DARKGREY);
+	lcd.setCursor(xPos - 5, yPos - 9);
+	lcd.print(yLabel);
 	lcd.setCursor(xPos + w + 3, yPos + h - 5);
 	lcd.print(xLabel);
 	lcd.drawFastHLine(xPos - 1, yPos, 1, ILI9341_DARKGREY);
@@ -622,6 +649,20 @@ void Plot_TypeDef::Init(uint16_t xPos, uint16_t yPos, uint16_t w, uint16_t h, co
 	lcd.print(txt);
 	lcd.drawFastVLine(xPos, yPos + h + 1, 1, ILI9341_DARKGREY);
 	lcd.drawFastVLine(xPos + w - 1, yPos + h + 1, 1, ILI9341_DARKGREY);
+	w -= 1;
+	h -= 1;
+	for (uint8_t i = 1; i <= xDiv && (xMax - xMin) > 0; i++) {
+		float xVal = round((xMax - xMin) / xDiv) * i;
+		xVal = xVal / (xMax - xMin);
+		uint16_t x = round(xPos + xVal * w);
+		lcd.drawFastVLine(x, yPos, h + 1, ILI9341_LIGHTGREY);
+	}
+	for (uint8_t i = 1; i <= yDiv && (yMax - yMin) > 0; i++) {
+		float yVal = round((yMax - yMin) / yDiv) * i;
+		yVal = yVal / (yMax - yMin);
+		uint16_t y = round(yPos + h - yVal * h);
+		lcd.drawFastHLine(xPos + 1, y, w, ILI9341_LIGHTGREY);
+	}
 	lcd.setFont(&FreeSans9pt7b);
 }
 

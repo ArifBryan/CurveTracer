@@ -11,7 +11,7 @@ volatile uint8_t adcReadChIndex;
 #define LOOP_INTERVAL	0.01
 #define LOOP_INTERVALms LOOP_INTERVAL * 1000
 
-#define CH_STABLE_CNT	8
+#define CH_STABLE_CNT	5
 
 // INA226 CH1 IRQ line
 extern "C" void EXTI4_Handler() {
@@ -76,25 +76,25 @@ extern "C" void SPI1_IRQHandler() {
 }
 
 void OutputControl_TypeDef::Init() {
-	ina226Ch1.Init(INA226_CONFIG_VBUSCT_588us, INA226_CONFIG_VSHCT_588us, INA226_CONFIG_AVG_16);
-	ina226Ch2.Init(INA226_CONFIG_VBUSCT_588us, INA226_CONFIG_VSHCT_588us, INA226_CONFIG_AVG_16);
-	ina226Ch3.Init(INA226_CONFIG_VBUSCT_588us, INA226_CONFIG_VSHCT_588us, INA226_CONFIG_AVG_16);
+	ina226Ch1.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_204us, INA226_CONFIG_AVG_128);
+	ina226Ch2.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_204us, INA226_CONFIG_AVG_128);
+	ina226Ch3.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_204us, INA226_CONFIG_AVG_128);
 	
-	ina226Ch1.SetCurrentCal(0.1);
-	ina226Ch2.SetCurrentCal(0.1);
-	ina226Ch3.SetCurrentCal(0.1);
+	ina226Ch1.SetCurrentCal(0.05);
+	ina226Ch2.SetCurrentCal(0.05);
+	ina226Ch3.SetCurrentCal(0.05);
 	
-	ch1.pidV.SetConstants(1.5, 0.0057, 0.2, LOOP_INTERVAL);
+	ch1.pidV.SetConstants(1.5, 0.0055, 0.2, LOOP_INTERVAL);
 	ch1.pidI.SetConstants(2.5, 0.02, 0.1, LOOP_INTERVAL);
 	ch1.pidV.SetOutputRange(0, 0xFFFF);
 	ch1.pidI.SetOutputRange(0, 0xFFFF);
 	
-	ch2.pidV.SetConstants(1.5, 0.0057, 0.2, LOOP_INTERVAL);
+	ch2.pidV.SetConstants(1.5, 0.0055, 0.2, LOOP_INTERVAL);
 	ch2.pidI.SetConstants(2.5, 0.02, 0.1, LOOP_INTERVAL);
 	ch2.pidV.SetOutputRange(0, 0xFFFF);
 	ch2.pidI.SetOutputRange(0, 0xFFFF);
 	
-	ch3.pidV.SetConstants(1.5, 0.0057, 0.2, LOOP_INTERVAL);
+	ch3.pidV.SetConstants(1.5, 0.0055, 0.2, LOOP_INTERVAL);
 	ch3.pidI.SetConstants(1.5, 0.01, 0.1, LOOP_INTERVAL);
 	ch3.pidV.SetOutputRange(0, 0xFFFF);
 	ch3.pidI.SetOutputRange(0, 0xFFFF);
@@ -161,7 +161,7 @@ void Channel_TypeDef::Handler() {
 		
 		if (mode == CH_MODE_VOLTAGE) {
 			mv = pidV.GetOutput();
-			if (abs(pidV.GetError()) > 1.25) {
+			if (abs(pidV.GetError()) > 1.0) {
 				stableCounter = CH_STABLE_CNT;
 			}
 			else {
