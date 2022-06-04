@@ -393,7 +393,7 @@ void UserInterface_TypeDef::ScreenMenu() {
 		canvas.setCursor(5, 17);
 		canvas.print(strbuff);
 		canvas.setCursor(267, 17);
-		canvas.setTextColor(sys.OverTemperature() ? ILI9341_RED : ILI9341_WHITE);
+		canvas.setTextColor(sys.OverTemperature() ? ILI9341_ORANGE : ILI9341_WHITE);
 		sprintf(strbuff, "%d.%dC\n", (uint8_t)sys.ReadDriverTemp(), (uint16_t)(sys.ReadDriverTemp() * 10) % 10);
 		canvas.print(strbuff);
 		lcd.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 25);

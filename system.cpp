@@ -125,12 +125,18 @@ void System_TypeDef::Handler() {
 	startup = (startup > 0 ? 2 : 1);
 	
 	// Status LED
-	if (Ticks() - sledTmr >= 100 && !LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
+	if (Ticks() - sledTmr >= 50 && !LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
 		LL_GPIO_SetOutputPin(LED_STA_GPIO, LED_STA_PIN);
 		sledTmr = Ticks();
 	}
-	else if (Ticks() - sledTmr >= 500 && LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
+	else if (Ticks() - sledTmr >= 250 && LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
 		LL_GPIO_ResetOutputPin(LED_STA_GPIO, LED_STA_PIN);
+		if (overTemp) {
+			LL_GPIO_TogglePin(LED_PWR_GPIO, LED_PWR_PIN);
+		}
+		else {
+			LL_GPIO_SetOutputPin(LED_PWR_GPIO, LED_PWR_PIN);
+		}
 		
 		sledTmr = Ticks();
 	}
@@ -164,11 +170,11 @@ void System_TypeDef::Ticks10ms_IRQ_Handler() {
 		}
 		
 		// Thermal supervisor
-		if (ReadDriverTemp() >= 45 && !overTemp) {
+		if (ReadDriverTemp() >= 38 && !overTemp) {
 			overTemp = 1;
 			OverTemperature_Callback();
 		}
-		else if (ReadDriverTemp() < 40) {
+		else if (ReadDriverTemp() <= 35) {
 			overTemp = 0;
 		}
 		

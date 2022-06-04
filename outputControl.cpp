@@ -84,17 +84,17 @@ void OutputControl_TypeDef::Init() {
 	ina226Ch2.SetCurrentCal(0.05);
 	ina226Ch3.SetCurrentCal(0.05);
 	
-	ch1.pidV.SetConstants(1.5, 0.0055, 0.2, LOOP_INTERVAL);
+	ch1.pidV.SetConstants(1.5, 0.005, 0.2, LOOP_INTERVAL);
 	ch1.pidI.SetConstants(2.5, 0.02, 0.1, LOOP_INTERVAL);
 	ch1.pidV.SetOutputRange(0, 0xFFFF);
 	ch1.pidI.SetOutputRange(0, 0xFFFF);
 	
-	ch2.pidV.SetConstants(1.5, 0.0055, 0.2, LOOP_INTERVAL);
+	ch2.pidV.SetConstants(1.5, 0.005, 0.2, LOOP_INTERVAL);
 	ch2.pidI.SetConstants(2.5, 0.02, 0.1, LOOP_INTERVAL);
 	ch2.pidV.SetOutputRange(0, 0xFFFF);
 	ch2.pidI.SetOutputRange(0, 0xFFFF);
 	
-	ch3.pidV.SetConstants(1.5, 0.0055, 0.2, LOOP_INTERVAL);
+	ch3.pidV.SetConstants(1.5, 0.005, 0.2, LOOP_INTERVAL);
 	ch3.pidI.SetConstants(1.5, 0.01, 0.1, LOOP_INTERVAL);
 	ch3.pidV.SetOutputRange(0, 0xFFFF);
 	ch3.pidI.SetOutputRange(0, 0xFFFF);
