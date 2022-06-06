@@ -84,7 +84,9 @@ void OutputControl_TypeDef::Init() {
 	ina226Ch2.SetCurrentCal(0.0521);
 	ina226Ch3.SetCurrentCal(0.05);
 	
-	ch1.pidV.SetConstants(1.5, 0.005, 0.2, LOOP_INTERVAL);
+	//ch1.pidV.SetConstants(1.5, 0.005, 0.2, LOOP_INTERVAL); // Trial & error
+	//ch1.pidV.SetConstants(1.8, 4.629, 0.054, LOOP_INTERVAL); // Ziegler Nichols
+	ch1.pidV.SetConstants(1.5, 4.629, 0.1, LOOP_INTERVAL); // Trial & Error
 	ch1.pidI.SetConstants(2.5, 0.02, 0.1, LOOP_INTERVAL);
 	ch1.pidV.SetOutputRange(0, 0xFFFF);
 	ch1.pidI.SetOutputRange(0, 0xFFFF);
@@ -99,7 +101,7 @@ void OutputControl_TypeDef::Init() {
 	ch3.pidV.SetOutputRange(0, 0xFFFF);
 	ch3.pidI.SetOutputRange(0, 0xFFFF);
 	
-	ch1.SetVoltage(1500);
+	ch1.SetVoltage(10000);
 	ch1.SetCurrent(1000);
 	ch2.SetVoltage(1500);
 	ch2.SetCurrent(1000);
@@ -161,7 +163,7 @@ void Channel_TypeDef::Handler() {
 		
 		if (mode == CH_MODE_VOLTAGE) {
 			mv = pidV.GetOutput();
-			if (abs(pidV.GetError()) > 1.0) {
+			if (abs(pidV.GetError()) > 1.25) {
 				stableCounter = CH_STABLE_CNT;
 			}
 			else {
