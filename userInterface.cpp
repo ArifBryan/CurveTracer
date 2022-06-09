@@ -436,27 +436,27 @@ void UserInterface_TypeDef::ScreenMenu() {
 				
 				if (outCtl.ch1.GetState()) {
 					text1.Draw((int16_t)outCtl.ch1.GetVoltage());
-					text4.Draw((int16_t)outCtl.ch1.GetCurrent());
+					text4.Draw(outCtl.ch1.GetCurrent());
 				}
 				else {
 					text1.Draw((int16_t)outCtl.ch1.GetSetVoltage());
-					text4.Draw((int16_t)outCtl.ch1.GetSetCurrent());
+					text4.Draw(outCtl.ch1.GetSetCurrent());
 				}
 				if (outCtl.ch2.GetState()) {
 					text2.Draw((int16_t)outCtl.ch2.GetVoltage());
-					text5.Draw((int16_t)outCtl.ch2.GetCurrent());
+					text5.Draw(outCtl.ch2.GetCurrent());
 				}
 				else {
 					text2.Draw((int16_t)outCtl.ch2.GetSetVoltage());
-					text5.Draw((int16_t)outCtl.ch2.GetSetCurrent());
+					text5.Draw(outCtl.ch2.GetSetCurrent());
 				}
 				if (outCtl.ch3.GetState()) {
 					text3.Draw((int16_t)outCtl.ch3.GetVoltage());
-					text6.Draw((int16_t)outCtl.ch3.GetCurrent());
+					text6.Draw(outCtl.ch3.GetCurrent());
 				}
 				else {
 					text3.Draw((int16_t)outCtl.ch3.GetSetVoltage());
-					text6.Draw((int16_t)outCtl.ch3.GetSetCurrent());
+					text6.Draw(outCtl.ch3.GetSetCurrent());
 				}
 			}
 			break;

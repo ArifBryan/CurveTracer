@@ -92,12 +92,14 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 				TIM_Init();
 				DMA_Init();
 				EXTI_Init();
+				SetFanSpeed(100);
 				// Watchdog reset
 				LL_IWDG_ReloadCounter(IWDG);
 				// Startup handler
 				Startup_CallbackHandler();
 				Shutdown_Callback = Shutdown_CallbackHandler;
 				OverTemperature_Callback = OverTemperature_CallbackHandler;
+				SetFanSpeed(0);
 				LL_mDelay(100);
 				// Watchdog reset
 				LL_IWDG_ReloadCounter(IWDG);

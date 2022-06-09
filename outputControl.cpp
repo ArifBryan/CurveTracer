@@ -101,7 +101,7 @@ void OutputControl_TypeDef::Init() {
 	ch3.pidV.SetOutputRange(0, 0xFFFF);
 	ch3.pidI.SetOutputRange(0, 0xFFFF);
 	
-	ch1.SetVoltage(10000);
+	ch1.SetVoltage(1500);
 	ch1.SetCurrent(1000);
 	ch2.SetVoltage(1500);
 	ch2.SetCurrent(1000);
