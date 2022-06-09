@@ -165,6 +165,7 @@ struct System_TypeDef {
 	uint32_t Ticks(void);
 	uint8_t IsStartup(void);
 	uint8_t IsUSBConnected(void);
+	uint8_t IsUndervoltage(void);
 	void Ticks10ms_IRQ_Handler();
 private:
 	void RCC_Init(void);

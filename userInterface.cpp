@@ -405,29 +405,34 @@ void UserInterface_TypeDef::ScreenMenu() {
 	if (uiRedraw || uiUpdate || uiNotify) {
 		GFXcanvas16 canvas(320, 25);
 		uint16_t barColor = ILI9341_DARKCYAN;
-		
 		canvas.setFont(&FreeSans9pt7b);
-		switch (uiMenuIndex) {
-		case 0:
-			canvas.fillScreen(ILI9341_DARKCYAN);
-			sprintf(strbuff, "Source & Measure");
-			break;
-		case 1:
-			canvas.fillScreen(ILI9341_DARKCYAN);
-			sprintf(strbuff, "Trace Setup");
-			break;
-		case 2:
-			if (curveTracer.IsSampling()) {
-				canvas.fillScreen(ILI9341_DARKGREEN);
-				sprintf(strbuff, "Trace - Running");
-				barColor = ILI9341_DARKGREEN;
-			}
-			else {
-				canvas.fillScreen(ILI9341_DARKCYAN);
-				sprintf(strbuff, "Trace");
-			}
-			break;
+		
+		if (sys.IsUndervoltage()) {
+			barColor = ILI9341_MAROON;
+			sprintf(strbuff, "Warning : Undervoltage");
 		}
+		else {
+		
+			switch (uiMenuIndex) {
+			case 0:
+				sprintf(strbuff, "Source & Measure");
+				break;
+			case 1:
+				sprintf(strbuff, "Trace Setup");
+				break;
+			case 2:
+				if (curveTracer.IsSampling()) {
+					barColor = ILI9341_DARKGREEN;
+					sprintf(strbuff, "Trace - Running");
+				}
+				else {
+					sprintf(strbuff, "Trace");
+				}
+				break;
+			}
+		}
+		
+		canvas.fillScreen(barColor);
 		canvas.setCursor(5, 17);
 		canvas.print(strbuff);
 		if (sys.IsUSBConnected()) {

@@ -1,7 +1,7 @@
 #include "system.h"
 #include "userInterface.h"
 
-#define UVLO_BYPASS		1
+#define UVLO_BYPASS		0
 #define PWRCTL_BYPASS	1
 
 void(*Shutdown_Callback)(void);
@@ -13,6 +13,7 @@ volatile uint32_t sysCheckTmr;
 volatile uint16_t adcData[3];
 volatile uint8_t adcDataIdx;
 volatile uint8_t overTemp;
+volatile uint8_t underVoltage;
 uint8_t startup;
 
 
@@ -133,7 +134,7 @@ void System_TypeDef::Handler() {
 	}
 	else if (Ticks() - sledTmr >= 250 && LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
 		LL_GPIO_ResetOutputPin(LED_STA_GPIO, LED_STA_PIN);
-		if (overTemp) {
+		if (overTemp || underVoltage) {
 			LL_GPIO_TogglePin(LED_PWR_GPIO, LED_PWR_PIN);
 		}
 		else {
@@ -145,6 +146,10 @@ void System_TypeDef::Handler() {
 	
 	// Watchdog reset
 	LL_IWDG_ReloadCounter(IWDG);
+}
+
+uint8_t System_TypeDef::IsUndervoltage() {
+	return underVoltage;
 }
 
 uint8_t System_TypeDef::IsStartup() {
@@ -182,9 +187,13 @@ void System_TypeDef::Ticks10ms_IRQ_Handler() {
 		
 		// Power supervisor
 		if (ReadVsenseVin() < 23000 && !UVLO_BYPASS) {
+			underVoltage = 1;
 			if (!PWRCTL_BYPASS) {
 				Shutdown();
 			}
+		}
+		else {
+			underVoltage = 0;
 		}
 		
 		sysCheckTmr = Ticks();
