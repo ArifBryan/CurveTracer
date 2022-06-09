@@ -327,7 +327,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 			if (btn1.justPressed()) {
 				Beep(50);
 				
-				if (ibstep && ibend) {
+				if ((int)ibstep && (int)ibend) {
 					curveTracer.SetupChannel(&outCtl.ch1, &outCtl.ch3, &outCtl.ch2);
 					curveTracer.SetupParams3ch(vstart, vend, vstep, irange, ibstart, ibend, ibstep, 100);
 				}
