@@ -21,7 +21,7 @@ void CurveTracer_TypeDef::Handler() {
 			stable = pRef->IsStable() && pA->IsStable();
 		}
 		if (stable) {
-			if (nextSampleSeq) {
+			if (nextSampleSeq && pB) {
 				samplePtr = 0;
 				nextSampleSeq = 0;
 			}
