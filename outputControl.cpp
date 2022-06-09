@@ -8,10 +8,10 @@ volatile uint8_t spiDACTransCount;
 volatile uint16_t spiDACBuffer[3];
 volatile uint8_t adcReadChIndex;
 
-#define LOOP_INTERVAL	0.01
+#define LOOP_INTERVAL	0.025
 #define LOOP_INTERVALms LOOP_INTERVAL * 1000
 
-#define CH_STABLE_CNT	5
+#define CH_STABLE_CNT	3
 
 // INA226 CH1 IRQ line
 extern "C" void EXTI4_Handler() {
@@ -86,18 +86,18 @@ void OutputControl_TypeDef::Init() {
 	
 	//ch1.pidV.SetConstants(1.5, 0.005, 0.2, LOOP_INTERVAL); // Trial & error
 	//ch1.pidV.SetConstants(1.8, 4.629, 0.054, LOOP_INTERVAL); // Ziegler Nichols
-	ch1.pidV.SetConstants(1.8, 9, 0.054, LOOP_INTERVAL); // Trial & Error
-	ch1.pidI.SetConstants(2.5, 0.02, 0.1, LOOP_INTERVAL);
+	ch1.pidV.SetConstants(2.0, 34.0, 0.01, LOOP_INTERVAL); // Trial & Error
+	ch1.pidI.SetConstants(2.0, 34.0, 0.01, LOOP_INTERVAL);
 	ch1.pidV.SetOutputRange(0, 0xFFFF);
 	ch1.pidI.SetOutputRange(0, 0xFFFF);
 	
-	ch2.pidV.SetConstants(1.5, 0.005, 0.2, LOOP_INTERVAL);
-	ch2.pidI.SetConstants(2.5, 0.02, 0.1, LOOP_INTERVAL);
+	ch2.pidV.SetConstants(2.0, 34.0, 0.01, LOOP_INTERVAL);
+	ch2.pidI.SetConstants(2.0, 34.0, 0.01, LOOP_INTERVAL);
 	ch2.pidV.SetOutputRange(0, 0xFFFF);
 	ch2.pidI.SetOutputRange(0, 0xFFFF);
 	
-	ch3.pidV.SetConstants(1.5, 0.005, 0.2, LOOP_INTERVAL);
-	ch3.pidI.SetConstants(1.5, 0.01, 0.1, LOOP_INTERVAL);
+	ch3.pidV.SetConstants(2.0, 34.0, 0.01, LOOP_INTERVAL);
+	ch3.pidI.SetConstants(2.0, 34.0, 0.01, LOOP_INTERVAL);
 	ch3.pidV.SetOutputRange(0, 0xFFFF);
 	ch3.pidI.SetOutputRange(0, 0xFFFF);
 	
