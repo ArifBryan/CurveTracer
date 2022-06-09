@@ -430,6 +430,9 @@ void UserInterface_TypeDef::ScreenMenu() {
 		}
 		canvas.setCursor(5, 17);
 		canvas.print(strbuff);
+		if (sys.IsUSBConnected()) {
+			canvas.drawBitmap(262, 3, (uint8_t*)pcBitmap, 25, 20, barColor, ILI9341_WHITE);
+		}
 		if (sys.OverTemperature()) {
 			canvas.drawBitmap(292, 1, (uint8_t*)tempWarningBitmap, 25, 22, barColor, ILI9341_ORANGE);
 		}

@@ -370,9 +370,6 @@ void System_TypeDef::GPIO_Init() {
 	GPIOInit_Struct.Pin = BTN_PWR_PIN;
 	LL_GPIO_Init(BTN_PWR_GPIO, &GPIOInit_Struct);
 	
-	GPIOInit_Struct.Pin = VSENSE_USB_PIN;
-	LL_GPIO_Init(VSENSE_USB_GPIO, &GPIOInit_Struct);
-	
 	GPIOInit_Struct.Pin = XPT2046_IRQ_PIN;
 	LL_GPIO_Init(XPT2046_IRQ_GPIO, &GPIOInit_Struct);
 	LL_GPIO_AF_SetEXTISource(LL_GPIO_AF_EXTI_PORTC, LL_GPIO_AF_EXTI_LINE8);
@@ -388,6 +385,10 @@ void System_TypeDef::GPIO_Init() {
 	GPIOInit_Struct.Pin = INA226_CH3_INT_PIN;
 	LL_GPIO_Init(INA226_CH3_INT_GPIO, &GPIOInit_Struct);
 	LL_GPIO_AF_SetEXTISource(LL_GPIO_AF_EXTI_PORTB, LL_GPIO_AF_EXTI_LINE9);
+	
+	GPIOInit_Struct.Pin = VSENSE_USB_PIN;
+	GPIOInit_Struct.Pull = LL_GPIO_PULL_DOWN;
+	LL_GPIO_Init(VSENSE_USB_GPIO, &GPIOInit_Struct);
 	
 	// Analog input pins
 	GPIOInit_Struct.Mode = LL_GPIO_MODE_ANALOG;
@@ -532,6 +533,10 @@ void System_TypeDef::SetFanSpeed(uint32_t spd) {
 	spd *= 2.5;
 	spd = (spd < 30 ? 0 : (spd > 250 ? 250 : spd));
 	LL_TIM_OC_SetCompareCH4(FAN_TIM, spd);
+}
+
+uint8_t System_TypeDef::IsUSBConnected() {
+	return LL_GPIO_IsInputPinSet(VSENSE_USB_GPIO, VSENSE_USB_PIN);
 }
 
 void System_TypeDef::USART_Init() {

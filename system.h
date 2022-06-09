@@ -164,6 +164,7 @@ struct System_TypeDef {
 	float ReadDriverTemp(void);
 	uint32_t Ticks(void);
 	uint8_t IsStartup(void);
+	uint8_t IsUSBConnected(void);
 	void Ticks10ms_IRQ_Handler();
 private:
 	void RCC_Init(void);
