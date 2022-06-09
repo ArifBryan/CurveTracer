@@ -74,8 +74,10 @@ struct INA226_TypeDef {
 	void Write(uint8_t reg, uint16_t data);
 	void ReadData(void);
 	void SetCurrentCal(float currentCal);
+	void SetVoltageCal(float voltageCal);
 	float GetVoltage(void);
 	float GetCurrent(void);
+	float GetCurrentCal(void) {return currentCal;}
 	void I2C_TransComplete_Handler(void);
 	uint8_t IsReadComplete(void);
 	uint16_t Read(uint8_t reg);
@@ -84,6 +86,7 @@ private:
 	I2C_TypeDef *i2cPeriph;
 	uint8_t addr;
 	float currentCal = 1;
+	float voltageCal = 0;
 	uint8_t interrupt;
 	volatile uint16_t vbus;
 	volatile int16_t vshunt;

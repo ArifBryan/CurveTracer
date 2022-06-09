@@ -15,6 +15,9 @@ void INA226_TypeDef::Init(uint8_t vShuntConvTime, uint8_t vBusConvTime, uint8_t 
 void INA226_TypeDef::SetCurrentCal(float currentCal) {
 	this->currentCal = currentCal;
 }
+void INA226_TypeDef::SetVoltageCal(float voltageCal) {
+	this->voltageCal = voltageCal;
+}
 
 void INA226_TypeDef::I2C_TransComplete_Handler() {
 	if (readCount == 2) {
@@ -52,7 +55,7 @@ uint8_t INA226_TypeDef::IsReadComplete() {
 }
 
 float INA226_TypeDef::GetVoltage() {
-	return vbus * 1.25;
+	return vbus * 1.25 - voltageCal;
 }
 
 float INA226_TypeDef::GetCurrent() {

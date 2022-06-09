@@ -25,6 +25,7 @@ uint8_t uiMenuIndex;
 uint8_t editVar;
 
 float vstart, vend, vstep, irange;
+float ibstart, ibstep, ibend;
 
 Point_TypeDef tsPos;
 
@@ -38,6 +39,7 @@ TextBox_TypeDef text3;
 TextBox_TypeDef text4;
 TextBox_TypeDef text5;
 TextBox_TypeDef text6;
+TextBox_TypeDef text7;
 
 Plot_TypeDef plot;
 
@@ -96,6 +98,7 @@ void UserInterface_TypeDef::Handler() {
 			text4.TouchHandler(tsPos, 1);
 			text5.TouchHandler(tsPos, 1);
 			text6.TouchHandler(tsPos, 1);
+			text7.TouchHandler(tsPos, 1);
 		}
 	}
 	else {
@@ -109,6 +112,7 @@ void UserInterface_TypeDef::Handler() {
 		text4.TouchHandler(tsPos, 0);
 		text5.TouchHandler(tsPos, 0);
 		text6.TouchHandler(tsPos, 0);
+		text7.TouchHandler(tsPos, 0);
 		tsPos.x = 0;
 		tsPos.y = 0;
 		tsPos.z = 0;
@@ -178,6 +182,15 @@ void UserInterface_TypeDef::ButtonHandler() {
 					break;
 				case 4:
 					irange = keypad.GetKeyFloat();
+					break;
+				case 5:
+					ibstart = keypad.GetKeyFloat();
+					break;
+				case 6:
+					ibstep = keypad.GetKeyFloat();
+					break;
+				case 7:
+					ibend = keypad.GetKeyFloat();
 					break;
 				}
 				break;
@@ -284,6 +297,21 @@ void UserInterface_TypeDef::ButtonHandler() {
 				keypad.Enable("I Range", "mA");
 				editVar = 4;
 			}
+			if (text5.JustPressed()) {
+				Beep(50);
+				keypad.Enable("Ib Start", "mA");
+				editVar = 5;
+			}
+			if (text6.JustPressed()) {
+				Beep(50);
+				keypad.Enable("Ib Step", "mA");
+				editVar = 6;
+			}
+			if (text7.JustPressed()) {
+				Beep(50);
+				keypad.Enable("Ib End", "mA");
+				editVar = 7;
+			}
 			
 			if (!keypad.IsEnabled()) {
 				if (btn1.justPressed() || btn1.justReleased()) {
@@ -298,8 +326,14 @@ void UserInterface_TypeDef::ButtonHandler() {
 			if (btn1.justPressed()) {
 				Beep(50);
 				
-				curveTracer.SetupChannel(&outCtl.ch1, &outCtl.ch2, &outCtl.ch3);
-				curveTracer.SetupParams(vstart, vend, vstep, irange, 100);
+				if (ibstep && ibend) {
+					curveTracer.SetupChannel(&outCtl.ch1, &outCtl.ch3, &outCtl.ch2);
+					curveTracer.SetupParams3ch(vstart, vend, vstep, irange, ibstart, ibend, ibstep, 100);
+				}
+				else {
+					curveTracer.SetupChannel(&outCtl.ch1, &outCtl.ch2);
+					curveTracer.SetupParams2ch(vstart, vend, vstep, irange, 100);
+				}
 				curveTracer.Start();
 				plot.ResetLinePlot();
 				SetScreenMenu(2);
@@ -468,11 +502,14 @@ void UserInterface_TypeDef::ScreenMenu() {
 				text2.Init(60, 55, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 				text3.Init(60, 80, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 				text4.Init(60, 105, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
+				text5.Init(60, 130, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
+				text6.Init(60, 155, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
+				text7.Init(60, 180, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
 					
 				btn1.drawButton(btn1.isPressed());
 				btn2.drawButton(btn2.isPressed());
 				
-				GFXcanvas16 canvas(60, 100);
+				GFXcanvas16 canvas(60, 170);
 				
 				canvas.fillScreen(ILI9341_WHITE);
 				canvas.setFont(&FreeSans9pt7b);
@@ -485,12 +522,21 @@ void UserInterface_TypeDef::ScreenMenu() {
 				canvas.print("Step");
 				canvas.setCursor(0, 93);
 				canvas.print("Range");
-				lcd.drawRGBBitmap(3, 27, canvas.getBuffer(), 60, 100);
+				canvas.setCursor(0, 118);
+				canvas.print("IbStart");
+				canvas.setCursor(0, 143);
+				canvas.print("IbStep");
+				canvas.setCursor(0, 168);
+				canvas.print("IbEnd");
+				lcd.drawRGBBitmap(3, 27, canvas.getBuffer(), 60, 170);
 				
 				text1.Draw((int16_t)vstart);
 				text2.Draw((int16_t)vend);
 				text3.Draw(vstep);
-				text4.Draw((int16_t)irange);
+				text4.Draw(irange);
+				text5.Draw(ibstart);
+				text6.Draw(ibstep);
+				text7.Draw(ibend);
 			}
 			if (uiRedraw || uiUpdate) {
 				
@@ -519,6 +565,9 @@ void UserInterface_TypeDef::ScreenMenu() {
 					plot.DrawLine(
 						curveTracer.data[curveTracer.GetSampleCount() - 1].v, 
 						curveTracer.data[curveTracer.GetSampleCount() - 1].i);
+				}
+				else {
+					plot.ResetLinePlot();
 				}
 			}
 			break;

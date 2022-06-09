@@ -76,9 +76,9 @@ extern "C" void SPI1_IRQHandler() {
 }
 
 void OutputControl_TypeDef::Init() {
-	ina226Ch1.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_204us, INA226_CONFIG_AVG_16);
-	ina226Ch2.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_204us, INA226_CONFIG_AVG_16);
-	ina226Ch3.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_204us, INA226_CONFIG_AVG_16);
+	ina226Ch1.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_332us, INA226_CONFIG_AVG_64);
+	ina226Ch2.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_332us, INA226_CONFIG_AVG_64);
+	ina226Ch3.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_332us, INA226_CONFIG_AVG_64);
 	
 	ina226Ch1.SetCurrentCal(0.05);
 	ina226Ch2.SetCurrentCal(0.0521);
@@ -86,18 +86,18 @@ void OutputControl_TypeDef::Init() {
 	
 	//ch1.pidV.SetConstants(1.5, 0.005, 0.2, LOOP_INTERVAL); // Trial & error
 	//ch1.pidV.SetConstants(1.8, 4.629, 0.054, LOOP_INTERVAL); // Ziegler Nichols
-	ch1.pidV.SetConstants(2.0, 34.0, 0.01, LOOP_INTERVAL); // Trial & Error
-	ch1.pidI.SetConstants(2.0, 34.0, 0.01, LOOP_INTERVAL);
+	ch1.pidV.SetConstants(1.8, 30.0, 0.005, LOOP_INTERVAL); // Trial & Error
+	ch1.pidI.SetConstants(1.0, 15.0, 0.001, LOOP_INTERVAL);
 	ch1.pidV.SetOutputRange(0, 0xFFFF);
 	ch1.pidI.SetOutputRange(0, 0xFFFF);
 	
-	ch2.pidV.SetConstants(2.0, 34.0, 0.01, LOOP_INTERVAL);
-	ch2.pidI.SetConstants(2.0, 34.0, 0.01, LOOP_INTERVAL);
+	ch2.pidV.SetConstants(1.8, 30.0, 0.005, LOOP_INTERVAL);
+	ch2.pidI.SetConstants(1.0, 15.0, 0.001, LOOP_INTERVAL);
 	ch2.pidV.SetOutputRange(0, 0xFFFF);
 	ch2.pidI.SetOutputRange(0, 0xFFFF);
 	
-	ch3.pidV.SetConstants(2.0, 34.0, 0.01, LOOP_INTERVAL);
-	ch3.pidI.SetConstants(2.0, 34.0, 0.01, LOOP_INTERVAL);
+	ch3.pidV.SetConstants(1.8, 30.0, 0.005, LOOP_INTERVAL);
+	ch3.pidI.SetConstants(1.0, 15.0, 0.001, LOOP_INTERVAL);
 	ch3.pidV.SetOutputRange(0, 0xFFFF);
 	ch3.pidI.SetOutputRange(0, 0xFFFF);
 	
@@ -147,16 +147,16 @@ void OutputControl_TypeDef::DisableAllOutputs() {
 }
 
 void Channel_TypeDef::Handler() {
-	vMeas += ina226->GetVoltage();
-	vMeas /= 2;
-	iMeas += ina226->GetCurrent();
-	iMeas /= 2;
+	vMeas += ina226->GetVoltage() * 4;
+	vMeas /= 5;
+	iMeas += ina226->GetCurrent() * 4;
+	iMeas /= 5;
 	
 	if (GetState()) {
 		if (iMeas > iSet) {
 			mode = CH_MODE_CURRENT;
 		}
-		else if (vMeas >= vSet || abs(iMeas) < iSet * 0.01) {
+		else if (vMeas >= vSet) {
 			mode = CH_MODE_VOLTAGE;
 		}
 			
@@ -165,7 +165,7 @@ void Channel_TypeDef::Handler() {
 		
 		if (mode == CH_MODE_VOLTAGE) {
 			mv = pidV.GetOutput();
-			if (abs(pidV.GetError()) > 1.25) {
+			if (abs(pidV.GetError()) > 1.20) {
 				stableCounter = CH_STABLE_CNT;
 			}
 			else {
@@ -173,9 +173,9 @@ void Channel_TypeDef::Handler() {
 			}
 		}
 		else {
-			mv = pidI.GetOutput();
+			mv = pidI.GetOutput() / ina226->GetCurrentCal();
 			pidV.Reset();
-			if (abs(pidV.GetError()) > 1.25) {
+			if (abs(pidI.GetError()) > 0.045) {
 				stableCounter = CH_STABLE_CNT;
 			}
 			else {

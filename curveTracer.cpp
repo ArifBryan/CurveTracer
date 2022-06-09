@@ -13,17 +13,35 @@ void CurveTracer_TypeDef::Init() {
 
 void CurveTracer_TypeDef::Handler() {
 	if (sys.Ticks() - tracerTimer >= tSample && run) {
-		if (pRef->IsStable() && pA->IsStable() && pB->IsStable()) {
-			data[samplePtr].i = pA->GetCurrent();
-			data[samplePtr].v = pA->GetVoltage() - pRef->GetVoltage();
-			samplePtr++;
+		uint8_t stable = 0;
+		if (pB) {
+			stable = pRef->IsStable() && pA->IsStable() && pB->IsStable();
+		}
+		else {
+			stable = pRef->IsStable() && pA->IsStable();
+		}
+		if (stable) {
+			if (nextSampleSeq) {
+				samplePtr = 0;
+				nextSampleSeq = 0;
+			}
+			else {
+				data[samplePtr].i = pA->GetCurrent();
+				data[samplePtr].v = pA->GetVoltage() - pRef->GetVoltage();
+				samplePtr++;
+			}
 			if (samplePtr >= sampleLen || data[samplePtr - 1].i > iLim) {
-				run = 0;
-				pRef->SetVoltage(OUT_MIN_V);
-				pA->SetVoltage(OUT_MIN_V);
-				pB->SetVoltage(OUT_MIN_V);
-				outCtl.DisableAllOutputs();
-				end = 1;
+				if (pB && ibSample < iEnd) {
+					ibSample += iStep;
+					pB->SetCurrent(ibSample);
+					vSample = vStart;
+					pA->SetVoltage(pRef->GetSetVoltage() + vSample);
+					nextSampleSeq = 1;
+				}
+				else {
+					Stop();
+					end = 1;
+				}
 			}
 			else if (samplePtr < sampleLen) {
 				vSample += vStep;
@@ -40,18 +58,29 @@ void CurveTracer_TypeDef::Start() {
 	run = 1;
 	end = 0;
 	samplePtr = 0;
+	nextSampleSeq = 0;
 	vSample = vStart;
+	ibSample = iStart;
 	pRef->SetVoltage(OUT_MIN_V);
-	pA->SetVoltage(pRef->GetSetVoltage() + vSample);
-	pB->SetVoltage(pRef->GetSetVoltage()) ;
 	pRef->SetState(1);
+	pA->SetVoltage(pRef->GetSetVoltage() + vSample);
 	pA->SetState(1);
-	pB->SetState(1);
+	if (pB) {
+		//pB->SetVoltage(pRef->GetSetVoltage());
+		pB->SetCurrent(ibSample);
+		pB->SetVoltage(pRef->GetSetVoltage() + vEnd);
+		pB->SetState(1);
+	}
 	tracerTimer = sys.Ticks();
 }
 
 void CurveTracer_TypeDef::Stop() {
 	run = 0;
+	pRef->SetVoltage(OUT_MIN_V);
+	pA->SetVoltage(OUT_MIN_V);
+	if (pB) {
+		pB->SetVoltage(OUT_MIN_V);
+	}
 	outCtl.DisableAllOutputs();
 }
 
