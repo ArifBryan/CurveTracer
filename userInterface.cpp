@@ -4,6 +4,7 @@
 #include "Fonts/FreeSansBold9pt7b.h"
 #include "Fonts/FreeSansOblique9pt7b.h"
 #include "ctLogoBitmap.h"
+#include "iconBitmap.h"
 #include "outputControl.h"
 #include "curveTracer.h"
 #include <stdio.h>
@@ -403,6 +404,8 @@ void UserInterface_TypeDef::ButtonHandler() {
 void UserInterface_TypeDef::ScreenMenu() {
 	if (uiRedraw || uiUpdate || uiNotify) {
 		GFXcanvas16 canvas(320, 25);
+		uint16_t barColor = ILI9341_DARKCYAN;
+		
 		canvas.setFont(&FreeSans9pt7b);
 		switch (uiMenuIndex) {
 		case 0:
@@ -417,6 +420,7 @@ void UserInterface_TypeDef::ScreenMenu() {
 			if (curveTracer.IsSampling()) {
 				canvas.fillScreen(ILI9341_DARKGREEN);
 				sprintf(strbuff, "Trace - Running");
+				barColor = ILI9341_DARKGREEN;
 			}
 			else {
 				canvas.fillScreen(ILI9341_DARKCYAN);
@@ -426,10 +430,9 @@ void UserInterface_TypeDef::ScreenMenu() {
 		}
 		canvas.setCursor(5, 17);
 		canvas.print(strbuff);
-		canvas.setCursor(267, 17);
-		canvas.setTextColor(sys.OverTemperature() ? ILI9341_ORANGE : ILI9341_WHITE);
-		sprintf(strbuff, "%d.%dC\n", (uint8_t)sys.ReadDriverTemp(), (uint16_t)(sys.ReadDriverTemp() * 10) % 10);
-		canvas.print(strbuff);
+		if (sys.OverTemperature()) {
+			canvas.drawBitmap(292, 1, (uint8_t*)tempWarningBitmap, 25, 22, barColor, ILI9341_ORANGE);
+		}
 		lcd.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 25);
 	}
 	if (!keypad.IsEnabled()) {

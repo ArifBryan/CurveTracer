@@ -60,6 +60,7 @@ add_bsp_based_executable(
 		curveTracer.cpp
 		curveTracer.cpp
 		curveTracer.h
+		iconBitmap.h
 	GENERATE_BIN
 	GENERATE_MAP
 	OUTPUT_RELOCATION_RECORDS)
