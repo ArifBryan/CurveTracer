@@ -2,7 +2,7 @@
 
 #include <stm32f1xx_ll_usart.h>
 
-#define SERIAL_RX_BUFF_SIZE	256
+#define SERIAL_RX_BUFF_SIZE	200
 #define SERIAL_TX_BUFF_SIZE	SERIAL_RX_BUFF_SIZE
 
 struct UART_IT_InitTypeDef {
@@ -16,8 +16,9 @@ struct UART_IT_InitTypeDef {
 struct UART_IT_TypeDef {
 	UART_IT_TypeDef(USART_TypeDef *usart, volatile uint32_t *ticks) {
 		this->usart = usart;
-		this->ticks = ticks; }
-	void Init(UART_IT_InitTypeDef *initStruct, void(*Receive_CallbackHandler)(char *data), char delimiter, uint32_t timeout = 1000);
+		this->ticks = ticks; 
+	}
+	void Init(UART_IT_InitTypeDef *initStruct, void(*Receive_CallbackHandler)(volatile char *data), char delimiter, uint32_t timeout = 1000);
 	void Transmit(const char *data);
 	void Handler();
 	void IRQ_Handler();
@@ -31,5 +32,5 @@ private:
 	volatile uint32_t timeoutTmr;
 	volatile uint32_t *ticks;
 	USART_TypeDef *usart;
-	void(*Receive_Handler)(char *data);
+	void(*Receive_Handler)(volatile char *data);
 };

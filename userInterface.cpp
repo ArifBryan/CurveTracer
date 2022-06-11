@@ -13,18 +13,6 @@ UserInterface_TypeDef ui;
 
 char strbuff[200];
 
-uint8_t uiRedraw = 1;
-uint8_t uiUpdate = 1;
-uint8_t uiNotify;
-uint32_t uiTimer;
-uint8_t uiUpdateIndex;
-volatile uint32_t beepTimer;
-uint32_t beepTime;
-volatile uint8_t beepCount;
-uint32_t touchTimer;
-uint8_t uiMenuIndex;
-uint8_t editVar;
-
 float vstart, vend, vstep, irange;
 float ibstart, ibstep, ibend;
 
@@ -71,6 +59,14 @@ void UserInterface_TypeDef::Init() {
 	ts.SetCalibration(min, max);
 	keypad.Init();
 	SetScreenMenu(0);
+	
+	vstart = 0;
+	vend = 1000;
+	vstep = 5;
+	irange = 200;
+	ibstart = 1;
+	ibend = 3;
+	ibstep = 1;
 }
 
 void UserInterface_TypeDef::Handler() {
@@ -327,7 +323,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 			if (btn1.justPressed()) {
 				Beep(50);
 				
-				if ((int)ibstep && (int)ibend) {
+				if ((ibstep > 0.0 && ibend > 0.0) || ibstart > 0.0) {
 					curveTracer.SetupChannel(&outCtl.ch1, &outCtl.ch3, &outCtl.ch2);
 					curveTracer.SetupParams3ch(vstart, vend, vstep, irange, ibstart, ibend, ibstep, 100);
 				}
@@ -411,6 +407,10 @@ void UserInterface_TypeDef::ScreenMenu() {
 			barColor = ILI9341_MAROON;
 			sprintf(strbuff, "Warning : Undervoltage");
 		}
+		else if (sys.IsOverTemperature() & 0) {
+			barColor = ILI9341_MAROON;
+			sprintf(strbuff, "Warning : Overheat");
+		}
 		else {
 		
 			switch (uiMenuIndex) {
@@ -438,7 +438,7 @@ void UserInterface_TypeDef::ScreenMenu() {
 		if (sys.IsUSBConnected()) {
 			canvas.drawBitmap(262, 3, (uint8_t*)pcBitmap, 25, 20, barColor, ILI9341_WHITE);
 		}
-		if (sys.OverTemperature()) {
+		if (sys.IsOverTemperature()) {
 			canvas.drawBitmap(292, 1, (uint8_t*)tempWarningBitmap, 25, 22, barColor, ILI9341_ORANGE);
 		}
 		lcd.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 25);

@@ -1,5 +1,6 @@
 #include "system.h"
 #include "userInterface.h"
+#include "outputControl.h"
 
 #define UVLO_BYPASS		0
 #define PWRCTL_BYPASS	1
@@ -7,14 +8,10 @@
 void(*Shutdown_Callback)(void);
 void(*OverTemperature_Callback)(void);
 extern "C" volatile uint32_t ticks;
-volatile uint32_t pwrBtnTmr;
-uint32_t sledTmr;
-volatile uint32_t sysCheckTmr;
 volatile uint16_t adcData[3];
 volatile uint8_t adcDataIdx;
-volatile uint8_t overTemp;
-volatile uint8_t underVoltage;
-uint8_t startup;
+uint32_t sledTmr;
+
 
 
 System_TypeDef sys;
@@ -43,6 +40,7 @@ extern "C" void CSSFault_Handler() {
 
 extern "C" void Ticks10ms_Handler() {
 	sys.Ticks10ms_IRQ_Handler();
+	outCtl.Ticks10ms_IRQ_Handler();
 	ui.Ticks10ms_IRQ_Handler();
 }
 
@@ -172,7 +170,15 @@ void System_TypeDef::Ticks10ms_IRQ_Handler() {
 	// ADC Vsense, Tsense sampling
 	if (Ticks() - sysCheckTmr >= 100) {
 		// Fan control
-		if (ReadDriverTemp() > 31) {
+		if (outCtl.ch1.GetState() || outCtl.ch2.GetState() || outCtl.ch3.GetState()) {
+			if (ReadDriverTemp() > 31) {
+				SetFanSpeed((ReadDriverTemp() - 31) * 15 + 25);
+			}
+			else {
+				SetFanSpeed((ReadDriverTemp() - 31) * 15 + 25);
+			}
+		}
+		else if (ReadDriverTemp() > 31) {
 			SetFanSpeed((ReadDriverTemp() - 31) * 15);
 		}
 		
@@ -200,7 +206,7 @@ void System_TypeDef::Ticks10ms_IRQ_Handler() {
 	}
 }
 
-uint8_t System_TypeDef::OverTemperature() {
+uint8_t System_TypeDef::IsOverTemperature() {
 	return overTemp;
 }
 
@@ -264,7 +270,7 @@ void System_TypeDef::GPIO_Init() {
 	LL_GPIO_Init(UART3_TX_GPIO, &GPIOInit_Struct);
 	
 	GPIOInit_Struct.Mode = LL_GPIO_MODE_INPUT;
-	GPIOInit_Struct.Pull = LL_GPIO_PULL_DOWN;
+	GPIOInit_Struct.Pull = LL_GPIO_PULL_UP;
 	GPIOInit_Struct.Pin = UART1_RX_PIN;
 	LL_GPIO_Init(UART1_RX_GPIO, &GPIOInit_Struct);
 	
@@ -443,9 +449,9 @@ void System_TypeDef::ADC_Init() {
 	LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_2, VSENSE_5V_ADC_CH);
 	LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_3, TSENSE_ADC_CH);
 	
-	LL_ADC_SetChannelSamplingTime(ADC1, VSENSE_VIN_ADC_CH, LL_ADC_SAMPLINGTIME_71CYCLES_5);
-	LL_ADC_SetChannelSamplingTime(ADC1, VSENSE_5V_ADC_CH, LL_ADC_SAMPLINGTIME_71CYCLES_5);
-	LL_ADC_SetChannelSamplingTime(ADC1, TSENSE_ADC_CH, LL_ADC_SAMPLINGTIME_71CYCLES_5);
+	LL_ADC_SetChannelSamplingTime(ADC1, VSENSE_VIN_ADC_CH, LL_ADC_SAMPLINGTIME_239CYCLES_5);
+	LL_ADC_SetChannelSamplingTime(ADC1, VSENSE_5V_ADC_CH, LL_ADC_SAMPLINGTIME_239CYCLES_5);
+	LL_ADC_SetChannelSamplingTime(ADC1, TSENSE_ADC_CH, LL_ADC_SAMPLINGTIME_239CYCLES_5);
 	
 	NVIC_EnableIRQ(ADC1_2_IRQn);
 	LL_ADC_EnableIT_EOS(ADC1);

@@ -23,11 +23,12 @@
 #include "ILI9341.h"
 #include "XPT2046.h"
 #include "INA226.h"
+#include "scpi.h"
 #include <math.h>
 
 // Firmware version
-#define FW_VER_MAJOR	1
-#define FW_VER_MINOR	50
+#define FW_VER_MAJOR	2
+#define FW_VER_MINOR	00
 #define FW_VER_REV		'a'
 #define FW_VER_DATE		__DATE__
 
@@ -158,7 +159,7 @@ struct System_TypeDef {
 	void Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_CallbackHandler)(void), void(*OverTemperature_CallbackHandler)(void));
 	void Handler(void);
 	void Shutdown(void);
-	uint8_t OverTemperature(void);
+	uint8_t IsOverTemperature(void);
 	uint32_t ReadVsense5V(void);
 	uint32_t ReadVsenseVin(void);
 	float ReadDriverTemp(void);
@@ -179,6 +180,12 @@ private:
 	void DMA_Init(void);
 	void IWDG_Init(void);
 	void SetFanSpeed(uint32_t spd);
+	
+	volatile uint32_t pwrBtnTmr;
+	volatile uint32_t sysCheckTmr;
+	volatile uint8_t overTemp;
+	volatile uint8_t underVoltage;
+	uint8_t startup;
 };
 
 extern System_TypeDef sys;

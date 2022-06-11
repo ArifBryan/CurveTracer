@@ -33,8 +33,6 @@ add_bsp_based_executable(
 		interrupt.c
 		uart_it.h
 		uart_it.cpp
-		serial.cpp
-		serial.h
 		ILI9341.h
 		ILI9341.cpp
 		gfxfont.h
@@ -61,6 +59,8 @@ add_bsp_based_executable(
 		curveTracer.cpp
 		curveTracer.h
 		iconBitmap.h
+		scpi.h
+		scpi.cpp
 	GENERATE_BIN
 	GENERATE_MAP
 	OUTPUT_RELOCATION_RECORDS)

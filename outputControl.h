@@ -49,6 +49,7 @@ private:
 struct OutputControl_TypeDef {
 	void Init(void);
 	void Handler(void);
+	void Ticks10ms_IRQ_Handler(void);
 	void SetDACValue(uint8_t ch, uint16_t val);
 	void WriteDACValues(void);
 	void DisableAllOutputs(void);

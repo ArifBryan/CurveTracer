@@ -3,12 +3,12 @@
 
 OutputControl_TypeDef outCtl;
 
-uint32_t ctrlTimer;
+volatile uint32_t ctrlTimer;
 volatile uint8_t spiDACTransCount;
 volatile uint16_t spiDACBuffer[3];
 volatile uint8_t adcReadChIndex;
 
-#define LOOP_INTERVAL	0.025
+#define LOOP_INTERVAL	0.01
 #define LOOP_INTERVALms LOOP_INTERVAL * 1000
 
 #define CH_STABLE_CNT	3
@@ -110,7 +110,25 @@ void OutputControl_TypeDef::Init() {
 }
 
 void OutputControl_TypeDef::Handler() {
-	if (sys.Ticks() - ctrlTimer >= LOOP_INTERVALms || sys.IsStartup()) {
+	//if (sys.Ticks() - ctrlTimer >= LOOP_INTERVALms || sys.IsStartup()) {
+//		ina226Ch1.ReadData();
+//		
+//		ch1.Handler();
+//		ch2.Handler();
+//		ch3.Handler();
+//		
+//		SetDACValue(1, ch1.mv);
+//		SetDACValue(2, ch2.mv);
+//		SetDACValue(3, ch3.mv);
+//		
+//		WriteDACValues();
+		
+		//ctrlTimer = sys.Ticks();
+	//}
+}
+
+void OutputControl_TypeDef::Ticks10ms_IRQ_Handler() {
+	if (++ctrlTimer >= LOOP_INTERVALms / 10 && !sys.IsStartup()) {
 		ina226Ch1.ReadData();
 		
 		ch1.Handler();
@@ -123,7 +141,7 @@ void OutputControl_TypeDef::Handler() {
 		
 		WriteDACValues();
 		
-		ctrlTimer = sys.Ticks();
+		ctrlTimer = 0;
 	}
 }
 
@@ -145,12 +163,12 @@ void OutputControl_TypeDef::DisableAllOutputs() {
 	LL_GPIO_ResetOutputPin(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN);	
 	LL_GPIO_ResetOutputPin(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN);	
 }
-
+#define FILTER_Kf	2
 void Channel_TypeDef::Handler() {
-	vMeas += ina226->GetVoltage() * 4;
-	vMeas /= 5;
-	iMeas += ina226->GetCurrent() * 4;
-	iMeas /= 5;
+	vMeas += ina226->GetVoltage() * FILTER_Kf;
+	vMeas /= FILTER_Kf + 1;
+	iMeas += ina226->GetCurrent() * FILTER_Kf;
+	iMeas /= FILTER_Kf + 1;
 	
 	if (GetState()) {
 		if (iMeas > iSet) {
@@ -165,7 +183,7 @@ void Channel_TypeDef::Handler() {
 		
 		if (mode == CH_MODE_VOLTAGE) {
 			mv = pidV.GetOutput();
-			if (abs(pidV.GetError()) > 1.20) {
+			if (abs(pidV.GetError()) >= 1.0) {
 				stableCounter = CH_STABLE_CNT;
 			}
 			else {
@@ -175,7 +193,7 @@ void Channel_TypeDef::Handler() {
 		else {
 			mv = pidI.GetOutput() / ina226->GetCurrentCal();
 			pidV.Reset();
-			if (abs(pidI.GetError()) > 0.045) {
+			if (abs(pidI.GetError()) >= 0.04) {
 				stableCounter = CH_STABLE_CNT;
 			}
 			else {

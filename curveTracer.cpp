@@ -76,11 +76,9 @@ void CurveTracer_TypeDef::Start() {
 
 void CurveTracer_TypeDef::Stop() {
 	run = 0;
-	pRef->SetVoltage(OUT_MIN_V);
-	pA->SetVoltage(OUT_MIN_V);
-	if (pB) {
-		pB->SetVoltage(OUT_MIN_V);
-	}
+	if (pRef) {pRef->SetVoltage(OUT_MIN_V); }
+	if (pA) {pA->SetVoltage(OUT_MIN_V); }
+	if (pB) {pB->SetVoltage(OUT_MIN_V); }
 	outCtl.DisableAllOutputs();
 }
 

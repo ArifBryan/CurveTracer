@@ -1,12 +1,14 @@
 #include "uart_it.h"
 #include <string.h>
 
-void UART_IT_TypeDef::Init(UART_IT_InitTypeDef *initStruct, void(*Receive_CallbackHandler)(char *data), char delimiter, uint32_t timeout) {
+void UART_IT_TypeDef::Init(UART_IT_InitTypeDef *initStruct, void(*Receive_CallbackHandler)(volatile char *data), char delimiter, uint32_t timeout) {
 	this->Receive_Handler = Receive_CallbackHandler;
 	this->delimiter = delimiter;
 	this->timeout = timeout;
 	
 	LL_USART_InitTypeDef USARTInit_Struct;
+	
+	LL_USART_StructInit(&USARTInit_Struct);
 	
 	USARTInit_Struct.TransferDirection = initStruct->TransferDirection;
 	USARTInit_Struct.BaudRate = initStruct->BaudRate;
@@ -29,11 +31,12 @@ void UART_IT_TypeDef::Init(UART_IT_InitTypeDef *initStruct, void(*Receive_Callba
 
 void UART_IT_TypeDef::IRQ_Handler() {
 	if (LL_USART_IsActiveFlag_RXNE(usart)) {
-		char data = LL_USART_ReceiveData8(usart);
+		volatile char data = LL_USART_ReceiveData8(usart);
 		
 		timeoutTmr = *ticks;
 		if (data == delimiter) {
 			rxBuff[rxBuffPtr++] = data;
+			rxBuff[rxBuffPtr] = 0;
 			rxBuffPtr = 0;
 		}
 		else {
@@ -43,7 +46,7 @@ void UART_IT_TypeDef::IRQ_Handler() {
 		
 		LL_USART_ClearFlag_RXNE(usart);
 	}
-	if (LL_USART_IsActiveFlag_TC(usart)) {
+	if (LL_USART_IsActiveFlag_TC(usart) && LL_USART_IsActiveFlag_TXE(usart)) {
 		if (txBuff[txBuffPtr] != 0) {
 			LL_USART_TransmitData8(usart, txBuff[txBuffPtr++]);
 		}
@@ -62,7 +65,7 @@ void UART_IT_TypeDef::Handler() {
 			rxBuffPtr = 0;
 		}
 		else if (rxBuffPtr == 0) {
-			Receive_Handler((char*)rxBuff);
+			Receive_Handler(rxBuff);
 			memset((char*)rxBuff, 0, strlen((char*)rxBuff));
 		}
 	}

@@ -105,9 +105,23 @@ struct UserInterface_TypeDef {
 	void ScreenMenu(void);
 	void SetScreenMenu(uint8_t index);
 	void ButtonHandler(void);
+	void ForceRedraw(void) {
+		uiRedraw = 1;
+	}
 	Keypad_TypeDef keypad;
 private:
 	void SplashScreen(void);
+	uint8_t uiRedraw = 1;
+	uint8_t uiUpdate = 1;
+	uint8_t uiNotify;
+	uint32_t uiTimer;
+	uint8_t uiUpdateIndex;
+	volatile uint32_t beepTimer;
+	uint32_t beepTime;
+	volatile uint8_t beepCount;
+	uint32_t touchTimer;
+	uint8_t uiMenuIndex;
+	uint8_t editVar;	
 };
 
 extern UserInterface_TypeDef ui;
