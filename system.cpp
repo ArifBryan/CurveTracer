@@ -91,7 +91,9 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 				TIM_Init();
 				DMA_Init();
 				EXTI_Init();
+				// Intterupt priority management.
 				// !IMPORTANT! Always manage interrupts priority wisely !IMPORTANT!
+				// !IMPORTANT! Do not leave NVIC/Interrupt priority unmanaged !IMPORTANT!
 				NVIC_Init();
 				SetFanSpeed(100);
 				// Watchdog reset
@@ -690,8 +692,10 @@ void System_TypeDef::IWDG_Init() {
 }
 
 void System_TypeDef::NVIC_Init() {
+	// Intterupt priority management.
 	// !IMPORTANT! Always manage interrupts priority wisely !IMPORTANT!
-	// Prioritize importatnt interrupt on the higher rank
+	// !IMPORTANT! Do not leave NVIC/Interrupt priority unmanaged !IMPORTANT!
+	// Prioritize important interrupt with higher rank
 	// Prioritize USART interrupt to avoid data overrun!
 	NVIC_SetPriority(USART1_IRQn, 3);
 	NVIC_SetPriority(I2C1_EV_IRQn, 4);

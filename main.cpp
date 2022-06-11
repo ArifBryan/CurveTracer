@@ -30,7 +30,7 @@ int main() {
 	sys.Init(Startup_Handler, Shutdown_Handler, OverTemperature_Handler);
 	while (1) {		
 		sys.Handler();
-		//scpi.Handler();
+		scpi.Handler();
 		ui.Handler();
 		outCtl.Handler();
 		curveTracer.Handler();

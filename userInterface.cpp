@@ -411,6 +411,9 @@ void UserInterface_TypeDef::ScreenMenu() {
 			barColor = ILI9341_MAROON;
 			sprintf(strbuff, "Warning : Overheat");
 		}
+		else if (scpi.reg.DispState) {
+			sprintf(strbuff, "%s",scpi.reg.DispData);
+		}
 		else {
 		
 			switch (uiMenuIndex) {

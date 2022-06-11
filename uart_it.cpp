@@ -32,7 +32,6 @@ void UART_IT_TypeDef::Init(UART_IT_InitTypeDef *initStruct, void(*Receive_Callba
 void UART_IT_TypeDef::IRQ_Handler() {
 	if (LL_USART_IsActiveFlag_RXNE(usart)) {
 		volatile char data = LL_USART_ReceiveData8(usart);
-		LL_USART_TransmitData8(usart, data);
 		
 		timeoutTmr = *ticks;
 		if (data == delimiter) {

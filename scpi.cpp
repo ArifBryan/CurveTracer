@@ -10,7 +10,7 @@ void SCPI_UARTReceive_Handler(volatile char *data) {
 }
 
 void SCPI_TypeDef::UARTReceive_Handler(char *data) {
-	Return(data);
+parseMnemonic:
 	// SCPI Command Header
 	if (strSkim(&data, "*")) {
 		if (strMatch(data, "IDN?")) {
@@ -94,6 +94,113 @@ void SCPI_TypeDef::UARTReceive_Handler(char *data) {
 				}
 			}
 		}
+		// MEASure
+		else if(strSkim(&data, "MEASure:") || strSkim(&data, "MEAS:")) {
+			// VOLTage
+			if (strSkim(&data, "VOLTage? ") || strSkim(&data, "VOLT? ")) {
+				if (strSkim(&data, "(@")) {
+					while (*data - '0' > 0 && *data - '0' < 9) {
+						switch (atoi(data)) {
+						case 1:
+							Return(outCtl.ch1.GetVoltage());
+							break;
+						case 2:
+							Return(outCtl.ch2.GetVoltage());
+							break;
+						case 3:
+							Return(outCtl.ch3.GetVoltage());
+							break;
+						default:
+							break;
+						}
+						data++;
+						if (*data == ',') {data++; }
+					}
+				}
+			}
+			// CURRent
+			if (strSkim(&data, "CURRent? ") || strSkim(&data, "CURR? ")) {
+				if (strSkim(&data, "(@")) {
+					while (*data - '0' > 0 && *data - '0' < 9) {
+						switch (atoi(data)) {
+						case 1:
+							Return(outCtl.ch1.GetCurrent());
+							break;
+						case 2:
+							Return(outCtl.ch2.GetCurrent());
+							break;
+						case 3:
+							Return(outCtl.ch3.GetCurrent());
+							break;
+						default:
+							break;
+						}
+						data++;
+						if (*data == ',') {data++; }
+					}
+				}
+			}
+			
+		}
+		// OUTPut1
+		else if(strSkim(&data, "OUTPut1") || strSkim(&data, "OUTP1")) {
+			// Query
+			if (strMatch(data, "?")) {
+				Return(outCtl.ch1.GetState() ? "ON" : "OFF");
+			}
+			// Command
+			else if(strSkim(&data, " ")) {
+				if (strMatch(data, "ON")) {outCtl.ch1.SetState(1); }
+				else if (strMatch(data, "OFF")) {outCtl.ch1.SetState(0); }
+			}
+		}
+		// OUTPut2
+		else if(strSkim(&data, "OUTPut2") || strSkim(&data, "OUTP2")) {
+			// Query
+			if (strMatch(data, "?")) {
+				Return(outCtl.ch2.GetState() ? "ON" : "OFF");
+			}
+			// Command
+			else if(strSkim(&data, " ")) {
+				if (strMatch(data, "ON")) {outCtl.ch2.SetState(1); }
+				else if (strMatch(data, "OFF")) {outCtl.ch2.SetState(0); }
+			}
+		}
+		// OUTPut3
+		else if(strSkim(&data, "OUTPut3") || strSkim(&data, "OUTP3")) {
+			// Query
+			if (strMatch(data, "?")) {
+				Return(outCtl.ch3.GetState() ? "ON" : "OFF");
+			}
+			// Command
+			else if(strSkim(&data, " ")) {
+				if (strMatch(data, "ON")) {outCtl.ch3.SetState(1); }
+				else if (strMatch(data, "OFF")) {outCtl.ch3.SetState(0); }
+			}
+		}
+		// DISPlay
+		else if(strSkim(&data, "DISPlay") || strSkim(&data, "DISP")) {
+			// Query
+			if (strMatch(data, "?")) {
+				Return(reg.DispState ? "ON" : "OFF");
+			}
+			// Command
+			else if(strSkim(&data, " ")) {
+				if (strMatch(data, "ON")) {reg.DispState = 1; }
+				else if (strMatch(data, "OFF")) {reg.DispState = 0; }
+			}
+			// Command DATA
+			else if(strSkim(&data, ":DATA ")) {
+				if (*data == ' ') {reg.DispData[0] = 0;}
+				sscanf(data, "%s;\n", reg.DispData);
+			}
+		}
+		
+		// Next Command
+		if (strchr(data, ';') != NULL) {
+			data = strchr(data, ';') + 1;
+			goto parseMnemonic;
+		}
 	}
 }
 
@@ -119,7 +226,8 @@ void SCPI_TypeDef::Return(const char *data) {
 
 void SCPI_TypeDef::Return(float data) {
 	char str[13];
-	sprintf(str, "%d.%1d", (int16_t)data, (uint16_t)(abs(data) * 10) % 10);
+	uint8_t dec = (uint)abs(data * 100) % 100;
+	sprintf(str, "%d.%02d", (int16_t)data, dec);
 	uart->Transmit(str);
 }
 
