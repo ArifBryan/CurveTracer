@@ -91,6 +91,8 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 				TIM_Init();
 				DMA_Init();
 				EXTI_Init();
+				// !IMPORTANT! Always manage interrupts priority wisely !IMPORTANT!
+				NVIC_Init();
 				SetFanSpeed(100);
 				// Watchdog reset
 				LL_IWDG_ReloadCounter(IWDG);
@@ -623,14 +625,14 @@ void System_TypeDef::EXTI_Init() {
 	EXTIInit_Struct.Trigger = LL_EXTI_TRIGGER_FALLING;
 	
 	EXTIInit_Struct.Line_0_31 = INA226_CH1_INT_EXTI;
-	LL_EXTI_Init(&EXTIInit_Struct);
-	NVIC_EnableIRQ(EXTI4_IRQn);
+	//LL_EXTI_Init(&EXTIInit_Struct);
+	//NVIC_EnableIRQ(EXTI4_IRQn);
 	EXTIInit_Struct.Line_0_31 = INA226_CH2_INT_EXTI;
-	LL_EXTI_Init(&EXTIInit_Struct);
-	NVIC_EnableIRQ(EXTI3_IRQn);
+	//LL_EXTI_Init(&EXTIInit_Struct);
+	//NVIC_EnableIRQ(EXTI3_IRQn);
 	EXTIInit_Struct.Line_0_31 = INA226_CH3_INT_EXTI;
-	LL_EXTI_Init(&EXTIInit_Struct);
-	NVIC_EnableIRQ(EXTI9_5_IRQn);
+	//LL_EXTI_Init(&EXTIInit_Struct);
+	//NVIC_EnableIRQ(EXTI9_5_IRQn);
 	
 	EXTIInit_Struct.Line_0_31 = XPT2046_IRQ_EXTI;
 	//LL_EXTI_Init(&EXTIInit_Struct);
@@ -685,6 +687,17 @@ void System_TypeDef::IWDG_Init() {
 	LL_IWDG_SetReloadCounter(IWDG, 0xFFF);
 	LL_IWDG_Enable(IWDG);
 	LL_IWDG_DisableWriteAccess(IWDG);
+}
+
+void System_TypeDef::NVIC_Init() {
+	// !IMPORTANT! Always manage interrupts priority wisely !IMPORTANT!
+	// Prioritize importatnt interrupt on the higher rank
+	// Prioritize USART interrupt to avoid data overrun!
+	NVIC_SetPriority(USART1_IRQn, 3);
+	NVIC_SetPriority(I2C1_EV_IRQn, 4);
+	NVIC_SetPriority(TIM3_IRQn, 4);
+	NVIC_SetPriority(SPI2_IRQn, 5);
+	NVIC_SetPriority(ADC1_2_IRQn, 6);
 }
 
 uint32_t System_TypeDef::Ticks() {

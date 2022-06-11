@@ -179,6 +179,7 @@ private:
 	void EXTI_Init(void);
 	void DMA_Init(void);
 	void IWDG_Init(void);
+	void NVIC_Init(void);
 	void SetFanSpeed(uint32_t spd);
 	
 	volatile uint32_t pwrBtnTmr;
