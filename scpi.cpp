@@ -196,7 +196,7 @@ parseMnemonic:
 			}
 		}
 		
-		// Next Command
+		// Parse Next Command
 		if (strchr(data, ';') != NULL) {
 			data = strchr(data, ';') + 1;
 			goto parseMnemonic;
