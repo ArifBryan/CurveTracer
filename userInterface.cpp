@@ -13,9 +13,6 @@ UserInterface_TypeDef ui;
 
 char strbuff[200];
 
-float vstart, vend, vstep, irange;
-float ibstart, ibstep, ibend;
-
 Point_TypeDef tsPos;
 
 Adafruit_GFX_Button btn1;
@@ -59,14 +56,6 @@ void UserInterface_TypeDef::Init() {
 	ts.SetCalibration(min, max);
 	keypad.Init();
 	SetScreenMenu(0);
-	
-	vstart = 0;
-	vend = 1000;
-	vstep = 5;
-	irange = 200;
-	ibstart = 1;
-	ibend = 3;
-	ibstep = 1;
 }
 
 void UserInterface_TypeDef::Handler() {
@@ -169,25 +158,25 @@ void UserInterface_TypeDef::ButtonHandler() {
 			case 1:
 				switch (editVar) {
 				case 1:
-					vstart = keypad.GetKeyFloat();
+					curveTracer.vStart = keypad.GetKeyFloat();
 					break;
 				case 2:
-					vend = keypad.GetKeyFloat();
+					curveTracer.vEnd = keypad.GetKeyFloat();
 					break;
 				case 3:
-					vstep = keypad.GetKeyFloat();
+					curveTracer.vStep = keypad.GetKeyFloat();
 					break;
 				case 4:
-					irange = keypad.GetKeyFloat();
+					curveTracer.iLim = keypad.GetKeyFloat();
 					break;
 				case 5:
-					ibstart = keypad.GetKeyFloat();
+					curveTracer.iStart = keypad.GetKeyFloat();
 					break;
 				case 6:
-					ibstep = keypad.GetKeyFloat();
+					curveTracer.iStep = keypad.GetKeyFloat();
 					break;
 				case 7:
-					ibend = keypad.GetKeyFloat();
+					curveTracer.iEnd = keypad.GetKeyFloat();
 					break;
 				}
 				break;
@@ -323,13 +312,13 @@ void UserInterface_TypeDef::ButtonHandler() {
 			if (btn1.justPressed()) {
 				Beep(50);
 				
-				if ((ibstep > 0.0 && ibend > 0.0) || ibstart > 0.0) {
+				if ((curveTracer.iStep > 0.0 && curveTracer.iEnd > 0.0) || curveTracer.iStart > 0.0) {
 					curveTracer.SetupChannel(&outCtl.ch1, &outCtl.ch3, &outCtl.ch2);
-					curveTracer.SetupParams3ch(vstart, vend, vstep, irange, ibstart, ibend, ibstep, 100);
+					curveTracer.tSample = 100;
 				}
 				else {
 					curveTracer.SetupChannel(&outCtl.ch1, &outCtl.ch2);
-					curveTracer.SetupParams2ch(vstart, vend, vstep, irange, 100);
+					curveTracer.tSample = 100;
 				}
 				curveTracer.Start();
 				plot.ResetLinePlot();
@@ -348,7 +337,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 				ui.Beep(50, 2);
 				uiNotify = 1;
 			}
-			if (curveTracer.IsNewSample(1)) {
+			if (curveTracer.IsNewSample()) {
 				uiUpdate = 1;
 			}
 			if (btn1.justPressed()) {
@@ -544,13 +533,13 @@ void UserInterface_TypeDef::ScreenMenu() {
 				canvas.print("IbEnd");
 				lcd.drawRGBBitmap(3, 27, canvas.getBuffer(), 60, 170);
 				
-				text1.Draw((int16_t)vstart);
-				text2.Draw((int16_t)vend);
-				text3.Draw(vstep);
-				text4.Draw(irange);
-				text5.Draw(ibstart);
-				text6.Draw(ibstep);
-				text7.Draw(ibend);
+				text1.Draw((int16_t)curveTracer.vStart);
+				text2.Draw((int16_t)curveTracer.vEnd);
+				text3.Draw(curveTracer.vStep);
+				text4.Draw(curveTracer.iLim);
+				text5.Draw(curveTracer.iStart);
+				text6.Draw(curveTracer.iStep);
+				text7.Draw(curveTracer.iEnd);
 			}
 			if (uiRedraw || uiUpdate) {
 				
@@ -571,14 +560,14 @@ void UserInterface_TypeDef::ScreenMenu() {
 				btn2.drawButton(btn2.isPressed());
 				btn3.drawButton(btn3.isPressed());
 				
-				plot.Init(20, 36, 195, 188, "mV", "mA", vstart, vend, 0, irange, 10, 10);
+				plot.Init(20, 36, 195, 188, "mV", "mA", curveTracer.vStart, curveTracer.vEnd, 0, curveTracer.iLim, 10, 10);
 				plot.SetPlotColor(ILI9341_ORANGE);
 			}
 			if (uiRedraw || uiUpdate) {
 				if (curveTracer.GetSampleCount() > 0) {
 					plot.DrawLine(
 						curveTracer.data[curveTracer.GetSampleCount() - 1].v, 
-						curveTracer.data[curveTracer.GetSampleCount() - 1].i);
+						abs(curveTracer.data[curveTracer.GetSampleCount() - 1].i));
 				}
 				else {
 					plot.ResetLinePlot();

@@ -37,8 +37,8 @@ struct CurveTracer_TypeDef {
 		this->vStart = vStart;
 		this->vEnd = vEnd;
 		this->vStep = vStep;
-		this->tSample = (tSample < CT_MIN_SAMPLE_TIME ? CT_MIN_SAMPLE_TIME : tSample);
 		this->iLim = iLim;
+		this->tSample = (tSample < CT_MIN_SAMPLE_TIME ? CT_MIN_SAMPLE_TIME : tSample);
 		sampleLen = abs(vStart - vEnd) / vStep + 1;
 	}
 	uint32_t GetSampleLength(void) {return sampleLen;}
@@ -47,20 +47,24 @@ struct CurveTracer_TypeDef {
 	void Stop(void);
 	uint8_t IsSampling(void);
 	uint8_t IsSamplingDone();
-	uint8_t IsNewSample(uint8_t clear);
-	uint8_t IsNewSample() {return IsNewSample(0);}
+	uint8_t IsNewSample() {return newSample;}
+	uint8_t IsNewSequence() {return nextSampleSeq;}
+	uint32_t GetSequenceCount(void) {return sampleSeq;}
+	uint8_t IsChannelValid(void) {return (pRef && pA) || (pRef && pA && pB);}
 	SampleData_TypeDef data[CT_DATA_LEN];
-private:
-	uint8_t run;
-	uint8_t end;
-	Channel_TypeDef *pRef, *pA, *pB;
+	
 	float vStart, vEnd, vStep, iLim;
 	float iStart, iEnd, iStep;
 	float vSample, iSample;
 	float ibSample;
 	uint32_t tSample;
+private:
+	uint8_t run;
+	uint8_t end;
+	Channel_TypeDef *pRef, *pA, *pB;
 	uint32_t samplePtr;
 	uint32_t sampleLen;
+	uint32_t sampleSeq;
 	uint8_t newSample;
 	uint8_t nextSampleSeq;
 };

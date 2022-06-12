@@ -237,6 +237,7 @@ void Channel_TypeDef::SetState(uint8_t en) {
 	}
 	else {
 		LL_GPIO_ResetOutputPin(gpio, pin);
+		stableCounter = 0;
 	}
 }
 uint8_t Channel_TypeDef::GetState() {
