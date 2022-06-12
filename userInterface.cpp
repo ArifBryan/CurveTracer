@@ -43,7 +43,10 @@ void UserInterface_TypeDef::Init() {
 	SetBrightness(30);
 	lcd.setFont(&FreeSans9pt7b);
 	SplashScreen();
-	LL_mDelay(2000);
+	LL_mDelay(1000);
+	// Watchdog reset
+	LL_IWDG_ReloadCounter(IWDG);
+	LL_mDelay(1000);
 	
 	Point_TypeDef min, max;
 	min.x = 0;

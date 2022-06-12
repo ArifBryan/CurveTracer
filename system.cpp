@@ -1,6 +1,8 @@
 #include "system.h"
 #include "userInterface.h"
 #include "outputControl.h"
+#include "Fonts/FreeSans9pt7b.h"
+#include <stddef.h>
 
 #define UVLO_BYPASS		0
 #define PWRCTL_BYPASS	1
@@ -37,6 +39,10 @@ extern "C" void CSSFault_Handler() {
 	}
 	NVIC_SystemReset();
 }
+extern "C" void HardFault_Handler() {
+	lcd.fillRect(295, 0, 25, 25, ILI9341_RED);
+	while (1) ;
+}
 
 extern "C" void Ticks10ms_Handler() {
 	sys.Ticks10ms_IRQ_Handler();
@@ -66,18 +72,20 @@ extern "C" void I2C1_EV_IRQHandler() {
 extern void I2C1_TransComplete_Handler();
 
 void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_CallbackHandler)(void), void(*OverTemperature_CallbackHandler)(void)) {
+	uint8_t forceOn = 0;
 	// Peripheral init
 	RCC_Init();
 	GPIO_Init();
-	//IWDG_Init();
+	IWDG_Init();
 	LL_GPIO_SetOutputPin(PWR_LATCH_GPIO, PWR_LATCH_PIN);
+	forceOn = LL_RCC_IsActiveFlag_SFTRST();
 	ADC_Init();
 	LL_mDelay(10);
 	LL_GPIO_ResetOutputPin(LED_STA_GPIO, LED_STA_PIN);
 	uint32_t platchTmr = Ticks();
 	while (1) {
 		// Power on button
-		if ((!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN) && (ReadVsenseVin() >= 23000 || UVLO_BYPASS)) || PWRCTL_BYPASS) {
+		if ((!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN) && (ReadVsenseVin() >= 23000 || UVLO_BYPASS)) || PWRCTL_BYPASS || forceOn) {
 			if (Ticks() - pwrBtnTmr >= 200) {
 				LL_GPIO_SetOutputPin(BEEPER_GPIO, BEEPER_PIN);
 				LL_mDelay(50);
@@ -122,6 +130,8 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 		else if (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) {
 			platchTmr = Ticks();
 		}
+		// Watchdog reset
+		LL_IWDG_ReloadCounter(IWDG);
 	}
 }
 
@@ -683,12 +693,12 @@ void System_TypeDef::DMA_Init() {
 }
 
 void System_TypeDef::IWDG_Init() {
-	LL_DBGMCU_APB1_GRP1_FreezePeriph(LL_DBGMCU_APB1_GRP1_IWDG_STOP);
 	LL_IWDG_EnableWriteAccess(IWDG);
 	LL_IWDG_SetPrescaler(IWDG, LL_IWDG_PRESCALER_16);
 	LL_IWDG_SetReloadCounter(IWDG, 0xFFF);
 	LL_IWDG_Enable(IWDG);
 	LL_IWDG_DisableWriteAccess(IWDG);
+	LL_DBGMCU_APB1_GRP1_FreezePeriph(LL_DBGMCU_APB1_GRP1_IWDG_STOP);
 }
 
 void System_TypeDef::NVIC_Init() {
