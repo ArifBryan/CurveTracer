@@ -40,6 +40,8 @@ extern "C" void CSSFault_Handler() {
 	NVIC_SystemReset();
 }
 extern "C" void HardFault_Handler() {
+	outCtl.DisableAllOutputs();
+	LL_GPIO_ResetOutputPin(BEEPER_GPIO, BEEPER_PIN);
 	lcd.fillRect(295, 0, 25, 25, ILI9341_RED);
 	while (1) ;
 }
@@ -53,7 +55,7 @@ extern "C" void Ticks10ms_Handler() {
 extern "C" void ADC1_EOS_Handler() {
 	adcData[adcDataIdx++] = LL_ADC_REG_ReadConversionData12(ADC1);
 	if (adcDataIdx == 3){adcDataIdx = 0; }
-	LL_ADC_REG_StartConversionSWStart(ADC1);
+	else {LL_ADC_REG_StartConversionSWStart(ADC1);}
 }
 
 extern "C" void USART1_IRQHandler() {
@@ -72,20 +74,23 @@ extern "C" void I2C1_EV_IRQHandler() {
 extern void I2C1_TransComplete_Handler();
 
 void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_CallbackHandler)(void), void(*OverTemperature_CallbackHandler)(void)) {
-	uint8_t forceOn = 0;
+	// Check reset source
+	uint8_t iwdgReset = LL_RCC_IsActiveFlag_IWDGRST();
+	LL_RCC_ClearResetFlags();
 	// Peripheral init
 	RCC_Init();
 	GPIO_Init();
 	IWDG_Init();
 	LL_GPIO_SetOutputPin(PWR_LATCH_GPIO, PWR_LATCH_PIN);
-	forceOn = LL_RCC_IsActiveFlag_SFTRST();
+	// Check if system restart
+	uint8_t forceOn = LL_RTC_BKP_GetRegister(BKP, LL_RTC_BKP_DR1) || iwdgReset;
 	ADC_Init();
 	LL_mDelay(10);
 	LL_GPIO_ResetOutputPin(LED_STA_GPIO, LED_STA_PIN);
 	uint32_t platchTmr = Ticks();
 	while (1) {
 		// Power on button
-		if ((!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN) && (ReadVsenseVin() >= 23000 || UVLO_BYPASS)) || PWRCTL_BYPASS || forceOn) {
+		if (((!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN) || forceOn) && (ReadVsenseVin() >= 23000 || UVLO_BYPASS)) || PWRCTL_BYPASS) {
 			if (Ticks() - pwrBtnTmr >= 200) {
 				LL_GPIO_SetOutputPin(BEEPER_GPIO, BEEPER_PIN);
 				LL_mDelay(50);
@@ -99,6 +104,8 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 				TIM_Init();
 				DMA_Init();
 				EXTI_Init();
+				// Clear restart flag
+				LL_RTC_BKP_SetRegister(BKP, LL_RTC_BKP_DR1, 0);
 				// Intterupt priority management.
 				// !IMPORTANT! Always manage interrupts priority wisely !IMPORTANT!
 				// !IMPORTANT! Do not leave NVIC/Interrupt priority unmanaged !IMPORTANT!
@@ -114,6 +121,19 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 				LL_mDelay(100);
 				// Watchdog reset
 				LL_IWDG_ReloadCounter(IWDG);
+				// Error-caused Reset Handler
+				if (iwdgReset) {
+					lcd.setTextColor(ILI9341_BLACK);
+					lcd.setCursor(5, 17);
+					lcd.print("System Error!");
+					lcd.setCursor(5, 37);
+					lcd.print("Press power button to reset.");
+					while (LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) {
+						LL_IWDG_ReloadCounter(IWDG); 
+						LL_mDelay(100);
+					}
+					Restart();
+				}
 				while (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) ;
 				pwrBtnTmr = Ticks();
 				break;
@@ -125,7 +145,11 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 		
 		// Temporary power latch timeout
 		if (Ticks() - platchTmr >= 500) {
-			LL_GPIO_ResetOutputPin(PWR_LATCH_GPIO, PWR_LATCH_PIN);			
+			LL_GPIO_ResetOutputPin(PWR_LATCH_GPIO, PWR_LATCH_PIN);
+			// Start ADC conversion
+			ADCStartConversion();
+			
+			platchTmr = Ticks();		
 		}
 		else if (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) {
 			platchTmr = Ticks();
@@ -152,6 +176,8 @@ void System_TypeDef::Handler() {
 		else {
 			LL_GPIO_SetOutputPin(LED_PWR_GPIO, LED_PWR_PIN);
 		}
+		// Start ADC conversion
+		ADCStartConversion();
 		
 		sledTmr = Ticks();
 	}
@@ -189,11 +215,14 @@ void System_TypeDef::Ticks10ms_IRQ_Handler() {
 				SetFanSpeed((ReadDriverTemp() - 31) * 15 + 25);
 			}
 			else {
-				SetFanSpeed((ReadDriverTemp() - 31) * 15 + 25);
+				SetFanSpeed(25);
 			}
 		}
 		else if (ReadDriverTemp() > 31) {
 			SetFanSpeed((ReadDriverTemp() - 31) * 15);
+		}
+		else {
+			SetFanSpeed(0);
 		}
 		
 		// Thermal supervisor
@@ -232,6 +261,13 @@ void System_TypeDef::Shutdown() {
 	NVIC_SystemReset();
 }
 
+void  System_TypeDef::Restart() {
+	Shutdown_Callback();
+	// Set restart flag
+	LL_RTC_BKP_SetRegister(BKP, LL_RTC_BKP_DR1, 0xFF);
+	NVIC_SystemReset();
+}
+
 void System_TypeDef::RCC_Init() {
 	LL_UTILS_PLLInitTypeDef PLLInit_Struct;
 	
@@ -256,6 +292,10 @@ void System_TypeDef::RCC_Init() {
 	LL_APB2_GRP1_ForceReset(LL_APB2_GRP1_PERIPH_ALL);
 	LL_APB1_GRP1_ReleaseReset(LL_APB1_GRP1_PERIPH_ALL);
 	LL_APB2_GRP1_ReleaseReset(LL_APB2_GRP1_PERIPH_ALL);
+	
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_BKP);
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
+	LL_PWR_EnableBkUpAccess();
 }
 
 void System_TypeDef::GPIO_Init() {
@@ -463,9 +503,9 @@ void System_TypeDef::ADC_Init() {
 	LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_2, VSENSE_5V_ADC_CH);
 	LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_3, TSENSE_ADC_CH);
 	
-	LL_ADC_SetChannelSamplingTime(ADC1, VSENSE_VIN_ADC_CH, LL_ADC_SAMPLINGTIME_239CYCLES_5);
-	LL_ADC_SetChannelSamplingTime(ADC1, VSENSE_5V_ADC_CH, LL_ADC_SAMPLINGTIME_239CYCLES_5);
-	LL_ADC_SetChannelSamplingTime(ADC1, TSENSE_ADC_CH, LL_ADC_SAMPLINGTIME_239CYCLES_5);
+	LL_ADC_SetChannelSamplingTime(ADC1, VSENSE_VIN_ADC_CH, LL_ADC_SAMPLINGTIME_71CYCLES_5);
+	LL_ADC_SetChannelSamplingTime(ADC1, VSENSE_5V_ADC_CH, LL_ADC_SAMPLINGTIME_71CYCLES_5);
+	LL_ADC_SetChannelSamplingTime(ADC1, TSENSE_ADC_CH, LL_ADC_SAMPLINGTIME_71CYCLES_5);
 	
 	NVIC_EnableIRQ(ADC1_2_IRQn);
 	LL_ADC_EnableIT_EOS(ADC1);
@@ -478,6 +518,12 @@ void System_TypeDef::ADC_Init() {
 	LL_ADC_REG_StartConversionSWStart(ADC1);
 }
 
+void System_TypeDef::ADCStartConversion() {
+	if (adcDataIdx == 0) {
+		LL_ADC_REG_StartConversionSWStart(ADC1);		
+	}
+}
+
 uint32_t System_TypeDef::ReadVsense5V() {
 	return adcData[1] * 1.4681;
 }
@@ -487,6 +533,7 @@ uint32_t System_TypeDef::ReadVsenseVin() {
 }
 
 float System_TypeDef::ReadDriverTemp() {
+	if (adcData[2] == 0) {return 0;}
 	return 50560.9 / adcData[2];
 }
 
@@ -562,6 +609,9 @@ void System_TypeDef::SetFanSpeed(uint32_t spd) {
 	spd *= 2.5;
 	spd = (spd < 30 ? 0 : (spd > 250 ? 250 : spd));
 	LL_TIM_OC_SetCompareCH4(FAN_TIM, spd);
+}
+uint8_t System_TypeDef::GetFanSpeed() {
+	return LL_TIM_OC_GetCompareCH4(FAN_TIM) / 2.5;
 }
 
 uint8_t System_TypeDef::IsUSBConnected() {
@@ -707,11 +757,11 @@ void System_TypeDef::NVIC_Init() {
 	// !IMPORTANT! Do not leave NVIC/Interrupt priority unmanaged !IMPORTANT!
 	// Prioritize important interrupt with higher rank
 	// Prioritize USART interrupt to avoid data overrun!
-	NVIC_SetPriority(USART1_IRQn, 3);
-	NVIC_SetPriority(I2C1_EV_IRQn, 4);
-	NVIC_SetPriority(TIM3_IRQn, 4);
-	NVIC_SetPriority(SPI2_IRQn, 5);
-	NVIC_SetPriority(ADC1_2_IRQn, 6);
+	NVIC_SetPriority(USART1_IRQn, 1);
+	NVIC_SetPriority(I2C1_EV_IRQn, 2);
+	NVIC_SetPriority(SPI2_IRQn, 2);
+	NVIC_SetPriority(ADC1_2_IRQn, 2);
+	NVIC_SetPriority(TIM3_IRQn, 3);
 }
 
 uint32_t System_TypeDef::Ticks() {

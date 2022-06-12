@@ -98,6 +98,7 @@ struct UserInterface_TypeDef {
 	void Init(void);
 	void Handler(void);
 	void SetBrightness(uint8_t bright);
+	uint32_t GetBrightness();
 	void Beep(uint32_t t, uint8_t cnt = 1);
 	uint8_t IsTouched(void);
 	void GetTouchPosition(uint16_t *x, uint16_t *y);
@@ -121,7 +122,8 @@ private:
 	volatile uint8_t beepCount;
 	uint32_t touchTimer;
 	uint8_t uiMenuIndex;
-	uint8_t editVar;	
+	uint8_t editVar;
+	uint8_t sysMenu;
 };
 
 extern UserInterface_TypeDef ui;

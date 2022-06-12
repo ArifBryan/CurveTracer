@@ -16,6 +16,8 @@
 #include <stm32f1xx_ll_dma.h>
 #include <stm32f1xx_ll_iwdg.h>
 #include <stm32f1xx_ll_system.h>
+#include <stm32f1xx_ll_rtc.h>
+#include <stm32f1xx_ll_pwr.h>
 #include <string.h>
 #include <stdio.h>
 #include "I2CHandle.h"
@@ -28,7 +30,7 @@
 
 // Firmware version
 #define FW_VER_MAJOR	2
-#define FW_VER_MINOR	00
+#define FW_VER_MINOR	10
 #define FW_VER_REV		'a'
 #define FW_VER_DATE		__DATE__
 
@@ -159,6 +161,7 @@ struct System_TypeDef {
 	void Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_CallbackHandler)(void), void(*OverTemperature_CallbackHandler)(void));
 	void Handler(void);
 	void Shutdown(void);
+	void Restart(void);
 	uint8_t IsOverTemperature(void);
 	uint32_t ReadVsense5V(void);
 	uint32_t ReadVsenseVin(void);
@@ -167,6 +170,8 @@ struct System_TypeDef {
 	uint8_t IsStartup(void);
 	uint8_t IsUSBConnected(void);
 	uint8_t IsUndervoltage(void);
+	void SetFanSpeed(uint32_t spd);
+	uint8_t GetFanSpeed(void);
 	void Ticks10ms_IRQ_Handler();
 private:
 	void RCC_Init(void);
@@ -180,7 +185,7 @@ private:
 	void DMA_Init(void);
 	void IWDG_Init(void);
 	void NVIC_Init(void);
-	void SetFanSpeed(uint32_t spd);
+	void ADCStartConversion(void);
 	
 	volatile uint32_t pwrBtnTmr;
 	volatile uint32_t sysCheckTmr;

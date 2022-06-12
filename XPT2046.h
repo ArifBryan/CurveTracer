@@ -61,4 +61,5 @@ private:
 	volatile Point_TypeDef pointPos;
 	Point_TypeDef pCalMin, pCalMax;
 	uint16_t zThreshold;
+	volatile bool newData;
 };

@@ -45,6 +45,7 @@ void XPT2046_TypeDef::SPI_IRQ_Handler() {
 			pointPos.y |= Read8() >> 3;
 			EndWrite();
 			LL_SPI_DisableIT_TXE(spi);
+			newData = 1;
 			break;
 		}
 	}
@@ -55,6 +56,7 @@ void XPT2046_TypeDef::StartConversion() {
 	if (spiInterrupt) {
 		Write(XPT2046_READ_Z1POS);
 		spiTransCount = 7;
+		newData = 0;
 		LL_SPI_EnableIT_TXE(spi);
 	}
 	else {
@@ -90,7 +92,7 @@ void XPT2046_TypeDef::GetPosition(Point_TypeDef *point) {
 }
 
 uint8_t XPT2046_TypeDef::IsTouched() {
-	return pointPos.z > zThreshold;
+	return pointPos.z > zThreshold && newData;
 }
 
 void XPT2046_TypeDef::SetCalibration(Point_TypeDef pMin, Point_TypeDef pMax) {
