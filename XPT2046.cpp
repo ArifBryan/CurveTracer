@@ -54,9 +54,12 @@ void XPT2046_TypeDef::SPI_IRQ_Handler() {
 void XPT2046_TypeDef::StartConversion() {
 	StartWrite();
 	if (spiInterrupt) {
-		Write(XPT2046_READ_Z1POS);
 		spiTransCount = 7;
 		newData = 0;
+		pointPos.x = 0;
+		pointPos.y = 0;
+		pointPos.z = 0;
+		Write(XPT2046_READ_Z1POS);
 		LL_SPI_EnableIT_TXE(spi);
 	}
 	else {

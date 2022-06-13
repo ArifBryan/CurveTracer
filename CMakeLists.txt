@@ -61,6 +61,8 @@ add_bsp_based_executable(
 		iconBitmap.h
 		scpi.h
 		scpi.cpp
+		scpi.cpp
+		scpi.h
 	GENERATE_BIN
 	GENERATE_MAP
 	OUTPUT_RELOCATION_RECORDS)

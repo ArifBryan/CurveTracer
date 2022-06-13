@@ -513,7 +513,7 @@ void UserInterface_TypeDef::ScreenMenu() {
 					canvas.fillScreen(ILI9341_WHITE);
 					canvas.setFont(&FreeSans9pt7b);
 					canvas.setTextColor(ILI9341_DARKGREY);
-					sprintf(strbuff, "v%d.%02d%c (%s), Arif Bryan", FW_VER_MAJOR, FW_VER_MINOR, FW_VER_REV, FW_VER_DATE);
+					sprintf(strbuff, "FW : v%d.%02d%c (%s), Arif Bryan", FW_VER_MAJOR, FW_VER_MINOR, FW_VER_REV, FW_VER_DATE);
 					canvas.setCursor(5, 18);
 					canvas.print(strbuff);
 					lcd.drawRGBBitmap(0, 215, canvas.getBuffer(), 320, 25);
