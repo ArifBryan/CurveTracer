@@ -165,11 +165,8 @@ void OutputControl_TypeDef::DisableAllOutputs() {
 }
 #define FILTER_Kf	2
 void Channel_TypeDef::Handler() {
-	float tf;
-	tf = (vMeas + ina226->GetVoltage() * FILTER_Kf) / FILTER_Kf + 1;
-	vMeas = tf;
-	iMeas += (iMeas + ina226->GetCurrent() * FILTER_Kf) / FILTER_Kf + 1;
-	iMeas = tf;
+	vMeas = (vMeas + (ina226->GetVoltage() * FILTER_Kf)) / (FILTER_Kf + 1);
+	iMeas = (iMeas + (ina226->GetCurrent() * FILTER_Kf)) / (FILTER_Kf + 1);
 	
 	if (GetState()) {
 		if (iMeas > iSet) {
