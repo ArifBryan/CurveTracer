@@ -494,7 +494,7 @@ void UserInterface_TypeDef::ScreenMenu() {
 					canvas.setFont(&FreeSans9pt7b);
 					canvas.setTextColor(ILI9341_DARKGREY);
 					canvas.setCursor(0, 18);
-					canvas.print("Vin");
+					canvas.print("+24V");
 					canvas.setCursor(0, 43);
 					canvas.print("+5V");
 					canvas.setCursor(0, 68);
