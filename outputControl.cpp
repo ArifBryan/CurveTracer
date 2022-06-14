@@ -168,7 +168,7 @@ void Channel_TypeDef::Handler() {
 	vMeas = (vMeas + (ina226->GetVoltage() * FILTER_Kf)) / (FILTER_Kf + 1);
 	iMeas = (iMeas + (ina226->GetCurrent() * FILTER_Kf)) / (FILTER_Kf + 1);
 	
-	if (GetState()) {
+	if (GetState() && !(mv == 0 && stableCounter < CH_STABLE_CNT)) {
 		if (iMeas > iSet) {
 			mode = CH_MODE_CURRENT;
 		}
@@ -199,11 +199,15 @@ void Channel_TypeDef::Handler() {
 			}
 		}
 	}
-	else {
+	else if (!GetState()) {
 		pidV.Reset();
 		pidI.Reset();
 		mode = CH_MODE_FLOATING;
+		stableCounter = CH_STABLE_CNT;
 		mv = 0;
+	}
+	else if (mv == 0) {
+		stableCounter = (stableCounter > 0 ? stableCounter - 1 : stableCounter);
 	}
 }
 
@@ -230,7 +234,7 @@ float Channel_TypeDef::GetCurrent() {
 void Channel_TypeDef::SetState(uint8_t en) {
 	if (en) {
 		LL_GPIO_SetOutputPin(gpio, pin);
-		mode = CH_MODE_CURRENT;
+		mode = CH_MODE_VOLTAGE;
 		stableCounter = CH_STABLE_CNT;
 	}
 	else {
