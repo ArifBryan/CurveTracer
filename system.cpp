@@ -272,7 +272,7 @@ void System_TypeDef::RCC_Init() {
 	LL_UTILS_PLLInitTypeDef PLLInit_Struct;
 	
 	PLLInit_Struct.Prediv = LL_RCC_PREDIV_DIV_1;
-	PLLInit_Struct.PLLMul = LL_RCC_PLL_MUL_9;
+	PLLInit_Struct.PLLMul = LL_RCC_PLL_MUL_15;
 	
 	LL_UTILS_ClkInitTypeDef ClkInit_Struct;
 	
