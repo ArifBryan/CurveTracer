@@ -22,23 +22,14 @@ void CurveTracer_TypeDef::Handler() {
 			stable = pRef->IsStable() && pA->IsStable();
 		}
 		if (stable) {
-			if (nextSampleSeq && pB) {
-				samplePtr = 0;
-				nextSampleSeq = 0;
-			}
-			else {
-				nextSampleSeq = 0;
-				data[samplePtr].i = pA->GetCurrent();
-				data[samplePtr].v = pA->GetVoltage() - pRef->GetVoltage();
-				samplePtr++;
-			}
-			if (samplePtr >= sampleLen || data[samplePtr - 1].i > iLim) {
+			if ((samplePtr >= sampleLen || data[samplePtr - 1].i > iLim) && samplePtr > 0) {
 				if (pB && ibSample < iEnd) {
 					ibSample += iStep;
 					pB->SetCurrent(ibSample);
 					vSample = vStart;
 					pA->SetVoltage(pRef->GetSetVoltage() + vSample);
 					nextSampleSeq = 1;
+					samplePtr = 0;
 					sampleSeq++;
 				}
 				else {
@@ -46,7 +37,13 @@ void CurveTracer_TypeDef::Handler() {
 					end = 1;
 				}
 			}
-			else if (samplePtr < sampleLen) {
+			else {
+				nextSampleSeq = 0;
+				data[samplePtr].i = pA->GetCurrent();
+				data[samplePtr].v = pA->GetVoltage() - pRef->GetVoltage();
+				samplePtr++;
+			}
+			if (samplePtr < sampleLen && run && !nextSampleSeq) {
 				vSample += vStep;
 				pA->SetVoltage(pRef->GetSetVoltage() + vSample);
 			}

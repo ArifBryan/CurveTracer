@@ -427,10 +427,10 @@ void SCPI_TypeDef::Handler() {
 			uint8_t iDec = (uint)abs(curveTracer.data[sample - 1].i * 100) % 100;
 			sprintf(buff, "P%d V%d.%02d,I%d.%02d", sample, (int)curveTracer.data[sample - 1].v, vDec, (int)curveTracer.data[sample - 1].i, iDec);
 			Return(buff);
-			if (curveTracer.IsNewSequence()) {
-				sprintf(buff, "TRAC S%d", curveTracer.GetSequenceCount());
-				Return(buff);
-			}
+		}
+		if (curveTracer.IsNewSequence() && curveTracer.IsNewSample()) {
+			sprintf(buff, "TRAC S%d", curveTracer.GetSequenceCount());
+			Return(buff);
 		}
 	}
 }

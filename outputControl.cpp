@@ -172,7 +172,7 @@ void Channel_TypeDef::Handler() {
 		if (iMeas > iSet) {
 			mode = CH_MODE_CURRENT;
 		}
-		else if (vMeas >= vSet) {
+		else if (vMeas > vSet) {
 			mode = CH_MODE_VOLTAGE;
 		}
 			
@@ -218,10 +218,12 @@ uint8_t Channel_TypeDef::IsStable() {
 void Channel_TypeDef::SetVoltage(float vSet) {
 	this->vSet = (vSet < OUT_MIN_V ? OUT_MIN_V : (vSet > OUT_MAX_V ? OUT_MAX_V : vSet));
 	stableCounter = CH_STABLE_CNT;
+	mode = CH_MODE_VOLTAGE;	
 }
 void Channel_TypeDef::SetCurrent(float iSet) {
 	this->iSet = (iSet < OUT_MIN_I ? OUT_MIN_I : (iSet > OUT_MAX_I ? OUT_MAX_I : iSet));
 	stableCounter = CH_STABLE_CNT;
+	mode = CH_MODE_CURRENT;
 }
 
 float Channel_TypeDef::GetVoltage() {
