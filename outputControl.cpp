@@ -11,7 +11,7 @@ volatile uint8_t adcReadChIndex;
 #define LOOP_INTERVAL	0.01
 #define LOOP_INTERVALms LOOP_INTERVAL * 1000
 
-#define CH_STABLE_CNT	3
+#define CH_STABLE_CNT	5
 
 // INA226 CH1 IRQ line
 extern "C" void EXTI4_Handler() {
