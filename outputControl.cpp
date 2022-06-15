@@ -11,7 +11,7 @@ volatile uint8_t adcReadChIndex;
 #define LOOP_INTERVAL	0.01
 #define LOOP_INTERVALms LOOP_INTERVAL * 1000
 
-#define CH_STABLE_CNT	5
+#define CH_STABLE_CNT	4
 
 // INA226 CH1 IRQ line
 extern "C" void EXTI4_Handler() {
@@ -163,10 +163,10 @@ void OutputControl_TypeDef::DisableAllOutputs() {
 	LL_GPIO_ResetOutputPin(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN);	
 	LL_GPIO_ResetOutputPin(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN);	
 }
-#define FILTER_Kf	2
+#define FILTER_Kf	5
 void Channel_TypeDef::Handler() {
-	vMeas = (vMeas + (ina226->GetVoltage() * FILTER_Kf)) / (FILTER_Kf + 1);
-	iMeas = (iMeas + (ina226->GetCurrent() * FILTER_Kf)) / (FILTER_Kf + 1);
+	vMeas = (ina226->GetVoltage() + (vMeas * FILTER_Kf)) / (FILTER_Kf + 1);
+	iMeas = (ina226->GetCurrent() + (iMeas * FILTER_Kf)) / (FILTER_Kf + 1);
 	
 	if (GetState() && !(mv == 0 && stableCounter < CH_STABLE_CNT)) {
 		if (iMeas > iSet) {
