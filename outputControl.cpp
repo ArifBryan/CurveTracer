@@ -87,17 +87,17 @@ void OutputControl_TypeDef::Init() {
 	//ch1.pidV.SetConstants(1.5, 0.005, 0.2, LOOP_INTERVAL); // Trial & error
 	//ch1.pidV.SetConstants(1.8, 4.629, 0.054, LOOP_INTERVAL); // Ziegler Nichols
 	ch1.pidV.SetConstants(1.8, 30.0, 0.005, LOOP_INTERVAL); // Trial & Error
-	ch1.pidI.SetConstants(0.75, 10.0, 0.001, LOOP_INTERVAL);
+	ch1.pidI.SetConstants(0.75, 12.0, 0.002, LOOP_INTERVAL);
 	ch1.pidV.SetOutputRange(0, 0xFFFF);
 	ch1.pidI.SetOutputRange(0, 0xFFFF);
 	
 	ch2.pidV.SetConstants(1.8, 30.0, 0.005, LOOP_INTERVAL);
-	ch2.pidI.SetConstants(0.75, 10.0, 0.001, LOOP_INTERVAL);
+	ch2.pidI.SetConstants(0.75, 12.0, 0.002, LOOP_INTERVAL);
 	ch2.pidV.SetOutputRange(0, 0xFFFF);
 	ch2.pidI.SetOutputRange(0, 0xFFFF);
 	
 	ch3.pidV.SetConstants(1.8, 30.0, 0.005, LOOP_INTERVAL);
-	ch3.pidI.SetConstants(0.75, 10.0, 0.001, LOOP_INTERVAL);
+	ch3.pidI.SetConstants(0.75, 12.0, 0.002, LOOP_INTERVAL);
 	ch3.pidV.SetOutputRange(0, 0xFFFF);
 	ch3.pidI.SetOutputRange(0, 0xFFFF);
 	
