@@ -72,7 +72,7 @@ void CurveTracer_TypeDef::Start() {
 	if (pB) {
 		//pB->SetVoltage(pRef->GetSetVoltage());
 		pB->SetCurrent(ibSample);
-		pB->SetVoltage(pRef->GetSetVoltage() + vEnd);
+		pB->SetVoltage(pRef->GetSetVoltage() + (vEnd * 3));
 		pB->SetState(1);
 	}
 	tracerTimer = sys.Ticks();
