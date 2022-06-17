@@ -6,7 +6,7 @@
 
 #define OUT_MIN_V	 1500
 #define OUT_MAX_V	21500
-#define OUT_MIN_I	-1000
+#define OUT_MIN_I		0
 #define OUT_MAX_I	 1000
 
 #define CH_MODE_FLOATING	0
@@ -22,11 +22,12 @@ struct Channel_TypeDef {
 	void Handler(void);
 	void SetVoltage(float vSet);
 	void SetCurrent(float iSet);
-	float GetSetVoltage(void) {return vSet;}
-	float GetSetCurrent(void) {return iSet;}
+	float GetSetVoltage(void) {return (invert ? -vSet : vSet);}
+	float GetSetCurrent(void) {return (invert ? -iSet : iSet);}
 	float GetVoltage(void);
 	float GetCurrent(void);
 	void SetState(uint8_t en);
+	void Invert(uint8_t en);
 	uint8_t GetState(void);
 	uint8_t GetMode(void) {
 		return mode;
@@ -39,6 +40,7 @@ struct Channel_TypeDef {
 	PID_TypeDef pidV;
 	PID_TypeDef pidI;
 	float mv;
+	uint8_t invert;
 private:
 	GPIO_TypeDef *gpio;
 	uint32_t pin;
@@ -53,6 +55,17 @@ struct OutputControl_TypeDef {
 	void SetDACValue(uint8_t ch, uint16_t val);
 	void WriteDACValues(void);
 	void DisableAllOutputs(void);
+	void InvertChannels(uint8_t en) {
+		ch1.Invert(en);
+		ch2.Invert(en);
+		ch3.Invert(en);
+	}
+	uint8_t IsInverted(void) {
+		return ch1.invert || ch2.invert || ch3.invert;
+	}
+	uint8_t IsAnyChannelEnabled(void) {
+		return ch1.GetState() || ch2.GetState() || ch3.GetState();
+	}
 	Channel_TypeDef ch1 = Channel_TypeDef(OPA548_CH1_ES_GPIO, OPA548_CH1_ES_PIN, &ina226Ch1);
 	Channel_TypeDef ch2 = Channel_TypeDef(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN, &ina226Ch2);
 	Channel_TypeDef ch3 = Channel_TypeDef(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN, &ina226Ch3);

@@ -18,6 +18,7 @@ Point_TypeDef tsPos;
 Adafruit_GFX_Button btn1;
 Adafruit_GFX_Button btn2;
 Adafruit_GFX_Button btn3;
+Adafruit_GFX_Button btn4;
 
 TextBox_TypeDef text1;
 TextBox_TypeDef text2;
@@ -232,12 +233,8 @@ void UserInterface_TypeDef::ButtonHandler() {
 			case 0:
 				if (btn1.justPressed()) {
 					Beep(50);
-				
-					if (outCtl.ch1.GetState() || outCtl.ch2.GetState() || outCtl.ch3.GetState()) {
-						outCtl.ch1.SetState(0);
-						outCtl.ch2.SetState(0);
-						outCtl.ch3.SetState(0);
-			
+					if (outCtl.IsAnyChannelEnabled()) {
+						outCtl.DisableAllOutputs();
 						btn1.setLabel("OFF");
 						btn1.setColor(ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE);
 					}
@@ -245,9 +242,19 @@ void UserInterface_TypeDef::ButtonHandler() {
 						outCtl.ch1.SetState(1);
 						outCtl.ch2.SetState(1);
 						outCtl.ch3.SetState(1);
-			
 						btn1.setLabel("ON");
 						btn1.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
+					}
+				}
+				if (btn2.justPressed()) {
+					Beep(50);
+					if (outCtl.IsInverted()) {
+						outCtl.InvertChannels(0);
+						btn2.setColor(ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE);
+					}
+					else {
+						outCtl.InvertChannels(1);
+						btn2.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
 					}
 				}
 		
@@ -283,16 +290,20 @@ void UserInterface_TypeDef::ButtonHandler() {
 					editVar = 6;
 				}
 		
-				if (!keypad.IsEnabled()) {
-					if (btn1.justPressed() || btn1.justReleased()) {
-						btn1.drawButton(btn1.isPressed());
-					}
-					if (btn2.justPressed() || btn2.justReleased()) {
-						btn2.drawButton(btn2.isPressed());
-					}
+				if (btn1.justPressed() || btn1.justReleased()) {
+					btn1.drawButton(btn1.isPressed());
+				}
+				if (btn2.justPressed() || btn2.justReleased()) {
+					btn2.drawButton(btn2.isPressed());
+				}
+				if (btn3.justPressed() || btn3.justReleased()) {
+					btn3.drawButton(btn3.isPressed());
+				}
+				if (btn4.justPressed() || btn4.justReleased()) {
+					btn4.drawButton(btn4.isPressed());
 				}
 		
-				if (btn2.justPressed()) {
+				if (btn4.justPressed()) {
 					Beep(50);
 					SetScreenMenu(1);
 				}
@@ -335,15 +346,12 @@ void UserInterface_TypeDef::ButtonHandler() {
 					editVar = 7;
 				}
 			
-				if (!keypad.IsEnabled()) {
-					if (btn1.justPressed() || btn1.justReleased()) {
-						btn1.drawButton(btn1.isPressed());
-					}
-					if (btn2.justPressed() || btn2.justReleased()) {
-						btn2.drawButton(btn2.isPressed());
-					}
+				if (btn1.justPressed() || btn1.justReleased()) {
+					btn1.drawButton(btn1.isPressed());
 				}
-			
+				if (btn2.justPressed() || btn2.justReleased()) {
+					btn2.drawButton(btn2.isPressed());
+				}			
 			
 				if (btn1.justPressed()) {
 					Beep(50);
@@ -400,16 +408,14 @@ void UserInterface_TypeDef::ButtonHandler() {
 					uiNotify = 1;
 				}
 		
-				if (!keypad.IsEnabled()) {
-					if (btn1.justPressed() || btn1.justReleased()) {
-						btn1.drawButton(btn1.isPressed());
-					}
-					if (btn2.justPressed() || btn2.justReleased()) {
-						btn2.drawButton(btn2.isPressed());
-					}
-					if (btn3.justPressed() || btn3.justReleased()) {
-						btn3.drawButton(btn3.isPressed());
-					}
+				if (btn1.justPressed() || btn1.justReleased()) {
+					btn1.drawButton(btn1.isPressed());
+				}
+				if (btn2.justPressed() || btn2.justReleased()) {
+					btn2.drawButton(btn2.isPressed());
+				}
+				if (btn3.justPressed() || btn3.justReleased()) {
+					btn3.drawButton(btn3.isPressed());
 				}
 		
 				if (btn2.justPressed()) {
@@ -532,13 +538,19 @@ void UserInterface_TypeDef::ScreenMenu() {
 			switch (uiMenuIndex) {
 			case 0:
 				if (uiRedraw) {
-					if (outCtl.ch1.GetState() || outCtl.ch2.GetState() || outCtl.ch3.GetState()) {
+					if (outCtl.IsAnyChannelEnabled()) {
 						btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "ON", 1, 1);
 					}
 					else {
 						btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "OFF", 1, 1);					
 					}
-					btn2.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "TRACE", 1, 1);
+					if (outCtl.IsInverted()) {
+						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "INV", 1, 1);
+					}
+					else {
+						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "INV", 1, 1);					
+					}
+					btn4.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "TRACE", 1, 1);
 					text1.Init(45, 30, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 					text2.Init(45, 55, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 					text3.Init(45, 80, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
@@ -548,6 +560,7 @@ void UserInterface_TypeDef::ScreenMenu() {
 				
 					btn1.drawButton(btn1.isPressed());
 					btn2.drawButton(btn2.isPressed());
+					btn4.drawButton(btn4.isPressed());
 				
 					GFXcanvas16 canvas(40, 100);
 				

@@ -80,27 +80,27 @@ void OutputControl_TypeDef::Init() {
 	ina226Ch2.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_332us, INA226_CONFIG_AVG_64);
 	ina226Ch3.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_332us, INA226_CONFIG_AVG_64);
 	
-	ina226Ch1.SetCurrentCal(0.05);
+	ina226Ch1.SetCurrentCal(0.0521);
 	ina226Ch2.SetCurrentCal(0.0521);
-	ina226Ch3.SetCurrentCal(0.05);
+	ina226Ch3.SetCurrentCal(0.0521);
 	
 	//ch1.pidV.SetConstants(1.5, 0.005, 0.2, LOOP_INTERVAL); // Trial & error
 	//ch1.pidV.SetConstants(1.8, 4.629, 0.054, LOOP_INTERVAL); // Ziegler Nichols
 	ch1.pidV.SetConstants(1.8, 30.0, 0.005, LOOP_INTERVAL); // Trial & Error
-	ch1.pidI.SetConstants(0.75, 12.0, 0.002, LOOP_INTERVAL);
+	ch1.pidI.SetConstants(0.75, 15.0, 0.002, LOOP_INTERVAL);
 	ch1.pidV.SetOutputRange(0, 0xFFFF);
 	ch1.pidI.SetOutputRange(0, 0xFFFF);
 	
 	ch2.pidV.SetConstants(1.8, 30.0, 0.005, LOOP_INTERVAL);
-	ch2.pidI.SetConstants(0.75, 12.0, 0.002, LOOP_INTERVAL);
+	ch2.pidI.SetConstants(0.75, 15.0, 0.002, LOOP_INTERVAL);
 	ch2.pidV.SetOutputRange(0, 0xFFFF);
 	ch2.pidI.SetOutputRange(0, 0xFFFF);
 	
 	ch3.pidV.SetConstants(1.8, 30.0, 0.005, LOOP_INTERVAL);
-	ch3.pidI.SetConstants(0.75, 12.0, 0.002, LOOP_INTERVAL);
+	ch3.pidI.SetConstants(0.75, 15.0, 0.002, LOOP_INTERVAL);
 	ch3.pidV.SetOutputRange(0, 0xFFFF);
 	ch3.pidI.SetOutputRange(0, 0xFFFF);
-	
+		
 	ch1.SetVoltage(1500);
 	ch1.SetCurrent(1000);
 	ch2.SetVoltage(1500);
@@ -169,15 +169,21 @@ void Channel_TypeDef::Handler() {
 	iMeas = (iMeas + (ina226->GetCurrent() * FILTER_Kf)) / (FILTER_Kf + 1);
 	
 	if (GetState() && !(mv == 0 && stableCounter < CH_STABLE_CNT)) {
-		if (iMeas > iSet) {
+		if ((invert ? -iMeas : iMeas) > iSet) {
 			mode = CH_MODE_CURRENT;
 		}
-		else if (vMeas > vSet) {
+		else if ((invert ? -(vMeas - 24000) : vMeas) > vSet) {
 			mode = CH_MODE_VOLTAGE;
 		}
-			
-		pidV.Calculate(vSet, vMeas);
-		pidI.Calculate(iSet, iMeas);
+		
+		if (invert) {
+			pidV.Calculate(vSet, -(vMeas - 24000));
+			pidI.Calculate(iSet, -iMeas);
+		}
+		else {
+			pidV.Calculate(vSet, vMeas);
+			pidI.Calculate(iSet, iMeas);
+		}
 		
 		if (mode == CH_MODE_VOLTAGE) {
 			mv = pidV.GetOutput();
@@ -189,7 +195,7 @@ void Channel_TypeDef::Handler() {
 			}
 		}
 		else {
-			mv = pidI.GetOutput() / ina226->GetCurrentCal();
+			mv = pidI.GetOutput();
 			pidV.Reset();
 			if (abs(pidI.GetError()) >= 0.04) {
 				stableCounter = CH_STABLE_CNT;
@@ -198,17 +204,25 @@ void Channel_TypeDef::Handler() {
 				stableCounter = (stableCounter > 0 ? stableCounter - 1 : stableCounter);
 			}
 		}
+		mv = (invert ? 0xFFFF - mv : mv);
 	}
 	else if (!GetState()) {
 		pidV.Reset();
 		pidI.Reset();
 		mode = CH_MODE_FLOATING;
 		stableCounter = CH_STABLE_CNT;
-		mv = 0;
+		mv = (invert ? 0xFFFF : 0);
 	}
 	else if (mv == 0) {
 		stableCounter = (stableCounter > 0 ? stableCounter - 1 : stableCounter);
 	}
+}
+
+void Channel_TypeDef::Invert(uint8_t en) {
+	invert = en;
+	stableCounter = CH_STABLE_CNT;
+	pidV.Reset();
+	pidI.Reset();
 }
 
 uint8_t Channel_TypeDef::IsStable() {
@@ -216,18 +230,20 @@ uint8_t Channel_TypeDef::IsStable() {
 }
 
 void Channel_TypeDef::SetVoltage(float vSet) {
+	vSet = abs(vSet);
 	this->vSet = (vSet < OUT_MIN_V ? OUT_MIN_V : (vSet > OUT_MAX_V ? OUT_MAX_V : vSet));
 	stableCounter = CH_STABLE_CNT;
 	mode = CH_MODE_VOLTAGE;	
 }
 void Channel_TypeDef::SetCurrent(float iSet) {
+	iSet = abs(iSet);
 	this->iSet = (iSet < OUT_MIN_I ? OUT_MIN_I : (iSet > OUT_MAX_I ? OUT_MAX_I : iSet));
 	stableCounter = CH_STABLE_CNT;
 	mode = CH_MODE_CURRENT;
 }
 
 float Channel_TypeDef::GetVoltage() {
-	return vMeas;
+	return (invert ? vMeas - 24000 : vMeas);
 }
 float Channel_TypeDef::GetCurrent() {
 	return iMeas;

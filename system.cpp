@@ -640,7 +640,7 @@ void System_TypeDef::SPI_Init() {
 	SPIInit_Struct.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
 	SPIInit_Struct.CRCPoly = 1U;
 	SPIInit_Struct.DataWidth = LL_SPI_DATAWIDTH_16BIT;
-	SPIInit_Struct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV4;
+	SPIInit_Struct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV8;
 	
 	LL_SPI_Init(SPI1, &SPIInit_Struct);
 	
