@@ -109,6 +109,7 @@ struct UserInterface_TypeDef {
 	void ForceRedraw(void) {
 		uiRedraw = 1;
 	}
+	void SetTouchBlock(uint32_t time) {touchBlock = time;}
 	Keypad_TypeDef keypad;
 private:
 	void SplashScreen(void);
@@ -124,6 +125,7 @@ private:
 	uint8_t uiMenuIndex;
 	uint8_t editVar;
 	uint8_t sysMenu;
+	uint32_t touchBlock;
 };
 
 extern UserInterface_TypeDef ui;
