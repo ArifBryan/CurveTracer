@@ -5,7 +5,7 @@
 #include <stddef.h>
 
 #define UVLO_BYPASS		0
-#define PWRCTL_BYPASS	1
+#define PWRCTL_BYPASS	0
 
 void(*Shutdown_Callback)(void);
 void(*OverTemperature_Callback)(void);
@@ -110,14 +110,12 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 				// !IMPORTANT! Always manage interrupts priority wisely !IMPORTANT!
 				// !IMPORTANT! Do not leave NVIC/Interrupt priority unmanaged !IMPORTANT!
 				NVIC_Init();
-				SetFanSpeed(100);
 				// Watchdog reset
 				LL_IWDG_ReloadCounter(IWDG);
 				// Startup handler
 				Startup_CallbackHandler();
 				Shutdown_Callback = Shutdown_CallbackHandler;
 				OverTemperature_Callback = OverTemperature_CallbackHandler;
-				SetFanSpeed(0);
 				LL_mDelay(100);
 				// Watchdog reset
 				LL_IWDG_ReloadCounter(IWDG);
@@ -154,6 +152,10 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 		else if (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) {
 			platchTmr = Ticks();
 		}
+		
+		// Standby loop
+		
+		
 		// Watchdog reset
 		LL_IWDG_ReloadCounter(IWDG);
 	}
@@ -192,6 +194,10 @@ uint8_t System_TypeDef::IsUndervoltage() {
 
 uint8_t System_TypeDef::IsStartup() {
 	return startup < 2;
+}
+
+uint8_t System_TypeDef::IsPowerBtnPressed() {
+	return !LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN);
 }
 
 void System_TypeDef::Ticks10ms_IRQ_Handler() {

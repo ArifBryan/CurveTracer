@@ -99,6 +99,7 @@ struct UserInterface_TypeDef {
 	void Handler(void);
 	void SetBrightness(uint8_t bright);
 	uint32_t GetBrightness();
+	void DisableBacklight(void);
 	void Beep(uint32_t t, uint8_t cnt = 1);
 	uint8_t IsTouched(void);
 	void GetTouchPosition(uint16_t *x, uint16_t *y);
@@ -110,9 +111,10 @@ struct UserInterface_TypeDef {
 		uiRedraw = 1;
 	}
 	void SetTouchBlock(uint32_t time) {touchBlock = time;}
+	void SplashScreen(void);
+	void DrawStartupInfo(void);
 	Keypad_TypeDef keypad;
 private:
-	void SplashScreen(void);
 	uint8_t uiRedraw = 1;
 	uint8_t uiUpdate = 1;
 	uint8_t uiNotify;

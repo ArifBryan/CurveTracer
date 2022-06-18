@@ -65,7 +65,7 @@ void CurveTracer_TypeDef::Start() {
 	nextSampleSeq = 1;
 	vSample = vStart;
 	ibSample = iStart;
-	pRef->SetVoltage(OUT_MIN_V);
+	pRef->SetVoltage(0);
 	pRef->SetState(1);
 	pA->SetVoltage(pRef->GetSetVoltage() + vSample);
 	pA->SetState(1);

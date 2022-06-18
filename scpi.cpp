@@ -325,6 +325,21 @@ parseMnemonic:
 					Return(curveTracer.IsSampling());
 				}
 			}
+			// INVerted
+			else if(IsMnemonic(&data, "INVerted")) {
+				// ON
+				if (IsMnemonic(&data, " ON")) {
+					outCtl.InvertChannels(1);
+				}
+				// OFF
+				if (IsMnemonic(&data, " OFF")) {
+					outCtl.InvertChannels(0);
+				}
+				// Query
+				else if(strSkim(&data, "?")) {
+					Return(outCtl.IsInverted());
+				}
+			}
 		}
 		// DISPlay
 		else if(IsMnemonic(&data, "DISPlay")) {
