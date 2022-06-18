@@ -201,6 +201,9 @@ void OutputControl_TypeDef::SelfTest() {
 	ch1.SetState(0);
 	ch2.SetState(0);
 	ch3.SetState(0);
+	ch1.SetVoltage(0);
+	ch2.SetVoltage(0);
+	ch3.SetVoltage(0);
 	if (!selftestResult) {selftestResult = 2; }
 }
 
