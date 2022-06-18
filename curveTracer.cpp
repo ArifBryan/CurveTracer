@@ -22,8 +22,8 @@ void CurveTracer_TypeDef::Handler() {
 			stable = pRef->IsStable() && pA->IsStable();
 		}
 		if (stable) {
-			if ((samplePtr >= sampleLen || data[samplePtr - 1].i > iLim) && samplePtr > 0) {
-				if (pB && ibSample < iEnd) {
+			if ((samplePtr >= sampleLen || abs(data[samplePtr - 1].i) > abs(iLim)) && samplePtr > 0) {
+				if (pB && abs(ibSample) < abs(iEnd)) {
 					ibSample += iStep;
 					pB->SetCurrent(ibSample);
 					vSample = vStart;
@@ -59,7 +59,7 @@ void CurveTracer_TypeDef::Start() {
 	run = 1;
 	end = 0;
 	this->tSample = (tSample < CT_MIN_SAMPLE_TIME ? CT_MIN_SAMPLE_TIME : tSample);
-	sampleLen = abs(vStart - vEnd) / vStep + 1;
+	sampleLen = abs((vStart - vEnd) / vStep) + 1;
 	samplePtr = 0;
 	sampleSeq = 0;
 	nextSampleSeq = 1;

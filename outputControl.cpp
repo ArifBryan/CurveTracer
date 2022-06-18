@@ -168,7 +168,7 @@ void Channel_TypeDef::Handler() {
 	vMeas = (ina226->GetVoltage() + (vMeas * FILTER_Kf)) / (FILTER_Kf + 1);
 	iMeas = (ina226->GetCurrent() + (iMeas * FILTER_Kf)) / (FILTER_Kf + 1);
 	
-	if (GetState() && !(mv == 0 && stableCounter < CH_STABLE_CNT)) {
+	if (GetState()) {
 		if ((invert ? -iMeas : iMeas) > iSet) {
 			mode = CH_MODE_CURRENT;
 		}
@@ -206,15 +206,12 @@ void Channel_TypeDef::Handler() {
 		}
 		mv = (invert ? 0xFFFF - mv : mv);
 	}
-	else if (!GetState()) {
+	else {
 		pidV.Reset();
 		pidI.Reset();
 		mode = CH_MODE_FLOATING;
 		stableCounter = CH_STABLE_CNT;
 		mv = (invert ? 0xFFFF : 0);
-	}
-	else if (mv == 0) {
-		stableCounter = (stableCounter > 0 ? stableCounter - 1 : stableCounter);
 	}
 }
 

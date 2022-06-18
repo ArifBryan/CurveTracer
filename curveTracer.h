@@ -28,7 +28,6 @@ struct CurveTracer_TypeDef {
 		this->vStep = vStep;
 		this->tSample = (tSample < CT_MIN_SAMPLE_TIME ? CT_MIN_SAMPLE_TIME : tSample);
 		this->iLim = iLim;
-		sampleLen = abs(vStart - vEnd) / vStep + 1;
 	}
 	void SetupParams3ch(float vStart, float vEnd, float vStep, float iLim, float iStart, float iEnd, float iStep, uint32_t tSample) {
 		this->iStart = iStart;
@@ -39,7 +38,6 @@ struct CurveTracer_TypeDef {
 		this->vStep = vStep;
 		this->iLim = iLim;
 		this->tSample = (tSample < CT_MIN_SAMPLE_TIME ? CT_MIN_SAMPLE_TIME : tSample);
-		sampleLen = abs(vStart - vEnd) / vStep + 1;
 	}
 	uint32_t GetSampleLength(void) {return sampleLen;}
 	uint32_t GetSampleCount(void) {return samplePtr;}

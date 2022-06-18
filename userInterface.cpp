@@ -361,7 +361,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 				if (btn1.justPressed()) {
 					Beep(50);
 				
-					if ((curveTracer.iStep > 0.0 && curveTracer.iEnd > 0.0) || curveTracer.iStart > 0.0) {
+					if ((abs(curveTracer.iStep) > 0.0 && abs(curveTracer.iEnd) > 0.0) || abs(curveTracer.iStart) > 0.0) {
 						curveTracer.SetupChannel(&outCtl.ch1, &outCtl.ch3, &outCtl.ch2);
 						curveTracer.tSample = 100;
 					}
@@ -673,15 +673,20 @@ void UserInterface_TypeDef::ScreenMenu() {
 					btn1.drawButton(btn1.isPressed());
 					btn4.drawButton(btn4.isPressed());
 					btn3.drawButton(btn3.isPressed());
-				
-					plot.Init(20, 36, 195, 188, "mV", "mA", curveTracer.vStart, curveTracer.vEnd, 0, curveTracer.iLim, 10, 10);
+					
+					if (outCtl.IsInverted()) {
+						plot.Init(20, 36, 195, 188, "mV", "mA", curveTracer.vEnd, curveTracer.vStart, curveTracer.iLim, 0, 10, 10);
+					}
+					else {
+						plot.Init(20, 36, 195, 188, "mV", "mA", curveTracer.vStart, curveTracer.vEnd, 0, curveTracer.iLim, 10, 10);
+					}
 					plot.SetPlotColor(ILI9341_ORANGE);
 				}
 				if (uiRedraw || uiUpdate) {
 					if (curveTracer.GetSampleCount() > 0) {
 						plot.DrawLine(
 							curveTracer.data[curveTracer.GetSampleCount() - 1].v, 
-							abs(curveTracer.data[curveTracer.GetSampleCount() - 1].i));
+							curveTracer.data[curveTracer.GetSampleCount() - 1].i);
 					}
 					else {
 						plot.ResetLinePlot();
@@ -703,8 +708,8 @@ void Plot_TypeDef::DrawPoint(float xVal, float yVal) {
 	if ((xVal >= xMin && xVal <= xMax) && (yVal >= yMin && yVal <= yMax)) {
 		xVal -= xMin;
 		yVal -= yMin;
-		xVal = xVal / (xMax - xMin);
-		yVal = yVal / (yMax - yMin);
+		xVal = abs(xVal / (xMax - xMin));
+		yVal = abs(yVal / (yMax - yMin));
 				
 		uint16_t x = round(gx + xVal * w);
 		uint16_t y = round(gy - yVal * h);
@@ -720,8 +725,8 @@ void Plot_TypeDef::DrawLine(float x1Val, float y1Val) {
 	if ((x1Val >= xMin && x1Val <= xMax) && (y1Val >= yMin && y1Val <= yMax)) {
 		x1Val -= xMin;
 		y1Val -= yMin;
-		x1Val = x1Val / (xMax - xMin);
-		y1Val = y1Val / (yMax - yMin);
+		x1Val = abs(x1Val / (xMax - xMin));
+		y1Val = abs(y1Val / (yMax - yMin));
 		
 		uint16_t x = round(gx + x1Val * w);
 		uint16_t y = round(gy - y1Val * h);
@@ -846,7 +851,8 @@ void TextBox_TypeDef::TouchHandler(Point_TypeDef pos, bool touch) {
 }
 void TextBox_TypeDef::Draw(float num) {
 	char str[21];
-	sprintf(str, "%d.%1d", (int16_t)num, (uint16_t)(abs(num) * 10) % 10);
+	if (num < 0 && num > -1) {sprintf(str, "-%d.%1d", (int16_t)num, (uint16_t)(abs(num) * 10) % 10); }
+	else {sprintf(str, "%d.%1d", (int16_t)num, (uint16_t)(abs(num) * 10) % 10); }
 	Draw(str);
 }
 void TextBox_TypeDef::Draw(int num) {
