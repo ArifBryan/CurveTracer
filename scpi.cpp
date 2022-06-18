@@ -421,7 +421,7 @@ void SCPI_TypeDef::Handler() {
 			char buff[51];
 			uint16_t sample = curveTracer.GetSampleCount();
 			if (curveTracer.IsNewSample() && sample > 0) {
-				if (sample == 1) {
+				if (sample == 1 && curveTracer.GetSequenceCount() == 0) {
 					sprintf(buff, "TRAC S%d", curveTracer.GetSequenceCount());
 					Return(buff);
 				}
