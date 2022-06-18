@@ -65,8 +65,10 @@ void CurveTracer_TypeDef::Start() {
 	nextSampleSeq = 1;
 	vSample = vStart;
 	ibSample = iStart;
+	pRef->SetCurrent(1000);
 	pRef->SetVoltage(0);
 	pRef->SetState(1);
+	pA->SetCurrent(1000);
 	pA->SetVoltage(pRef->GetSetVoltage() + vSample);
 	pA->SetState(1);
 	if (pB) {
@@ -80,9 +82,9 @@ void CurveTracer_TypeDef::Start() {
 
 void CurveTracer_TypeDef::Stop() {
 	run = 0;
-	if (pRef) {pRef->SetVoltage(OUT_MIN_V); }
-	if (pA) {pA->SetVoltage(OUT_MIN_V); }
-	if (pB) {pB->SetVoltage(OUT_MIN_V); }
+	if (pRef) {pRef->SetVoltage(0); }
+	if (pA) {pA->SetVoltage(0); }
+	if (pB) {pB->SetVoltage(0); }
 	outCtl.DisableAllOutputs();
 }
 

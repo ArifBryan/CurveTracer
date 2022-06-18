@@ -2,8 +2,8 @@
 
 #include <stm32f1xx_ll_usart.h>
 
-#define SERIAL_RX_BUFF_SIZE	200
-#define SERIAL_TX_BUFF_SIZE	SERIAL_RX_BUFF_SIZE
+#define SERIAL_RX_BUFF_SIZE	400
+#define SERIAL_TX_BUFF_SIZE	150
 
 struct UART_IT_InitTypeDef {
 	uint32_t TransferDirection = LL_USART_DIRECTION_TX_RX;
