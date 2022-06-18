@@ -330,10 +330,12 @@ parseMnemonic:
 				// ON
 				if (IsMnemonic(&data, " ON")) {
 					outCtl.InvertChannels(1);
+					ui.ForceRedraw();
 				}
 				// OFF
 				if (IsMnemonic(&data, " OFF")) {
 					outCtl.InvertChannels(0);
+					ui.ForceRedraw();
 				}
 				// Query
 				else if(strSkim(&data, "?")) {
