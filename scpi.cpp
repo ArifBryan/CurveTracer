@@ -311,9 +311,6 @@ parseMnemonic:
 						curveTracer.Start();
 						ui.SetScreenMenu(2);
 						ui.ForceRedraw();
-						char buff[21];
-						sprintf(buff, "TRAC S%d", curveTracer.GetSequenceCount());
-						Return(buff);
 					}
 				}
 				// STOP
@@ -326,6 +323,23 @@ parseMnemonic:
 				// Query
 				else if(strSkim(&data, "?")) {
 					Return(curveTracer.IsSampling());
+				}
+			}
+			// INVerted
+			else if(IsMnemonic(&data, "INVerted")) {
+				// ON
+				if (IsMnemonic(&data, " ON")) {
+					outCtl.InvertChannels(1);
+					ui.ForceRedraw();
+				}
+				// OFF
+				if (IsMnemonic(&data, " OFF")) {
+					outCtl.InvertChannels(0);
+					ui.ForceRedraw();
+				}
+				// Query
+				else if(strSkim(&data, "?")) {
+					Return(outCtl.IsInverted());
 				}
 			}
 		}
@@ -416,21 +430,27 @@ void SCPI_TypeDef::Init() {
 
 void SCPI_TypeDef::Handler() {
 	uart->Handler();
-	if (curveTracer.IsSamplingDone() && curveTracer.IsNewSample()) {
-		Return("TRAC STOP");
-	}
-	if (curveTracer.IsSampling()) {
-		char buff[51];
-		uint16_t sample = curveTracer.GetSampleCount();
-		if (curveTracer.IsNewSample() && sample > 0) {
-			uint8_t vDec = (uint)abs(curveTracer.data[sample - 1].v * 100) % 100;
-			uint8_t iDec = (uint)abs(curveTracer.data[sample - 1].i * 100) % 100;
-			sprintf(buff, "P%d V%d.%02d,I%d.%02d", sample, (int)curveTracer.data[sample - 1].v, vDec, (int)curveTracer.data[sample - 1].i, iDec);
-			Return(buff);
+	if (sys.IsUSBConnected()) {
+		if (curveTracer.IsSamplingDone() && curveTracer.IsNewSample()) {
+			Return("TRAC STOP");
 		}
-		if (curveTracer.IsNewSequence() && curveTracer.IsNewSample()) {
-			sprintf(buff, "TRAC S%d", curveTracer.GetSequenceCount());
-			Return(buff);
+		if (curveTracer.IsSampling()) {
+			char buff[51];
+			uint16_t sample = curveTracer.GetSampleCount();
+			if (curveTracer.IsNewSample() && sample > 0) {
+				if (sample == 1 && curveTracer.GetSequenceCount() == 0) {
+					sprintf(buff, "TRAC S%d", curveTracer.GetSequenceCount());
+					Return(buff);
+				}
+				uint8_t vDec = (uint)abs(curveTracer.data[sample - 1].v * 100) % 100;
+				uint8_t iDec = (uint)abs(curveTracer.data[sample - 1].i * 100) % 100;
+				sprintf(buff, "P%d V%d.%02d,I%d.%02d", sample, (int)curveTracer.data[sample - 1].v, vDec, (int)curveTracer.data[sample - 1].i, iDec);
+				Return(buff);
+			}
+			if (curveTracer.IsNewSequence() && curveTracer.IsNewSample()) {
+				sprintf(buff, "TRAC S%d", curveTracer.GetSequenceCount());
+				Return(buff);
+			}
 		}
 	}
 }

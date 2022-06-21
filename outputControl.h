@@ -22,7 +22,7 @@ struct Channel_TypeDef {
 	void Handler(void);
 	void SetVoltage(float vSet);
 	void SetCurrent(float iSet);
-	float GetSetVoltage(void) {return (invert ? -vSet : vSet);}
+	float GetSetVoltage(void) {return (invert ? -vSet + OUT_MIN_V : vSet - OUT_MIN_V);}
 	float GetSetCurrent(void) {return (invert ? -iSet : iSet);}
 	float GetVoltage(void);
 	float GetCurrent(void);
@@ -33,6 +33,17 @@ struct Channel_TypeDef {
 		return mode;
 	}
 	uint8_t IsStable(void);
+	void SelfCalibrate(void);
+	uint8_t GetCalState(void) {
+		return calState;
+	}
+	void SetCalValue(float vMin, float vMax, uint16_t dacMin, uint16_t dacMax) {
+		this->calVMin = vMin;
+		this->calVMax = vMax;
+		this->calDACMin = dacMin;
+		this->calDACMax = dacMax;
+		calState = 1;
+	}
 	
 	float vSet, iSet;
 	float vMeas, iMeas;
@@ -46,6 +57,9 @@ private:
 	uint32_t pin;
 	INA226_TypeDef *ina226;
 	uint16_t stableCounter;
+	uint8_t calState;
+	float calVMin, calVMax;
+	uint16_t calDACMin, calDACMax;
 };
 
 struct OutputControl_TypeDef {
@@ -66,9 +80,14 @@ struct OutputControl_TypeDef {
 	uint8_t IsAnyChannelEnabled(void) {
 		return ch1.GetState() || ch2.GetState() || ch3.GetState();
 	}
+	void SelfTest(void);
+	uint8_t GetSelftestResult(void) {return selftestResult;}
 	Channel_TypeDef ch1 = Channel_TypeDef(OPA548_CH1_ES_GPIO, OPA548_CH1_ES_PIN, &ina226Ch1);
 	Channel_TypeDef ch2 = Channel_TypeDef(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN, &ina226Ch2);
 	Channel_TypeDef ch3 = Channel_TypeDef(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN, &ina226Ch3);
+private:
+	volatile uint32_t ctrlTimer;
+	uint8_t selftestResult;
 };
 
 extern OutputControl_TypeDef outCtl;

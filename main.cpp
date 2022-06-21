@@ -10,12 +10,26 @@ void Startup_Handler() {
 	
 	scpi.Init();
 	ui.Init();
+	ui.SplashScreen();
+	ui.DrawStartupInfo();
 	outCtl.Init();
 	curveTracer.Init();
+	ui.DrawStartupInfo();
+	LL_mDelay(500);
+	if (outCtl.GetSelftestResult() == 2) {
+		while (1) {
+			if (sys.IsPowerBtnPressed()) {
+				sys.Restart();
+			}
+			LL_IWDG_ReloadCounter(IWDG);
+		}
+	}
+	ui.SetScreenMenu(0);
 }
 
 void Shutdown_Handler() {
-	ui.SetBrightness(0);
+	outCtl.DisableAllOutputs();
+	ui.DisableBacklight();
 }
 
 void OverTemperature_Handler() {

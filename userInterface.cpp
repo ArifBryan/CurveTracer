@@ -45,11 +45,6 @@ void UserInterface_TypeDef::Init() {
 	LL_mDelay(10);
 	SetBrightness(30);
 	lcd.setFont(&FreeSans9pt7b);
-	SplashScreen();
-	LL_mDelay(1000);
-	// Watchdog reset
-	LL_IWDG_ReloadCounter(IWDG);
-	LL_mDelay(1000);
 	
 	Point_TypeDef min, max;
 	min.x = 0;
@@ -64,10 +59,10 @@ void UserInterface_TypeDef::Init() {
 	bar.Init(1, 1, 319, 24);
 	SetScreenMenu(0);
 }
-
 void UserInterface_TypeDef::Handler() {
 	// Touch
-	if (!LL_GPIO_IsInputPinSet(XPT2046_IRQ_GPIO, XPT2046_IRQ_PIN)){
+	if (!LL_GPIO_IsInputPinSet(XPT2046_IRQ_GPIO, XPT2046_IRQ_PIN) && !(sys.Ticks() - touchTimer < touchBlock)){
+		touchBlock = 0;
 		if (sys.Ticks() - touchTimer >= 50) {
 			ts.StartConversion();
 			
@@ -78,12 +73,13 @@ void UserInterface_TypeDef::Handler() {
 		}
 		
 		if (keypad.IsEnabled()) {
-			keypad.TouchHandler(tsPos, 1);			
+			keypad.TouchHandler(tsPos, 1);	
 		}
 		else {
 			btn1.press(btn1.contains(tsPos.x, tsPos.y));
 			btn2.press(btn2.contains(tsPos.x, tsPos.y));
 			btn3.press(btn3.contains(tsPos.x, tsPos.y));
+			btn4.press(btn4.contains(tsPos.x, tsPos.y));
 			text1.TouchHandler(tsPos, 1);
 			text2.TouchHandler(tsPos, 1);
 			text3.TouchHandler(tsPos, 1);
@@ -99,6 +95,7 @@ void UserInterface_TypeDef::Handler() {
 		btn1.press(0);
 		btn2.press(0);
 		btn3.press(0);
+		btn4.press(0);
 		text1.TouchHandler(tsPos, 0);
 		text2.TouchHandler(tsPos, 0);
 		text3.TouchHandler(tsPos, 0);
@@ -110,7 +107,9 @@ void UserInterface_TypeDef::Handler() {
 		tsPos.x = 0;
 		tsPos.y = 0;
 		tsPos.z = 0;
-		touchTimer = sys.Ticks();
+		if (touchBlock == 0) {
+			touchTimer = sys.Ticks();
+		}
 	}
 		
 	// Button handler
@@ -205,6 +204,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 				uiRedraw = 1;
 				editVar = 0;
 				keypad.Disable();
+				SetTouchBlock(250);
 			}
 		}
 	}
@@ -348,12 +348,15 @@ void UserInterface_TypeDef::ButtonHandler() {
 				}
 				if (btn2.justPressed() || btn2.justReleased()) {
 					btn2.drawButton(btn2.isPressed());
+				}
+				if (btn4.justPressed() || btn4.justReleased()) {
+					btn4.drawButton(btn4.isPressed());
 				}			
 			
 				if (btn1.justPressed()) {
 					Beep(50);
 				
-					if ((curveTracer.iStep > 0.0 && curveTracer.iEnd > 0.0) || curveTracer.iStart > 0.0) {
+					if ((abs(curveTracer.iStep) > 0.0 && abs(curveTracer.iEnd) > 0.0) || abs(curveTracer.iStart) > 0.0) {
 						curveTracer.SetupChannel(&outCtl.ch1, &outCtl.ch3, &outCtl.ch2);
 						curveTracer.tSample = 100;
 					}
@@ -366,6 +369,17 @@ void UserInterface_TypeDef::ButtonHandler() {
 					SetScreenMenu(2);
 				}
 				if (btn2.justPressed()) {
+					Beep(50);
+					if (outCtl.IsInverted()) {
+						outCtl.InvertChannels(0);
+						btn2.setColor(ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE);
+					}
+					else {
+						outCtl.InvertChannels(1);
+						btn2.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
+					}
+				}
+				if (btn4.justPressed()) {
 					Beep(50);
 					SetScreenMenu(0);
 				}
@@ -408,20 +422,23 @@ void UserInterface_TypeDef::ButtonHandler() {
 				if (btn1.justPressed() || btn1.justReleased()) {
 					btn1.drawButton(btn1.isPressed());
 				}
-				if (btn2.justPressed() || btn2.justReleased()) {
-					btn2.drawButton(btn2.isPressed());
+				if (btn4.justPressed() || btn4.justReleased()) {
+					btn4.drawButton(btn4.isPressed());
 				}
 				if (btn3.justPressed() || btn3.justReleased()) {
 					btn3.drawButton(btn3.isPressed());
 				}
 		
-				if (btn2.justPressed()) {
+				if (btn4.justPressed()) {
 					Beep(50);
 					curveTracer.Stop();
 					SetScreenMenu(1);
 				}
 				break;
 			}
+		}
+		if (keypad.IsEnabled()) {
+			SetTouchBlock(250);
 		}
 	}
 }
@@ -548,12 +565,12 @@ void UserInterface_TypeDef::ScreenMenu() {
 						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "INV", 1, 1);					
 					}
 					btn4.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "TRACE", 1, 1);
-					text1.Init(45, 30, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
-					text2.Init(45, 55, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
-					text3.Init(45, 80, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
-					text4.Init(140, 30, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
-					text5.Init(140, 55, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
-					text6.Init(140, 80, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
+					text1.Init(45, 30, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
+					text2.Init(45, 55, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
+					text3.Init(45, 80, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
+					text4.Init(140, 30, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
+					text5.Init(140, 55, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
+					text6.Init(140, 80, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
 				
 					btn1.drawButton(btn1.isPressed());
 					btn2.drawButton(btn2.isPressed());
@@ -603,7 +620,13 @@ void UserInterface_TypeDef::ScreenMenu() {
 			case 1:
 				if (uiRedraw) {
 					btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "START", 1, 1);
-					btn2.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "SMU", 1, 1);
+					if (outCtl.IsInverted()) {
+						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "INV", 1, 1);
+					}
+					else {
+						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "INV", 1, 1);					
+					}
+					btn4.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "SMU", 1, 1);
 					text1.Init(60, 30, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 					text2.Init(60, 55, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 					text3.Init(60, 80, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
@@ -614,6 +637,7 @@ void UserInterface_TypeDef::ScreenMenu() {
 					
 					btn1.drawButton(btn1.isPressed());
 					btn2.drawButton(btn2.isPressed());
+					btn4.drawButton(btn4.isPressed());
 				
 					GFXcanvas16 canvas(60, 170);
 				
@@ -656,21 +680,26 @@ void UserInterface_TypeDef::ScreenMenu() {
 					else {
 						btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "START", 1, 1);
 					}
-					btn2.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "BACK", 1, 1);
+					btn4.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "BACK", 1, 1);
 					btn3.initButton(&lcd, 275, 105, 75, 45, ILI9341_ORANGE, ILI9341_ORANGE, ILI9341_WHITE, "CLEAR", 1, 1);
 					
 					btn1.drawButton(btn1.isPressed());
-					btn2.drawButton(btn2.isPressed());
+					btn4.drawButton(btn4.isPressed());
 					btn3.drawButton(btn3.isPressed());
-				
-					plot.Init(20, 36, 195, 188, "mV", "mA", curveTracer.vStart, curveTracer.vEnd, 0, curveTracer.iLim, 10, 10);
+					
+					if (outCtl.IsInverted()) {
+						plot.Init(20, 36, 195, 188, "mV", "mA", curveTracer.vEnd, curveTracer.vStart, curveTracer.iLim, 0, 10, 10);
+					}
+					else {
+						plot.Init(20, 36, 195, 188, "mV", "mA", curveTracer.vStart, curveTracer.vEnd, 0, curveTracer.iLim, 10, 10);
+					}
 					plot.SetPlotColor(ILI9341_ORANGE);
 				}
 				if (uiRedraw || uiUpdate) {
 					if (curveTracer.GetSampleCount() > 0) {
 						plot.DrawLine(
 							curveTracer.data[curveTracer.GetSampleCount() - 1].v, 
-							abs(curveTracer.data[curveTracer.GetSampleCount() - 1].i));
+							curveTracer.data[curveTracer.GetSampleCount() - 1].i);
 					}
 					else {
 						plot.ResetLinePlot();
@@ -692,8 +721,8 @@ void Plot_TypeDef::DrawPoint(float xVal, float yVal) {
 	if ((xVal >= xMin && xVal <= xMax) && (yVal >= yMin && yVal <= yMax)) {
 		xVal -= xMin;
 		yVal -= yMin;
-		xVal = xVal / (xMax - xMin);
-		yVal = yVal / (yMax - yMin);
+		xVal = abs(xVal / (xMax - xMin));
+		yVal = abs(yVal / (yMax - yMin));
 				
 		uint16_t x = round(gx + xVal * w);
 		uint16_t y = round(gy - yVal * h);
@@ -709,8 +738,8 @@ void Plot_TypeDef::DrawLine(float x1Val, float y1Val) {
 	if ((x1Val >= xMin && x1Val <= xMax) && (y1Val >= yMin && y1Val <= yMax)) {
 		x1Val -= xMin;
 		y1Val -= yMin;
-		x1Val = x1Val / (xMax - xMin);
-		y1Val = y1Val / (yMax - yMin);
+		x1Val = abs(x1Val / (xMax - xMin));
+		y1Val = abs(y1Val / (yMax - yMin));
 		
 		uint16_t x = round(gx + x1Val * w);
 		uint16_t y = round(gy - y1Val * h);
@@ -835,7 +864,8 @@ void TextBox_TypeDef::TouchHandler(Point_TypeDef pos, bool touch) {
 }
 void TextBox_TypeDef::Draw(float num) {
 	char str[21];
-	sprintf(str, "%d.%1d", (int16_t)num, (uint16_t)(abs(num) * 10) % 10);
+	if (num < 0 && num > -1) {sprintf(str, "-%d.%1d", (int16_t)num, (uint16_t)(abs(num) * 10) % 10); }
+	else {sprintf(str, "%d.%1d", (int16_t)num, (uint16_t)(abs(num) * 10) % 10); }
 	Draw(str);
 }
 void TextBox_TypeDef::Draw(int num) {
@@ -1037,7 +1067,7 @@ void Keypad_TypeDef::Init() {
 	key[4].initButtonUL(&lcd, x, y, 60, 40, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "4", 1, 1);
 	key[5].initButtonUL(&lcd, x += btnWidth + btnPad, y, btnWidth, btnHeight, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "5", 1, 1);
 	key[6].initButtonUL(&lcd, x += btnWidth + btnPad, y, btnWidth, btnHeight, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "6", 1, 1);
-	key[7].initButtonUL(&lcd, 255, y, btnWidth, btnHeight, ILI9341_ORANGE, ILI9341_ORANGE, ILI9341_WHITE, "C", 1, 1);
+	key[7].initButtonUL(&lcd, 255, y, btnWidth, btnHeight, ILI9341_DARKGREY, ILI9341_DARKGREY, ILI9341_WHITE, "C", 1, 1);
 	x = xPos;
 	y += btnHeight + btnPad;
 	key[8].initButtonUL(&lcd, x, y, 60, 40, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "7", 1, 1);
@@ -1054,6 +1084,29 @@ void Keypad_TypeDef::Init() {
 	refresh = 1;
 }
 
+
+// User Interface
+void UserInterface_TypeDef::DrawStartupInfo() {
+	GFXcanvas16 canvas(250, 40);
+	canvas.fillScreen(ILI9341_WHITE);
+	canvas.setTextColor(ILI9341_DARKGREY);
+	canvas.setFont(&FreeSans9pt7b);
+	if (outCtl.GetSelftestResult() == 1) {
+		canvas.setCursor(56, 17);
+		canvas.print("Selftest passed.");
+	}
+	else if (outCtl.GetSelftestResult() == 2) {
+		canvas.setCursor(56, 17);
+		canvas.print("Selftest failed.");
+		canvas.setCursor(40, 34);
+		canvas.print("Press power to reset");
+	}
+	else {
+		canvas.setCursor(48, 17);
+		canvas.print("Running selftest...");
+	}
+	lcd.drawRGBBitmap(35, 170, canvas.getBuffer(), 250, 40);
+}
 void UserInterface_TypeDef::SplashScreen() {
 	{
 		lcd.drawRGBBitmap(130, 72, (uint16_t*)ctLogoBitmap, ctLogoBitmapWidth, ctLogoBitmapHeight);
@@ -1109,6 +1162,10 @@ void UserInterface_TypeDef::SetBrightness(uint8_t bright) {
 	bright = (bright < 5 ? 5 : (bright > 100 ? 100 : bright));
 	LL_TIM_OC_SetCompareCH3(LCD_BKLT_TIM, bright);	
 }
+void UserInterface_TypeDef::DisableBacklight() {
+	LL_TIM_OC_SetCompareCH3(LCD_BKLT_TIM, 0);	
+}
+
 uint32_t UserInterface_TypeDef::GetBrightness() {
 	return LL_TIM_OC_GetCompareCH3(LCD_BKLT_TIM);	
 }

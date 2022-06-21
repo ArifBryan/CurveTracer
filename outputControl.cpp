@@ -3,7 +3,6 @@
 
 OutputControl_TypeDef outCtl;
 
-volatile uint32_t ctrlTimer;
 volatile uint8_t spiDACTransCount;
 volatile uint16_t spiDACBuffer[3];
 volatile uint8_t adcReadChIndex;
@@ -87,26 +86,36 @@ void OutputControl_TypeDef::Init() {
 	//ch1.pidV.SetConstants(1.5, 0.005, 0.2, LOOP_INTERVAL); // Trial & error
 	//ch1.pidV.SetConstants(1.8, 4.629, 0.054, LOOP_INTERVAL); // Ziegler Nichols
 	ch1.pidV.SetConstants(1.8, 30.0, 0.005, LOOP_INTERVAL); // Trial & Error
-	ch1.pidI.SetConstants(0.75, 12.0, 0.002, LOOP_INTERVAL);
+	ch1.pidI.SetConstants(0.75, 25.0, 0.002, LOOP_INTERVAL);
 	ch1.pidV.SetOutputRange(0, 0xFFFF);
 	ch1.pidI.SetOutputRange(0, 0xFFFF);
 	
 	ch2.pidV.SetConstants(1.8, 30.0, 0.005, LOOP_INTERVAL);
-	ch2.pidI.SetConstants(0.75, 12.0, 0.002, LOOP_INTERVAL);
+	ch2.pidI.SetConstants(0.75, 25.0, 0.002, LOOP_INTERVAL);
 	ch2.pidV.SetOutputRange(0, 0xFFFF);
 	ch2.pidI.SetOutputRange(0, 0xFFFF);
 	
 	ch3.pidV.SetConstants(1.8, 30.0, 0.005, LOOP_INTERVAL);
-	ch3.pidI.SetConstants(0.75, 12.0, 0.002, LOOP_INTERVAL);
+	ch3.pidI.SetConstants(0.75, 25.0, 0.002, LOOP_INTERVAL);
 	ch3.pidV.SetOutputRange(0, 0xFFFF);
 	ch3.pidI.SetOutputRange(0, 0xFFFF);
 		
-	ch1.SetVoltage(1500);
+	ch1.SetVoltage(0);
 	ch1.SetCurrent(1000);
-	ch2.SetVoltage(1500);
+	ch2.SetVoltage(0);
 	ch2.SetCurrent(1000);
-	ch3.SetVoltage(1500);
+	ch3.SetVoltage(0);
 	ch3.SetCurrent(1000);
+	
+	ch1.SetCalValue(521, 22939, 0, 61149);
+	ch2.SetCalValue(557, 22840, 0, 60822);
+	ch3.SetCalValue(529, 22893, 0, 63765);
+	
+//	ch1.SelfCalibrate();
+//	ch2.SelfCalibrate();
+//	ch3.SelfCalibrate();
+	
+	SelfTest();
 }
 
 void OutputControl_TypeDef::Handler() {
@@ -128,7 +137,7 @@ void OutputControl_TypeDef::Handler() {
 }
 
 void OutputControl_TypeDef::Ticks10ms_IRQ_Handler() {
-	if (++ctrlTimer >= LOOP_INTERVALms / 10 && !sys.IsStartup()) {
+	if (++ctrlTimer >= LOOP_INTERVALms / 10) {
 		ina226Ch1.ReadData();
 		
 		ch1.Handler();
@@ -163,21 +172,57 @@ void OutputControl_TypeDef::DisableAllOutputs() {
 	LL_GPIO_ResetOutputPin(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN);	
 	LL_GPIO_ResetOutputPin(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN);	
 }
+
+void OutputControl_TypeDef::SelfTest() {
+	uint32_t testTout = sys.Ticks();
+	uint8_t testSequence = 0;
+	selftestResult = 0;
+	ch1.SetState(1);
+	ch2.SetState(1);
+	ch3.SetState(1);
+	ch1.SetVoltage(0);
+	ch2.SetVoltage(0);
+	ch3.SetVoltage(0);
+	while (sys.Ticks() - testTout < 5000) {
+		if (ch1.IsStable() && ch2.IsStable() && ch3.IsStable()) {
+			if (testSequence == 0) {
+				ch1.SetVoltage(OUT_MAX_V);
+				ch2.SetVoltage(OUT_MAX_V);
+				ch3.SetVoltage(OUT_MAX_V);
+				testSequence++;
+			}
+			else if (testSequence == 1) {
+				selftestResult = 1;
+				break;
+			}
+		}
+		LL_IWDG_ReloadCounter(IWDG);
+	}
+	ch1.SetState(0);
+	ch2.SetState(0);
+	ch3.SetState(0);
+	ch1.SetVoltage(0);
+	ch2.SetVoltage(0);
+	ch3.SetVoltage(0);
+	if (!selftestResult) {selftestResult = 2; }
+}
+
+// Channel
 #define FILTER_Kf	5
 void Channel_TypeDef::Handler() {
 	vMeas = (ina226->GetVoltage() + (vMeas * FILTER_Kf)) / (FILTER_Kf + 1);
 	iMeas = (ina226->GetCurrent() + (iMeas * FILTER_Kf)) / (FILTER_Kf + 1);
 	
-	if (GetState() && !(mv == 0 && stableCounter < CH_STABLE_CNT)) {
+	if (GetState() && calState == 1) {
 		if ((invert ? -iMeas : iMeas) > iSet) {
 			mode = CH_MODE_CURRENT;
 		}
-		else if ((invert ? -(vMeas - 24000) : vMeas) > vSet) {
+		else if ((invert ? -(vMeas - calVMax) : vMeas) > vSet) {
 			mode = CH_MODE_VOLTAGE;
 		}
 		
 		if (invert) {
-			pidV.Calculate(vSet, -(vMeas - 24000));
+			pidV.Calculate(vSet, -(vMeas - calVMax));
 			pidI.Calculate(iSet, -iMeas);
 		}
 		else {
@@ -187,7 +232,7 @@ void Channel_TypeDef::Handler() {
 		
 		if (mode == CH_MODE_VOLTAGE) {
 			mv = pidV.GetOutput();
-			if (abs(pidV.GetError()) >= 1.0) {
+			if (abs(pidV.GetError()) > 0.625) {
 				stableCounter = CH_STABLE_CNT;
 			}
 			else {
@@ -195,26 +240,65 @@ void Channel_TypeDef::Handler() {
 			}
 		}
 		else {
-			mv = pidI.GetOutput();
+			// I = V / R
+			mv = pidI.GetOutput() / ina226->GetCurrentCal();
 			pidV.Reset();
-			if (abs(pidI.GetError()) >= 0.04) {
+			if (abs(pidI.GetError()) > 0.025) {
 				stableCounter = CH_STABLE_CNT;
 			}
 			else {
 				stableCounter = (stableCounter > 0 ? stableCounter - 1 : stableCounter);
 			}
 		}
-		mv = (invert ? 0xFFFF - mv : mv);
+		mv = (invert ? calDACMax - mv : mv);
 	}
-	else if (!GetState()) {
+	else {
 		pidV.Reset();
 		pidI.Reset();
 		mode = CH_MODE_FLOATING;
 		stableCounter = CH_STABLE_CNT;
-		mv = (invert ? 0xFFFF : 0);
+		if (calState) {
+			mv = (invert ? calDACMax : 0);
+		}
 	}
-	else if (mv == 0) {
-		stableCounter = (stableCounter > 0 ? stableCounter - 1 : stableCounter);
+}
+
+void Channel_TypeDef::SelfCalibrate() {
+	uint8_t calSequence = 0;
+	calState = 0;
+	mv = 0;
+	calVMax = 0;
+	calVMin = sys.ReadVsenseVin();
+	SetState(1);
+	while (!calState) {
+		switch (calSequence) {
+		case 0:
+			mv += 0xFFFF / 800;
+			LL_mDelay(LOOP_INTERVALms * 5);
+			if (vMeas > calVMax) {
+				calVMax = vMeas;
+				calDACMax = mv;
+			}
+			if (mv >= 0xFFFF) {calSequence++; }
+			break;
+		case 1:
+			if (mv > 0) {mv -= 0xFFFF / 800; }
+			LL_mDelay(LOOP_INTERVALms * 5);
+			if (vMeas < calVMin) {
+				calVMin = vMeas;
+				calDACMin = mv;
+			}
+			if (mv == 0) {calSequence++; }
+			break;
+		case 2:
+			SetState(0);
+			pidV.SetOutputRange(calDACMin, calDACMax);
+			pidI.SetOutputRange(calDACMin, calDACMax);
+			if (calVMin >= OUT_MIN_V || calVMax <= OUT_MAX_V) {calState = 2; }
+			else{calState = 1; }
+			break;
+		}
+		LL_IWDG_ReloadCounter(IWDG);
 	}
 }
 
@@ -230,7 +314,7 @@ uint8_t Channel_TypeDef::IsStable() {
 }
 
 void Channel_TypeDef::SetVoltage(float vSet) {
-	vSet = abs(vSet);
+	vSet = abs(vSet) + OUT_MIN_V;
 	this->vSet = (vSet < OUT_MIN_V ? OUT_MIN_V : (vSet > OUT_MAX_V ? OUT_MAX_V : vSet));
 	stableCounter = CH_STABLE_CNT;
 	mode = CH_MODE_VOLTAGE;	
@@ -243,7 +327,7 @@ void Channel_TypeDef::SetCurrent(float iSet) {
 }
 
 float Channel_TypeDef::GetVoltage() {
-	return (invert ? vMeas - 24000 : vMeas);
+	return (invert ? vMeas - calVMax + OUT_MIN_V : vMeas - OUT_MIN_V);
 }
 float Channel_TypeDef::GetCurrent() {
 	return iMeas;
