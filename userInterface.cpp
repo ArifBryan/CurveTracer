@@ -296,9 +296,6 @@ void UserInterface_TypeDef::ButtonHandler() {
 				if (btn2.justPressed() || btn2.justReleased()) {
 					btn2.drawButton(btn2.isPressed());
 				}
-				if (btn3.justPressed() || btn3.justReleased()) {
-					btn3.drawButton(btn3.isPressed());
-				}
 				if (btn4.justPressed() || btn4.justReleased()) {
 					btn4.drawButton(btn4.isPressed());
 				}
