@@ -1096,7 +1096,7 @@ void UserInterface_TypeDef::DrawStartupInfo() {
 		canvas.print("Selftest passed.");
 	}
 	else if (outCtl.GetSelftestResult() == 2) {
-		canvas.setCursor(56, 17);
+		canvas.setCursor(61, 17);
 		canvas.print("Selftest failed.");
 		canvas.setCursor(40, 34);
 		canvas.print("Press power to reset");

@@ -79,9 +79,12 @@ void OutputControl_TypeDef::Init() {
 	ina226Ch2.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_332us, INA226_CONFIG_AVG_64);
 	ina226Ch3.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_332us, INA226_CONFIG_AVG_64);
 	
-	ina226Ch1.SetCurrentCal(0.0521);
-	ina226Ch2.SetCurrentCal(0.0521);
-	ina226Ch3.SetCurrentCal(0.0521);
+	ina226Ch1.SetCurrentCal(0.0517061);
+	ina226Ch2.SetCurrentCal(0.0518456);
+	ina226Ch3.SetCurrentCal(0.0522574);
+	ina226Ch1.SetVoltageCal(-1.8);
+	ina226Ch2.SetVoltageCal(-2.6);
+	ina226Ch3.SetVoltageCal(-1.2);
 	
 	//ch1.pidV.SetConstants(1.5, 0.005, 0.2, LOOP_INTERVAL); // Trial & error
 	//ch1.pidV.SetConstants(1.8, 4.629, 0.054, LOOP_INTERVAL); // Ziegler Nichols
@@ -107,15 +110,24 @@ void OutputControl_TypeDef::Init() {
 	ch3.SetVoltage(0);
 	ch3.SetCurrent(1000);
 	
-	ch1.SetCalValue(521, 22939, 0, 61149);
-	ch2.SetCalValue(557, 22840, 0, 60822);
-	ch3.SetCalValue(529, 22893, 0, 63765);
+	// NG : Different cal value of each channel 
+	// resulting in different negative voltage regulation.
+//	ch1.SetCalValue(521, 22939, 0, 61149);
+//	ch2.SetCalValue(557, 22840, 0, 60822);
+//	ch3.SetCalValue(529, 22893, 0, 63765);
 	
+	// OK : Identical cal value of each channel (using highest and lowest cal point) 
+	// resulting in proportional positive and negative voltage regulation.
+	ch1.SetCalValue(520, 23000, 0, 64000);
+	ch2.SetCalValue(520, 23000, 0, 64000);
+	ch3.SetCalValue(520, 23000, 0, 64000);
+	
+	// TODO : Apply min max cal value for each channel as above stated.
 //	ch1.SelfCalibrate();
 //	ch2.SelfCalibrate();
 //	ch3.SelfCalibrate();
 	
-	SelfTest();
+	//SelfTest();
 }
 
 void OutputControl_TypeDef::Handler() {
@@ -241,7 +253,7 @@ void Channel_TypeDef::Handler() {
 		}
 		else {
 			// I = V / R
-			mv = pidI.GetOutput() / ina226->GetCurrentCal() / iSet;
+			mv = pidI.GetOutput() / ina226->GetCurrentCal() / (iSet / 30);
 			pidV.Reset();
 			if (abs(pidI.GetError()) > 0.025) {
 				stableCounter = CH_STABLE_CNT;

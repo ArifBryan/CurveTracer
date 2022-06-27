@@ -74,6 +74,8 @@ extern "C" void I2C1_EV_IRQHandler() {
 extern void I2C1_TransComplete_Handler();
 
 void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_CallbackHandler)(void), void(*OverTemperature_CallbackHandler)(void)) {
+	Shutdown_Callback = Shutdown_CallbackHandler;
+	OverTemperature_Callback = OverTemperature_CallbackHandler;
 	// Check reset source
 	uint8_t iwdgReset = LL_RCC_IsActiveFlag_IWDGRST();
 	LL_RCC_ClearResetFlags();
@@ -112,26 +114,25 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 				NVIC_Init();
 				// Watchdog reset
 				LL_IWDG_ReloadCounter(IWDG);
-				// Startup handler
-				Startup_CallbackHandler();
-				Shutdown_Callback = Shutdown_CallbackHandler;
-				OverTemperature_Callback = OverTemperature_CallbackHandler;
-				LL_mDelay(100);
-				// Watchdog reset
-				LL_IWDG_ReloadCounter(IWDG);
 				// Error-caused Reset Handler
 				if (iwdgReset) {
+					ui.Init();
 					lcd.setTextColor(ILI9341_BLACK);
 					lcd.setCursor(5, 17);
 					lcd.print("System Error!");
 					lcd.setCursor(5, 37);
 					lcd.print("Press power button to reset.");
-					while (LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) {
+					while (!IsPowerBtnPressed()) {
 						LL_IWDG_ReloadCounter(IWDG); 
 						LL_mDelay(100);
 					}
 					Restart();
 				}
+				// Startup handler
+				Startup_CallbackHandler();
+				LL_mDelay(100);
+				// Watchdog reset
+				LL_IWDG_ReloadCounter(IWDG);
 				while (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) ;
 				pwrBtnTmr = Ticks();
 				break;
@@ -265,13 +266,15 @@ void System_TypeDef::Shutdown() {
 	while (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) ;
 	LL_GPIO_ResetOutputPin(PWR_LATCH_GPIO, PWR_LATCH_PIN);
 	NVIC_SystemReset();
+	while (1) ;
 }
 
 void  System_TypeDef::Restart() {
 	Shutdown_Callback();
 	// Set restart flag
-	LL_RTC_BKP_SetRegister(BKP, LL_RTC_BKP_DR1, 0xFF);
+	LL_RTC_BKP_SetRegister(BKP, LL_RTC_BKP_DR1, 1);
 	NVIC_SystemReset();
+	while (1) ;
 }
 
 void System_TypeDef::RCC_Init() {

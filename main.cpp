@@ -7,22 +7,21 @@
 
 void Startup_Handler() {
 	//InitializeInstrumentingProfiler();
-	
 	scpi.Init();
 	ui.Init();
 	ui.SplashScreen();
-	ui.DrawStartupInfo();
 	outCtl.Init();
 	curveTracer.Init();
 	ui.DrawStartupInfo();
+	outCtl.SelfTest();
+	ui.DrawStartupInfo();
 	LL_mDelay(500);
 	if (outCtl.GetSelftestResult() == 2) {
-		while (1) {
-			if (sys.IsPowerBtnPressed()) {
-				sys.Restart();
-			}
-			LL_IWDG_ReloadCounter(IWDG);
+		while (!sys.IsPowerBtnPressed()) {
+			LL_IWDG_ReloadCounter(IWDG); 
+			LL_mDelay(100);
 		}
+		sys.Restart();
 	}
 	ui.SetScreenMenu(0);
 }
