@@ -18,7 +18,7 @@ void Startup_Handler() {
 	LL_mDelay(500);
 	if (outCtl.GetSelftestResult() == 2) {
 		while (!sys.IsPowerBtnPressed()) {
-			LL_IWDG_ReloadCounter(IWDG); 
+			sys.WatchdogReload();
 			LL_mDelay(100);
 		}
 		sys.Restart();

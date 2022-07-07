@@ -16,6 +16,7 @@ struct SCPI_TypeDef {
 	void Init(void);
 	void Handler(void);
 	void Return(const char *data);
+	void ReturnRaw(const char *data);
 	void Return(float data);
 	void Return(int data);
 	void UARTReceive_Handler(char *data);

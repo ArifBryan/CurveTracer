@@ -78,3 +78,9 @@ void UART_IT_TypeDef::Transmit(const char *data) {
 	txBuff[strlen(data) + 1] = 0;
 	LL_USART_TransmitData8(usart, txBuff[txBuffPtr++]);
 }
+void UART_IT_TypeDef::TransmitRaw(const char *data) {
+	while (txBuffPtr != 0) ;
+	memcpy((char*)txBuff, data, strlen(data));
+	txBuff[strlen(data)] = 0;
+	LL_USART_TransmitData8(usart, txBuff[txBuffPtr++]);
+}

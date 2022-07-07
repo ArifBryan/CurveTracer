@@ -20,6 +20,7 @@ struct UART_IT_TypeDef {
 	}
 	void Init(UART_IT_InitTypeDef *initStruct, void(*Receive_CallbackHandler)(volatile char *data), char delimiter, uint32_t timeout = 1000);
 	void Transmit(const char *data);
+	void TransmitRaw(const char *data);
 	void Handler();
 	void IRQ_Handler();
 private:

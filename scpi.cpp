@@ -356,17 +356,38 @@ parseMnemonic:
 				else if (strMatch(data, "OFF")) {reg.DispState = 0; }
 			}
 			// DATA
-			else if(strSkim(&data, ":DATA ")) {
+			else if(IsMnemonic(&data, ":DATA ")) {
 				if (*data == ' ') {reg.DispData[0] = 0;}
 				sscanf(data, "%s;\n", reg.DispData);
 			}
 			// MENU
-			else if(strSkim(&data, ":MENU ")) {
+			else if(IsMnemonic(&data, ":MENU ")) {
 				ui.SetScreenMenu(atoi(data));
 			}
 			// CLEar
-			else if(strSkim(&data, ":CLEar")) {
+			else if(IsMnemonic(&data, ":CLEar")) {
 				ui.ForceRedraw();
+			}
+			// FETCh
+			else if(IsMnemonic(&data, ":FETCh?")) {
+				Return("W320,H240");
+				char buff[10];
+				char delim[2] = { '\n', 0 };
+				lcd.startWrite();
+				lcd.setAddrWindow(0, 0, 320, 240);
+				lcd.writeCommand(ILI9341_RAMRD);
+				for (uint16_t h = 0; h < 240; h++) {
+					for (uint16_t w = 0; w < 320; w++) {
+						uint16_t pix = lcd.read16();
+						sprintf(buff, "%d,", pix);
+						ReturnRaw(buff);
+						sys.WatchdogReload();
+					}
+					ReturnRaw(delim);
+					sys.WatchdogReload();
+				}
+				lcd.endWrite();
+				ReturnRaw(delim);
 			}
 		}
 		// STATus
@@ -457,6 +478,9 @@ void SCPI_TypeDef::Handler() {
 
 void SCPI_TypeDef::Return(const char *data) {
 	uart->Transmit(data);
+}
+void SCPI_TypeDef::ReturnRaw(const char *data) {
+	uart->TransmitRaw(data);
 }
 
 void SCPI_TypeDef::Return(float data) {

@@ -30,7 +30,7 @@
 
 // Firmware version
 #define FW_VER_MAJOR	2
-#define FW_VER_MINOR	55
+#define FW_VER_MINOR	60
 #define FW_VER_REV		'a'
 #define FW_VER_DATE		__DATE__
 
@@ -174,6 +174,7 @@ struct System_TypeDef {
 	uint8_t GetFanSpeed(void);
 	void Ticks10ms_IRQ_Handler();
 	uint8_t IsPowerBtnPressed(void);
+	void WatchdogReload(void);
 private:
 	void RCC_Init(void);
 	void GPIO_Init(void);

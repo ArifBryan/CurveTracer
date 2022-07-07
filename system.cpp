@@ -761,6 +761,10 @@ void System_TypeDef::IWDG_Init() {
 	LL_DBGMCU_APB1_GRP1_FreezePeriph(LL_DBGMCU_APB1_GRP1_IWDG_STOP);
 }
 
+void System_TypeDef::WatchdogReload() {
+	LL_IWDG_ReloadCounter(IWDG);
+}
+
 void System_TypeDef::NVIC_Init() {
 	// Intterupt priority management.
 	// !IMPORTANT! Always manage interrupts priority wisely !IMPORTANT!
