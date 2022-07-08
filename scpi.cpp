@@ -371,15 +371,19 @@ parseMnemonic:
 			// FETCh
 			else if(IsMnemonic(&data, ":FETCh?")) {
 				Return("W320,H240");
-				char buff[10];
+				char buff[15];
 				char delim[2] = { '\n', 0 };
 				lcd.startWrite();
 				lcd.setAddrWindow(0, 0, 320, 240);
 				lcd.writeCommand(ILI9341_RAMRD);
+				lcd.spiRead();
 				for (uint16_t h = 0; h < 240; h++) {
 					for (uint16_t w = 0; w < 320; w++) {
-						uint16_t pix = lcd.read16();
-						sprintf(buff, "%d,", pix);
+						uint8_t r = (lcd.spiRead() >> 3) * 17;
+						uint8_t g = round((lcd.spiRead() >> 2) * 8.22);
+						uint8_t b = (lcd.spiRead() >> 3) * 17;
+						uint32_t pix = (r << 16) | (g << 8) | (b);
+						sprintf(buff, "%X,", pix);
 						ReturnRaw(buff);
 						sys.WatchdogReload();
 					}
