@@ -373,23 +373,26 @@ parseMnemonic:
 				Return("W320,H240");
 				char buff[15];
 				char delim[2] = { '\n', 0 };
+				uint8_t r, g, b;
+				uint32_t pix;
 				lcd.startWrite();
 				lcd.setAddrWindow(0, 0, 320, 240);
 				lcd.writeCommand(ILI9341_RAMRD);
 				lcd.spiRead();
+				LL_SPI_SetBaudRatePrescaler(SPI2, LL_SPI_BAUDRATEPRESCALER_DIV4);
 				for (uint16_t h = 0; h < 240; h++) {
 					for (uint16_t w = 0; w < 320; w++) {
-						uint8_t r = (lcd.spiRead() >> 3) * 17;
-						uint8_t g = round((lcd.spiRead() >> 2) * 8.22);
-						uint8_t b = (lcd.spiRead() >> 3) * 17;
-						uint32_t pix = (r << 16) | (g << 8) | (b);
+						r = (lcd.spiRead() >> 3) * 8;
+						g = (lcd.spiRead() >> 2) * 4;
+						b = (lcd.spiRead() >> 3) * 8;
+						pix = (r << 16) | (g << 8) | (b);
 						sprintf(buff, "%X,", pix);
 						ReturnRaw(buff);
-						sys.WatchdogReload();
 					}
 					ReturnRaw(delim);
 					sys.WatchdogReload();
 				}
+				LL_SPI_SetBaudRatePrescaler(SPI2, LL_SPI_BAUDRATEPRESCALER_DIV2);
 				lcd.endWrite();
 				ReturnRaw(delim);
 			}
