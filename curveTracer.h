@@ -29,14 +29,24 @@ struct CurveTracer_TypeDef {
 		this->tSample = (tSample < CT_MIN_SAMPLE_TIME ? CT_MIN_SAMPLE_TIME : tSample);
 		this->iLim = iLim;
 	}
-	void SetupParams3ch(float vStart, float vEnd, float vStep, float iLim, float iStart, float iEnd, float iStep, uint32_t tSample) {
-		this->iStart = iStart;
-		this->iEnd = iEnd;
-		this->iStep = iStep;
-		this->vStart = vStart;
-		this->vEnd = vEnd;
-		this->vStep = vStep;
-		this->iLim = iLim;
+	void SetupParamsBJT(float vceStart, float vceEnd, float vceStep, float icLim, float ibStart, float ibEnd, float ibStep, uint32_t tSample) {
+		this->bStart = ibStart;
+		this->bEnd = ibEnd;
+		this->bStep = ibStep;
+		this->vStart = vceStart;
+		this->vEnd = vceEnd;
+		this->vStep = vceStep;
+		this->iLim = icLim;
+		this->tSample = (tSample < CT_MIN_SAMPLE_TIME ? CT_MIN_SAMPLE_TIME : tSample);
+	}
+	void SetupParamsFET(float vdsStart, float vdsEnd, float vdsStep, float idLim, float vgsStart, float vgsEnd, float vgsStep, uint32_t tSample) {
+		this->bStart = vgsStart;
+		this->bEnd = vgsEnd;
+		this->bStep = vgsStep;
+		this->vStart = vdsStart;
+		this->vEnd = vdsEnd;
+		this->vStep = vdsStep;
+		this->iLim = idLim;
 		this->tSample = (tSample < CT_MIN_SAMPLE_TIME ? CT_MIN_SAMPLE_TIME : tSample);
 	}
 	uint32_t GetSampleLength(void) {return sampleLen;}
@@ -52,10 +62,13 @@ struct CurveTracer_TypeDef {
 	SampleData_TypeDef data[CT_DATA_LEN];
 	
 	float vStart, vEnd, vStep, iLim;
-	float iStart, iEnd, iStep;
+	float bStart, bEnd, bStep;
 	float vSample, iSample;
-	float ibSample;
+	float bSample;
+	uint8_t bType;
 	uint32_t tSample;
+	const uint8_t bTypeCurrent = 0;
+	const uint8_t bTypeVoltage = 1;
 private:
 	uint8_t run;
 	uint8_t end;

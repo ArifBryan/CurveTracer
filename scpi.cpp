@@ -261,33 +261,33 @@ parseMnemonic:
 				if (IsMnemonic(&data, "STARt")) {
 					// Command
 					if (strSkim(&data, " ")) {
-						curveTracer.iStart = atof(data);
+						curveTracer.bStart = atof(data);
 					}
 					// Query
 					else if(strSkim(&data, "?")) {
-						Return(curveTracer.iStart);	
+						Return(curveTracer.bStart);	
 					}
 				}
 				// STOP
 				if (IsMnemonic(&data, "STOP")) {
 					// Command
 					if (strSkim(&data, " ")) {
-						curveTracer.iEnd = atof(data);
+						curveTracer.bEnd = atof(data);
 					}
 					// Query
 					else if(strSkim(&data, "?")) {
-						Return(curveTracer.iEnd);	
+						Return(curveTracer.bEnd);	
 					}
 				}
 				// STEP
 				if (IsMnemonic(&data, "STEP")) {
 					// Command
 					if (strSkim(&data, " ")) {
-						curveTracer.iStep = atof(data);
+						curveTracer.bStep = atof(data);
 					}
 					// Query
 					else if(strSkim(&data, "?")) {
-						Return(curveTracer.iStep);	
+						Return(curveTracer.bStep);	
 					}
 				}
 				// RANGe
