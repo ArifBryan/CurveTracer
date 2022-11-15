@@ -185,13 +185,13 @@ void UserInterface_TypeDef::ButtonHandler() {
 						curveTracer.iLim = keypad.GetKeyFloat();
 						break;
 					case 5:
-						curveTracer.iStart = keypad.GetKeyFloat();
+						curveTracer.bStart = keypad.GetKeyFloat();
 						break;
 					case 6:
-						curveTracer.iStep = keypad.GetKeyFloat();
+						curveTracer.bStep = keypad.GetKeyFloat();
 						break;
 					case 7:
-						curveTracer.iEnd = keypad.GetKeyFloat();
+						curveTracer.bEnd = keypad.GetKeyFloat();
 						break;
 					}
 					break;
@@ -356,7 +356,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 				if (btn1.justPressed()) {
 					Beep(50);
 				
-					if ((abs(curveTracer.iStep) > 0.0 && abs(curveTracer.iEnd) > 0.0) || abs(curveTracer.iStart) > 0.0) {
+					if ((abs(curveTracer.bStep) > 0.0 && abs(curveTracer.bEnd) > 0.0) || abs(curveTracer.bStart) > 0.0) {
 						curveTracer.SetupChannel(&outCtl.ch1, &outCtl.ch3, &outCtl.ch2);
 						curveTracer.tSample = 100;
 					}
@@ -664,9 +664,9 @@ void UserInterface_TypeDef::ScreenMenu() {
 					text2.Draw((int16_t)curveTracer.vEnd);
 					text3.Draw(curveTracer.vStep);
 					text4.Draw(curveTracer.iLim);
-					text5.Draw(curveTracer.iStart);
-					text6.Draw(curveTracer.iStep);
-					text7.Draw(curveTracer.iEnd);
+					text5.Draw(curveTracer.bStart);
+					text6.Draw(curveTracer.bStep);
+					text7.Draw(curveTracer.bEnd);
 				}
 				if (uiRedraw || uiUpdate) {
 				

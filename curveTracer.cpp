@@ -23,9 +23,14 @@ void CurveTracer_TypeDef::Handler() {
 		}
 		if (stable) {
 			if ((samplePtr >= sampleLen || abs(data[samplePtr - 1].i) > abs(iLim)) && samplePtr > 0) {
-				if (pB && abs(ibSample) < abs(iEnd)) {
-					ibSample += iStep;
-					pB->SetCurrent(ibSample);
+				if (pB && abs(bSample) < abs(bEnd)) {
+					bSample += bStep;
+					if (bType == bTypeCurrent) {
+						pB->SetCurrent(bSample);
+					}
+					else if (bType == bTypeVoltage) {
+						pB->SetVoltage(bSample);
+					}
 					vSample = vStart;
 					pA->SetVoltage(pRef->GetSetVoltage() + vSample);
 					nextSampleSeq = 1;
@@ -64,7 +69,7 @@ void CurveTracer_TypeDef::Start() {
 	sampleSeq = 0;
 	nextSampleSeq = 1;
 	vSample = vStart;
-	ibSample = iStart;
+	bSample = bStart;
 	pRef->SetCurrent(1000);
 	pRef->SetVoltage(0);
 	pRef->SetState(1);
@@ -72,9 +77,14 @@ void CurveTracer_TypeDef::Start() {
 	pA->SetVoltage(pRef->GetSetVoltage() + vSample);
 	pA->SetState(1);
 	if (pB) {
-		//pB->SetVoltage(pRef->GetSetVoltage());
-		pB->SetCurrent(ibSample);
-		pB->SetVoltage(pRef->GetSetVoltage() + (vEnd * 3));
+		if (bType == bTypeCurrent) {
+			pB->SetCurrent(bSample);
+			pB->SetVoltage(pRef->GetSetVoltage() + (vEnd * 3));
+		}
+		else if (bType == bTypeVoltage) {
+			pB->SetCurrent(1000);
+			pB->SetVoltage(bSample);
+		}
 		pB->SetState(1);
 	}
 	tracerTimer = sys.Ticks();
