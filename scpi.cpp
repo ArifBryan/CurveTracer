@@ -232,35 +232,11 @@ parseMnemonic:
 						Return(curveTracer.vStart);	
 					}
 				}
-				// STARt2
-				if (IsMnemonic(&data, "STARt2")) {
-					curveTracer.bType = curveTracer.bTypeVoltage;
-					// Command
-					if (strSkim(&data, " ")) {
-						curveTracer.bStart = atof(data);
-					}
-					// Query
-					else if(strSkim(&data, "?")) {
-						Return(curveTracer.bStart);	
-					}
-				}
 				// STOP
 				if (IsMnemonic(&data, "STOP")) {
 					// Command
 					if (strSkim(&data, " ")) {
 						curveTracer.vEnd = atof(data);
-					}
-					// Query
-					else if(strSkim(&data, "?")) {
-						Return(curveTracer.vEnd);	
-					}
-				}
-				// STOP2
-				if (IsMnemonic(&data, "STOP2")) {
-					curveTracer.bType = curveTracer.bTypeVoltage;
-					// Command
-					if (strSkim(&data, " ")) {
-						curveTracer.bEnd = atof(data);
 					}
 					// Query
 					else if(strSkim(&data, "?")) {
@@ -278,8 +254,35 @@ parseMnemonic:
 						Return(curveTracer.vStep);	
 					}
 				}
-				// STEP2
-				if (IsMnemonic(&data, "STEP2")) {
+			}
+			// VOLTage2
+			else if(IsMnemonic(&data, "VOLTage2:")) {
+				// STARt
+				if (IsMnemonic(&data, "STARt")) {
+					curveTracer.bType = curveTracer.bTypeVoltage;
+					// Command
+					if (strSkim(&data, " ")) {
+						curveTracer.bStart = atof(data);
+					}
+					// Query
+					else if(strSkim(&data, "?")) {
+						Return(curveTracer.bStart);	
+					}
+				}
+				// STOP
+				if (IsMnemonic(&data, "STOP")) {
+					curveTracer.bType = curveTracer.bTypeVoltage;
+					// Command
+					if (strSkim(&data, " ")) {
+						curveTracer.bEnd = atof(data);
+					}
+					// Query
+					else if(strSkim(&data, "?")) {
+						Return(curveTracer.vEnd);	
+					}
+				}
+				// STEP
+				if (IsMnemonic(&data, "STEP")) {
 					curveTracer.bType = curveTracer.bTypeVoltage;
 					// Command
 					if (strSkim(&data, " ")) {
@@ -341,6 +344,57 @@ parseMnemonic:
 					}
 				}
 			}
+			// CURRent
+			else if(IsMnemonic(&data, "CURRent:")) {
+				// STARt
+				if (IsMnemonic(&data, "STARt")) {
+					curveTracer.bType = curveTracer.bTypeCurrent;
+					// Command
+					if (strSkim(&data, " ")) {
+						curveTracer.bStart = atof(data);
+					}
+					// Query
+					else if(strSkim(&data, "?")) {
+						Return(curveTracer.bStart);	
+					}
+				}
+				// STOP
+				if (IsMnemonic(&data, "STOP")) {
+					curveTracer.bType = curveTracer.bTypeCurrent;
+					// Command
+					if (strSkim(&data, " ")) {
+						curveTracer.bEnd = atof(data);
+					}
+					// Query
+					else if(strSkim(&data, "?")) {
+						Return(curveTracer.bEnd);	
+					}
+				}
+				// STEP
+				if (IsMnemonic(&data, "STEP")) {
+					curveTracer.bType = curveTracer.bTypeCurrent;
+					// Command
+					if (strSkim(&data, " ")) {
+						curveTracer.bStep = atof(data);
+					}
+					// Query
+					else if(strSkim(&data, "?")) {
+						Return(curveTracer.bStep);	
+					}
+				}
+				// RANGe
+				if (IsMnemonic(&data, "RANGe")) {
+					// Command
+					if (strSkim(&data, " ")) {
+						curveTracer.iLim = atof(data);
+					}
+					// Query
+					else if(strSkim(&data, "?")) {
+						Return(curveTracer.iLim);	
+					}
+				}
+			}
+			
 			// STATe
 			else if(IsMnemonic(&data, "STATe")) {
 				// INITiate
