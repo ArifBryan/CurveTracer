@@ -21,7 +21,10 @@ void Startup_Handler() {
 			sys.WatchdogReload();
 			LL_mDelay(100);
 		}
-		sys.Restart();
+		LL_GPIO_SetOutputPin(BEEPER_GPIO, BEEPER_PIN);
+		LL_mDelay(50);
+		LL_GPIO_ResetOutputPin(BEEPER_GPIO, BEEPER_PIN);
+		sys.Shutdown();
 	}
 	ui.SetScreenMenu(0);
 }

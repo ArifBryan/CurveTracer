@@ -84,10 +84,11 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 	GPIO_Init();
 	IWDG_Init();
 	LL_GPIO_SetOutputPin(PWR_LATCH_GPIO, PWR_LATCH_PIN);
+	// Wait for supply to stabilize
+	LL_mDelay(10);
 	// Check if system restart
 	uint8_t forceOn = LL_RTC_BKP_GetRegister(BKP, LL_RTC_BKP_DR1) || iwdgReset;
 	ADC_Init();
-	LL_mDelay(10);
 	LL_GPIO_ResetOutputPin(LED_STA_GPIO, LED_STA_PIN);
 	uint32_t platchTmr = Ticks();
 	while (1) {
@@ -145,8 +146,6 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 		// Temporary power latch timeout
 		if (Ticks() - platchTmr >= 500) {
 			LL_GPIO_ResetOutputPin(PWR_LATCH_GPIO, PWR_LATCH_PIN);
-			// Start ADC conversion
-			ADCStartConversion();
 			
 			platchTmr = Ticks();		
 		}
@@ -167,12 +166,8 @@ void System_TypeDef::Handler() {
 	startup = (startup > 0 ? 2 : 1);
 	
 	// Status LED
-	if (Ticks() - sledTmr >= 50 && !LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
+	if (Ticks() - sledTmr >= 250) {
 		LL_GPIO_SetOutputPin(LED_STA_GPIO, LED_STA_PIN);
-		sledTmr = Ticks();
-	}
-	else if (Ticks() - sledTmr >= 250 && LL_GPIO_IsOutputPinSet(LED_STA_GPIO, LED_STA_PIN)) {
-		LL_GPIO_ResetOutputPin(LED_STA_GPIO, LED_STA_PIN);
 		if (overTemp || underVoltage) {
 			LL_GPIO_TogglePin(LED_PWR_GPIO, LED_PWR_PIN);
 		}
@@ -233,11 +228,11 @@ void System_TypeDef::Ticks10ms_IRQ_Handler() {
 		}
 		
 		// Thermal supervisor
-		if (ReadDriverTemp() >= 38 && !overTemp) {
+		if (ReadDriverTemp() >= 45 && !overTemp) {
 			overTemp = 1;
 			OverTemperature_Callback();
 		}
-		else if (ReadDriverTemp() <= 35) {
+		else if (ReadDriverTemp() <= 40) {
 			overTemp = 0;
 		}
 		
