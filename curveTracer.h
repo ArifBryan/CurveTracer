@@ -58,7 +58,48 @@ struct CurveTracer_TypeDef {
 	uint8_t IsNewSample() {return newSample;}
 	uint8_t IsNewSequence() {return nextSampleSeq;}
 	uint32_t GetSequenceCount(void) {return sampleSeq;}
-	uint8_t IsChannelValid(void) {return (pRef && pA) || (pRef && pA && pB);}
+	uint8_t IsChannelValid(void) {
+		return ((pRef && pA) || (pRef && pA && pB)) && ((pRef != pA) && (pA != pB) && (pB!=pRef));
+	}
+	uint8_t IsParamValid(void) {
+		uint8_t vParamValid = 0;
+		uint8_t iParamValid = 0;
+		uint8_t bParamValid = 0;
+		if (outCtl.IsInverted()) {
+			vParamValid = vStart <= 0 && vEnd < 0 && vStep != 0;
+			iParamValid = iLim < 0;
+			bParamValid = bStart <= 0 && bEnd <= 0 && bStep <= 0;
+		}
+		else {
+			vParamValid = vStart >= 0 && vEnd > 0 && vStep != 0;
+			iParamValid = iLim > 0;
+			bParamValid = bStart >= 0 && bEnd >= 0 && bStep >= 0;
+		}
+		return vParamValid && iParamValid && bParamValid;
+	}
+	void InvertParams() {
+		vStart = -vStart;
+		vEnd = -vEnd;
+		vStep = -vStep;
+		iLim = -iLim;
+		bStart = -bStart;
+		bEnd = -bEnd;
+		bStep = -bStep;
+	}
+	void ResetParams() {
+		vStart = 0;
+		vEnd = 0;
+		vStep = 0;
+		iLim = 0;
+		bStart = 0;
+		bEnd = 0;
+		bStep = 0;
+		pRef = 0;
+		pA = 0;
+		pB = 0;
+	}
+	void SetpBiasModeCurrent() {bType = bTypeCurrent;}
+	void SetpBiasModeVoltage() {bType = bTypeVoltage; }
 	SampleData_TypeDef data[CT_DATA_LEN];
 	
 	float vStart, vEnd, vStep, iLim;
@@ -69,10 +110,10 @@ struct CurveTracer_TypeDef {
 	uint32_t tSample;
 	const uint8_t bTypeCurrent = 0;
 	const uint8_t bTypeVoltage = 1;
+	Channel_TypeDef *pRef, *pA, *pB;
 private:
 	uint8_t run;
 	uint8_t end;
-	Channel_TypeDef *pRef, *pA, *pB;
 	uint32_t samplePtr;
 	uint32_t sampleLen;
 	uint32_t sampleSeq;

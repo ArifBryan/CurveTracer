@@ -27,6 +27,9 @@ TextBox_TypeDef text4;
 TextBox_TypeDef text5;
 TextBox_TypeDef text6;
 TextBox_TypeDef text7;
+TextBox_TypeDef text8;
+TextBox_TypeDef text9;
+TextBox_TypeDef text10;
 
 TouchOverlay_TypeDef bar;
 
@@ -87,6 +90,9 @@ void UserInterface_TypeDef::Handler() {
 			text5.TouchHandler(tsPos, 1);
 			text6.TouchHandler(tsPos, 1);
 			text7.TouchHandler(tsPos, 1);
+			text8.TouchHandler(tsPos, 1);
+			text9.TouchHandler(tsPos, 1);
+			text10.TouchHandler(tsPos, 1);
 			bar.TouchHandler(tsPos, 1);
 		}
 	}
@@ -103,6 +109,9 @@ void UserInterface_TypeDef::Handler() {
 		text5.TouchHandler(tsPos, 0);
 		text6.TouchHandler(tsPos, 0);
 		text7.TouchHandler(tsPos, 0);
+		text8.TouchHandler(tsPos, 0);
+		text9.TouchHandler(tsPos, 0);
+		text10.TouchHandler(tsPos, 0);
 		bar.TouchHandler(tsPos, 0);
 		tsPos.x = 0;
 		tsPos.y = 0;
@@ -142,59 +151,106 @@ void UserInterface_TypeDef::ButtonHandler() {
 			if (sysMenu) {
 				switch (editVar) {
 				case 1:
-					SetBrightness(keypad.GetKeyInteger());
+					SetBrightness(keypad.GetKeyInteger(0, 100));
 					break;
 				}
 			}
 			else {
+				Channel_TypeDef *chList[4] = { 0, &outCtl.ch1, &outCtl.ch2, &outCtl.ch3 };
 				switch (uiMenuIndex) {
-				case 0:
+				case 0:	// FET Menu
 					switch (editVar) {
 					case 1:
-						outCtl.ch1.SetVoltage(keypad.GetKeyFloat());
+						curveTracer.vStart = keypad.GetKeyFloat(-20000, 20000);
 						break;
 					case 2:
-						outCtl.ch2.SetVoltage(keypad.GetKeyFloat());
+						curveTracer.vStep = keypad.GetKeyFloat(-20000, 20000);
 						break;
 					case 3:
-						outCtl.ch3.SetVoltage(keypad.GetKeyFloat());
+						curveTracer.vEnd = keypad.GetKeyFloat(-20000, 20000);
 						break;
 					case 4:
-						outCtl.ch1.SetCurrent(keypad.GetKeyFloat());
+						curveTracer.iLim = keypad.GetKeyFloat(-1000, 1000);
 						break;
 					case 5:
-						outCtl.ch2.SetCurrent(keypad.GetKeyFloat());
+						curveTracer.bStart = keypad.GetKeyFloat(-20000, 20000);
 						break;
 					case 6:
-						outCtl.ch3.SetCurrent(keypad.GetKeyFloat());
-						break;
-					}
-					break;
-				case 1:
-					switch (editVar) {
-					case 1:
-						curveTracer.vStart = keypad.GetKeyFloat();
-						break;
-					case 2:
-						curveTracer.vEnd = keypad.GetKeyFloat();
-						break;
-					case 3:
-						curveTracer.vStep = keypad.GetKeyFloat();
-						break;
-					case 4:
-						curveTracer.iLim = keypad.GetKeyFloat();
-						break;
-					case 5:
-						curveTracer.bStart = keypad.GetKeyFloat();
-						break;
-					case 6:
-						curveTracer.bStep = keypad.GetKeyFloat();
+						curveTracer.bStep = keypad.GetKeyFloat(-20000, 20000);
 						break;
 					case 7:
-						curveTracer.bEnd = keypad.GetKeyFloat();
+						curveTracer.bEnd = keypad.GetKeyFloat(-20000, 20000);
+						break;
+					case 8:
+						curveTracer.pB = chList[keypad.GetKeyInteger(0, 3)];
+						break;
+					case 9:
+						curveTracer.pA = chList[keypad.GetKeyInteger(0, 3)];
+						break;
+					case 10:
+						curveTracer.pRef = chList[keypad.GetKeyInteger(0, 3)];
 						break;
 					}
 					break;
+					
+				case 1:	// BJT Menu
+					switch (editVar) {
+					case 1:
+						curveTracer.vStart = keypad.GetKeyFloat(-20000, 20000);
+						break;
+					case 2:
+						curveTracer.vStep = keypad.GetKeyFloat(-20000, 20000);
+						break;
+					case 3:
+						curveTracer.vEnd = keypad.GetKeyFloat(-20000, 20000);
+						break;
+					case 4:
+						curveTracer.iLim = keypad.GetKeyFloat(-1000, 1000);
+						break;
+					case 5:
+						curveTracer.bStart = keypad.GetKeyFloat(-1000, 1000);
+						break;
+					case 6:
+						curveTracer.bStep = keypad.GetKeyFloat(-1000, 1000);
+						break;
+					case 7:
+						curveTracer.bEnd = keypad.GetKeyFloat(-1000, 1000);
+						break;
+					case 8:
+						curveTracer.pB = chList[keypad.GetKeyInteger(0, 3)];
+						break;
+					case 9:
+						curveTracer.pA = chList[keypad.GetKeyInteger(0, 3)];
+						break;
+					case 10:
+						curveTracer.pRef = chList[keypad.GetKeyInteger(0, 3)];
+						break;
+					}
+					break;
+					
+				case 3:	// SMU Mode (DISABLED)
+					switch (editVar) {
+					case 1:
+						outCtl.ch1.SetVoltage(keypad.GetKeyFloat(-20000, 20000));
+						break;
+					case 2:
+						outCtl.ch2.SetVoltage(keypad.GetKeyFloat(-20000, 20000));
+						break;
+					case 3:
+						outCtl.ch3.SetVoltage(keypad.GetKeyFloat(-20000, 20000));
+						break;
+					case 4:
+						outCtl.ch1.SetCurrent(keypad.GetKeyFloat(-1000, 1000));
+						break;
+					case 5:
+						outCtl.ch2.SetCurrent(keypad.GetKeyFloat(-1000, 1000));
+						break;
+					case 6:
+						outCtl.ch3.SetCurrent(keypad.GetKeyFloat(-1000, 1000));
+						break;
+					}
+					break;
+					
 				}
 			}
 		}
@@ -208,6 +264,8 @@ void UserInterface_TypeDef::ButtonHandler() {
 			}
 		}
 	}
+	
+	// Menu
 	if(!keypad.IsEnabled()) {
 		if (sysMenu) {
 			if (bar.JustPressed()) {
@@ -230,7 +288,256 @@ void UserInterface_TypeDef::ButtonHandler() {
 				lcd.fillRect(0, 25, 320, 215, ILI9341_WHITE);
 			}
 			switch (uiMenuIndex) {
-			case 0:
+			case 0:	// FET Menu
+				if (text1.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Vds Start", "mV");
+					editVar = 1;
+				}
+				if (text2.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Vds Step", "mV");
+					editVar = 2;
+				}
+				if (text3.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Vds End", "mV");
+					editVar = 3;
+				}
+				if (text4.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Id Range", "mA");
+					editVar = 4;
+				}
+				if (text5.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Vgs Start", "mV");
+					editVar = 5;
+				}
+				if (text6.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Vgs Step", "mV");
+					editVar = 6;
+				}
+				if (text7.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Vgs End", "mV");
+					editVar = 7;
+				}
+				if (text8.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Gate CH", "");
+					editVar = 8;
+				}
+				if (text9.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Drain CH", "");
+					editVar = 9;
+				}
+				if (text10.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Source CH", "");
+					editVar = 10;
+				}
+			
+				if (btn1.justPressed() || btn1.justReleased()) {
+					btn1.drawButton(btn1.isPressed());
+				}
+				if (btn2.justPressed() || btn2.justReleased()) {
+					btn2.drawButton(btn2.isPressed());
+				}
+				if (btn4.justPressed() || btn4.justReleased()) {
+					btn4.drawButton(btn4.isPressed());
+				}			
+			
+				if (btn1.justPressed()) {
+					if (curveTracer.IsChannelValid() && curveTracer.IsParamValid()) {
+						Beep(50);
+						curveTracer.tSample = 100;
+						curveTracer.bType = curveTracer.bTypeVoltage;
+						curveTracer.Start();
+						plot.ResetLinePlot();
+						SetScreenMenu(2);
+					}
+					else {
+						Beep(50, 3);						
+					}
+				}
+				if (btn2.justPressed()) {
+					Beep(50);
+					curveTracer.InvertParams();
+					uiUpdate = 1;
+					if (outCtl.IsInverted()) {
+						outCtl.InvertChannels(0);
+						btn2.setLabel("N-CH");
+					}
+					else {
+						outCtl.InvertChannels(1);
+						btn2.setLabel("P-CH");
+					}
+				}
+				if (btn4.justPressed()) {
+					Beep(50);
+					curveTracer.ResetParams();
+					outCtl.InvertChannels(0);
+					SetScreenMenu(1);
+				}
+				break;
+				
+			case 1:	// BJT Menu
+				if (text1.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Vce Start", "mV");
+					editVar = 1;
+				}
+				if (text2.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Vce Step", "mV");
+					editVar = 2;
+				}
+				if (text3.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Vce End", "mV");
+					editVar = 3;
+				}
+				if (text4.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Ic Range", "mA");
+					editVar = 4;
+				}
+				if (text5.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Ib Start", "mA");
+					editVar = 5;
+				}
+				if (text6.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Ib Step", "mA");
+					editVar = 6;
+				}
+				if (text7.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Ib End", "mA");
+					editVar = 7;
+				}
+				if (text8.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Base CH", "");
+					editVar = 8;
+				}
+				if (text9.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Collector CH", "");
+					editVar = 9;
+				}
+				if (text10.JustPressed()) {
+					Beep(50);
+					keypad.Enable("Emitter CH", "");
+					editVar = 10;
+				}
+			
+				if (btn1.justPressed() || btn1.justReleased()) {
+					btn1.drawButton(btn1.isPressed());
+				}
+				if (btn2.justPressed() || btn2.justReleased()) {
+					btn2.drawButton(btn2.isPressed());
+				}
+				if (btn4.justPressed() || btn4.justReleased()) {
+					btn4.drawButton(btn4.isPressed());
+				}			
+			
+				if (btn1.justPressed()) {
+					if (curveTracer.IsChannelValid() && curveTracer.IsParamValid()) {
+						Beep(50);
+						curveTracer.tSample = 100;
+						curveTracer.bType = curveTracer.bTypeCurrent;
+						curveTracer.Start();
+						plot.ResetLinePlot();
+						SetScreenMenu(2);
+					}
+					else {
+						Beep(50, 3);						
+					}
+				}
+				if (btn2.justPressed()) {
+					Beep(50);
+					curveTracer.InvertParams();
+					uiUpdate = 1;
+					if (outCtl.IsInverted()) {
+						outCtl.InvertChannels(0);
+						btn2.setLabel("NPN");
+					}
+					else {
+						outCtl.InvertChannels(1);
+						btn2.setLabel("PNP");
+					}
+				}
+				if (btn4.justPressed()) {
+					Beep(50);
+					curveTracer.ResetParams();
+					outCtl.InvertChannels(0);
+					SetScreenMenu(0);
+				}
+				break;
+				
+			case 2:	// Trace Display
+				if (curveTracer.IsSamplingDone() && curveTracer.IsNewSample()) {
+					btn1.setLabel("START");
+					btn1.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
+					btn1.drawButton(btn1.isPressed());
+					ui.Beep(50, 2);
+					uiNotify = 1;
+				}
+				if (curveTracer.IsNewSample()) {
+					uiUpdate = 1;
+				}
+				if (btn1.justPressed()) {
+					Beep(50);
+		
+					if (!curveTracer.IsSampling()) {
+						plot.ResetLinePlot();
+						curveTracer.Start();
+						btn1.setLabel("STOP");
+						btn1.setColor(ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE);
+					}
+					else {
+						curveTracer.Stop();
+						btn1.setLabel("START");
+						btn1.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
+					}
+					uiNotify = 1;
+				}
+				if (btn3.justPressed()) {
+					Beep(50);
+					curveTracer.Stop();
+					plot.Clear();
+					uiRedraw = 1;
+					uiNotify = 1;
+				}
+		
+				if (btn1.justPressed() || btn1.justReleased()) {
+					btn1.drawButton(btn1.isPressed());
+				}
+				if (btn4.justPressed() || btn4.justReleased()) {
+					btn4.drawButton(btn4.isPressed());
+				}
+				if (btn3.justPressed() || btn3.justReleased()) {
+					btn3.drawButton(btn3.isPressed());
+				}
+		
+				if (btn4.justPressed()) {
+					Beep(50);
+					curveTracer.Stop();
+					if (curveTracer.bType == curveTracer.bTypeCurrent) {
+						SetScreenMenu(1);
+					}
+					else if (curveTracer.bType == curveTracer.bTypeVoltage) {
+						SetScreenMenu(0);
+					}
+				}
+				break;
+				
+			case 3: // SMU Mode (DISABLED)
 				if (btn1.justPressed()) {
 					Beep(50);
 					if (outCtl.IsAnyChannelEnabled()) {
@@ -250,11 +557,11 @@ void UserInterface_TypeDef::ButtonHandler() {
 					Beep(50);
 					if (outCtl.IsInverted()) {
 						outCtl.InvertChannels(0);
-						btn2.setColor(ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE);
+						btn2.setLabel("Norm");
 					}
 					else {
 						outCtl.InvertChannels(1);
-						btn2.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
+						btn2.setLabel("Inv.");
 					}
 				}
 		
@@ -305,136 +612,6 @@ void UserInterface_TypeDef::ButtonHandler() {
 					SetScreenMenu(1);
 				}
 				break;
-			case 1:
-			
-				if (text1.JustPressed()) {
-					Beep(50);
-					keypad.Enable("V Start", "mV");
-					editVar = 1;
-				}
-				if (text2.JustPressed()) {
-					Beep(50);
-					keypad.Enable("V End", "mV");
-					editVar = 2;
-				}
-				if (text3.JustPressed()) {
-					Beep(50);
-					keypad.Enable("V Step", "mV");
-					editVar = 3;
-				}
-				if (text4.JustPressed()) {
-					Beep(50);
-					keypad.Enable("I Range", "mA");
-					editVar = 4;
-				}
-				if (text5.JustPressed()) {
-					Beep(50);
-					keypad.Enable("Ib Start", "mA");
-					editVar = 5;
-				}
-				if (text6.JustPressed()) {
-					Beep(50);
-					keypad.Enable("Ib Step", "mA");
-					editVar = 6;
-				}
-				if (text7.JustPressed()) {
-					Beep(50);
-					keypad.Enable("Ib End", "mA");
-					editVar = 7;
-				}
-			
-				if (btn1.justPressed() || btn1.justReleased()) {
-					btn1.drawButton(btn1.isPressed());
-				}
-				if (btn2.justPressed() || btn2.justReleased()) {
-					btn2.drawButton(btn2.isPressed());
-				}
-				if (btn4.justPressed() || btn4.justReleased()) {
-					btn4.drawButton(btn4.isPressed());
-				}			
-			
-				if (btn1.justPressed()) {
-					Beep(50);
-				
-					if ((abs(curveTracer.bStep) > 0.0 && abs(curveTracer.bEnd) > 0.0) || abs(curveTracer.bStart) > 0.0) {
-						curveTracer.SetupChannel(&outCtl.ch1, &outCtl.ch3, &outCtl.ch2);
-						curveTracer.tSample = 100;
-					}
-					else {
-						curveTracer.SetupChannel(&outCtl.ch1, &outCtl.ch2);
-						curveTracer.tSample = 100;
-					}
-					curveTracer.Start();
-					plot.ResetLinePlot();
-					SetScreenMenu(2);
-				}
-				if (btn2.justPressed()) {
-					Beep(50);
-					if (outCtl.IsInverted()) {
-						outCtl.InvertChannels(0);
-						btn2.setColor(ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE);
-					}
-					else {
-						outCtl.InvertChannels(1);
-						btn2.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
-					}
-				}
-				if (btn4.justPressed()) {
-					Beep(50);
-					SetScreenMenu(0);
-				}
-				break;
-			case 2:
-				if (curveTracer.IsSamplingDone() && curveTracer.IsNewSample()) {
-					btn1.setLabel("START");
-					btn1.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
-					btn1.drawButton(btn1.isPressed());
-					ui.Beep(50, 2);
-					uiNotify = 1;
-				}
-				if (curveTracer.IsNewSample()) {
-					uiUpdate = 1;
-				}
-				if (btn1.justPressed()) {
-					Beep(50);
-		
-					if (!curveTracer.IsSampling()) {
-						plot.ResetLinePlot();
-						curveTracer.Start();
-						btn1.setLabel("STOP");
-						btn1.setColor(ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE);
-					}
-					else {
-						curveTracer.Stop();
-						btn1.setLabel("START");
-						btn1.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
-					}
-					uiNotify = 1;
-				}
-				if (btn3.justPressed()) {
-					Beep(50);
-					curveTracer.Stop();
-					plot.Clear();
-					uiRedraw = 1;
-					uiNotify = 1;
-				}
-		
-				if (btn1.justPressed() || btn1.justReleased()) {
-					btn1.drawButton(btn1.isPressed());
-				}
-				if (btn4.justPressed() || btn4.justReleased()) {
-					btn4.drawButton(btn4.isPressed());
-				}
-				if (btn3.justPressed() || btn3.justReleased()) {
-					btn3.drawButton(btn3.isPressed());
-				}
-		
-				if (btn4.justPressed()) {
-					Beep(50);
-					curveTracer.Stop();
-					SetScreenMenu(1);
-				}
-				break;
 			}
 		}
 		if (keypad.IsEnabled()) {
@@ -467,20 +644,24 @@ void UserInterface_TypeDef::ScreenMenu() {
 			else {
 				switch (uiMenuIndex) {
 				case 0:
-					sprintf(strbuff, "Source & Measure");
+					sprintf(strbuff, "FET Trace");
 					break;
 				case 1:
-					sprintf(strbuff, "Trace Setup");
+					sprintf(strbuff, "BJT Trace");
 					break;
 				case 2:
 					if (curveTracer.IsSampling()) {
 						barColor = ILI9341_DARKGREEN;
-						sprintf(strbuff, "Trace - Running");
+						sprintf(strbuff, "VI Trace - Running");
 					}
 					else {
-						sprintf(strbuff, "Trace");
+						sprintf(strbuff, "VI Trace");
 					}
 					break;
+				case 3:
+					sprintf(strbuff, "Source & Measure");
+					break;
+					
 				}
 			}
 		}
@@ -497,9 +678,8 @@ void UserInterface_TypeDef::ScreenMenu() {
 		lcd.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 25);
 	}
 	if (!keypad.IsEnabled()) {
-		if (sysMenu) {
+		if (sysMenu) { // System Menu
 			if (uiRedraw) {
-				btn2.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "TRACE", 1, 1);
 				text1.Init(60, 30, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 				text2.Init(60, 55, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 				text3.Init(60, 80, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "C");
@@ -552,17 +732,178 @@ void UserInterface_TypeDef::ScreenMenu() {
 			switch (uiMenuIndex) {
 			case 0:
 				if (uiRedraw) {
+					btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "START", 1, 1);
+					if (outCtl.IsInverted()) {
+						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "P-CH", 1, 1);
+					}
+					else {
+						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "N-CH", 1, 1);					
+					}
+					btn4.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "FET", 1, 1);
+					text1.Init(90, 30, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
+					text2.Init(90, 55, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
+					text3.Init(90, 80, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
+					text4.Init(90, 105, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
+					text5.Init(90, 130, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
+					text6.Init(90, 155, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
+					text7.Init(90, 180, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
+					
+					btn1.drawButton(btn1.isPressed());
+					btn2.drawButton(btn2.isPressed());
+					btn4.drawButton(btn4.isPressed());
+				
+					GFXcanvas16 canvas(85, 200);
+				
+					canvas.fillScreen(ILI9341_WHITE);
+					canvas.setFont(&FreeSans9pt7b);
+					canvas.setTextColor(ILI9341_DARKGREY);
+					canvas.setCursor(0, 18);
+					canvas.print("Vds Start");
+					canvas.setCursor(0, 43);
+					canvas.print("Vds Step");
+					canvas.setCursor(0, 68);
+					canvas.print("Vds End");
+					canvas.setCursor(0, 93);
+					canvas.print("Id Range");
+					canvas.setCursor(0, 118);
+					canvas.print("Vgs Start");
+					canvas.setCursor(0, 143);
+					canvas.print("Vgs Step");
+					canvas.setCursor(0, 168);
+					canvas.print("Vgs End");
+					canvas.setCursor(0, 193);
+					canvas.print("CH");
+					lcd.drawRGBBitmap(3, 27, canvas.getBuffer(), 85, 200);		
+					
+					text8.Init(50, 205, 20, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "G");
+					text9.Init(95, 205, 20, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "D");
+					text10.Init(140, 205, 20, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "S");
+				}
+				if (uiRedraw || uiUpdate) {
+					text1.Draw((int16_t)curveTracer.vStart);
+					text2.Draw(curveTracer.vStep);
+					text3.Draw((int16_t)curveTracer.vEnd);
+					text4.Draw((int16_t)curveTracer.iLim);
+					text5.Draw((int16_t)curveTracer.bStart);
+					text6.Draw((int16_t)curveTracer.bStep);
+					text7.Draw((int16_t)curveTracer.bEnd);
+					text8.Draw(curveTracer.pB->GetChNumber());
+					text9.Draw(curveTracer.pA->GetChNumber());
+					text10.Draw(curveTracer.pRef->GetChNumber());
+				}
+				break;
+			case 1:
+				if (uiRedraw) {
+					btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "START", 1, 1);
+					if (outCtl.IsInverted()) {
+						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "PNP", 1, 1);
+					}
+					else {
+						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "NPN", 1, 1);					
+					}
+					btn4.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "BJT", 1, 1);
+					text1.Init(90, 30, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
+					text2.Init(90, 55, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
+					text3.Init(90, 80, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
+					text4.Init(90, 105, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
+					text5.Init(90, 130, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
+					text6.Init(90, 155, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
+					text7.Init(90, 180, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
+					
+					btn1.drawButton(btn1.isPressed());
+					btn2.drawButton(btn2.isPressed());
+					btn4.drawButton(btn4.isPressed());
+				
+					GFXcanvas16 canvas(85, 200);
+				
+					canvas.fillScreen(ILI9341_WHITE);
+					canvas.setFont(&FreeSans9pt7b);
+					canvas.setTextColor(ILI9341_DARKGREY);
+					canvas.setCursor(0, 18);
+					canvas.print("Vce Start");
+					canvas.setCursor(0, 43);
+					canvas.print("Vce Step");
+					canvas.setCursor(0, 68);
+					canvas.print("Vce End");
+					canvas.setCursor(0, 93);
+					canvas.print("Ic Range");
+					canvas.setCursor(0, 118);
+					canvas.print("Ib Start");
+					canvas.setCursor(0, 143);
+					canvas.print("Ib Step");
+					canvas.setCursor(0, 168);
+					canvas.print("Ib End");
+					canvas.setCursor(0, 193);
+					canvas.print("CH");
+					lcd.drawRGBBitmap(3, 27, canvas.getBuffer(), 85, 200);
+					
+					text8.Init(50, 205, 20, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "B");
+					text9.Init(95, 205, 20, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "C");
+					text10.Init(140, 205, 20, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "E");
+				}
+				if (uiRedraw || uiUpdate) {
+					text1.Draw((int16_t)curveTracer.vStart);
+					text2.Draw(curveTracer.vStep);
+					text3.Draw((int16_t)curveTracer.vEnd);
+					text4.Draw((int16_t)curveTracer.iLim);
+					text5.Draw(curveTracer.bStart);
+					text6.Draw(curveTracer.bStep);
+					text7.Draw(curveTracer.bEnd);
+					text8.Draw(curveTracer.pB->GetChNumber());
+					text9.Draw(curveTracer.pA->GetChNumber());
+					text10.Draw(curveTracer.pRef->GetChNumber());
+				}
+				break;
+			case 2:
+				if (uiRedraw) {
+					if (curveTracer.IsSampling()) {
+						btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "STOP", 1, 1);
+					}
+					else {
+						btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "START", 1, 1);
+					}
+					btn4.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "BACK", 1, 1);
+					btn3.initButton(&lcd, 275, 105, 75, 45, ILI9341_ORANGE, ILI9341_ORANGE, ILI9341_WHITE, "CLEAR", 1, 1);
+					
+					btn1.drawButton(btn1.isPressed());
+					btn4.drawButton(btn4.isPressed());
+					btn3.drawButton(btn3.isPressed());
+					
+					if (outCtl.IsInverted()) {
+						plot.Init(20, 36, 195, 188, "mV", "mA", curveTracer.vEnd, curveTracer.vStart, curveTracer.iLim, 0, 10, 10);
+						plot.SetOrigin(215, 36);
+					}
+					else {
+						plot.Init(20, 36, 195, 188, "mV", "mA", curveTracer.vStart, curveTracer.vEnd, 0, curveTracer.iLim, 10, 10);
+						plot.SetOrigin(20, 224);
+					}
+					plot.SetPlotColor(ILI9341_ORANGE);
+				}
+				if (uiRedraw || uiUpdate) {
+					if (curveTracer.GetSampleCount() > 0) {
+						plot.DrawLine(
+							curveTracer.data[curveTracer.GetSampleCount() - 1].v, 
+							curveTracer.data[curveTracer.GetSampleCount() - 1].i);
+					}
+					else {
+						plot.ResetLinePlot();
+					}
+				}
+				break;
+				
+			case 3:	// SMU Mode (DISABLED)
+				if (uiRedraw) {
 					if (outCtl.IsAnyChannelEnabled()) {
 						btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "ON", 1, 1);
 					}
 					else {
-						btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "OFF", 1, 1);					
+						btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "OFF", 1, 1);	
 					}
 					if (outCtl.IsInverted()) {
-						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "INV", 1, 1);
+						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "Inv.", 1, 1);
 					}
 					else {
-						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "INV", 1, 1);					
+						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "Norm", 1, 1);					
 					}
 					btn4.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "TRACE", 1, 1);
 					text1.Init(45, 30, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
@@ -617,95 +958,6 @@ void UserInterface_TypeDef::ScreenMenu() {
 					}
 				}
 				break;
-			case 1:
-				if (uiRedraw) {
-					btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "START", 1, 1);
-					if (outCtl.IsInverted()) {
-						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "INV", 1, 1);
-					}
-					else {
-						btn2.initButton(&lcd, 275, 105, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "INV", 1, 1);					
-					}
-					btn4.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "SMU", 1, 1);
-					text1.Init(60, 30, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
-					text2.Init(60, 55, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
-					text3.Init(60, 80, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
-					text4.Init(60, 105, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
-					text5.Init(60, 130, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
-					text6.Init(60, 155, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
-					text7.Init(60, 180, 60, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
-					
-					btn1.drawButton(btn1.isPressed());
-					btn2.drawButton(btn2.isPressed());
-					btn4.drawButton(btn4.isPressed());
-				
-					GFXcanvas16 canvas(60, 170);
-				
-					canvas.fillScreen(ILI9341_WHITE);
-					canvas.setFont(&FreeSans9pt7b);
-					canvas.setTextColor(ILI9341_DARKGREY);
-					canvas.setCursor(0, 18);
-					canvas.print("Start");
-					canvas.setCursor(0, 43);
-					canvas.print("End");
-					canvas.setCursor(0, 68);
-					canvas.print("Step");
-					canvas.setCursor(0, 93);
-					canvas.print("Range");
-					canvas.setCursor(0, 118);
-					canvas.print("IbStart");
-					canvas.setCursor(0, 143);
-					canvas.print("IbStep");
-					canvas.setCursor(0, 168);
-					canvas.print("IbEnd");
-					lcd.drawRGBBitmap(3, 27, canvas.getBuffer(), 60, 170);
-				
-					text1.Draw((int16_t)curveTracer.vStart);
-					text2.Draw((int16_t)curveTracer.vEnd);
-					text3.Draw(curveTracer.vStep);
-					text4.Draw(curveTracer.iLim);
-					text5.Draw(curveTracer.bStart);
-					text6.Draw(curveTracer.bStep);
-					text7.Draw(curveTracer.bEnd);
-				}
-				if (uiRedraw || uiUpdate) {
-				
-				}
-				break;
-			case 2:
-				if (uiRedraw) {
-					if (curveTracer.IsSampling()) {
-						btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE, "STOP", 1, 1);
-					}
-					else {
-						btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "START", 1, 1);
-					}
-					btn4.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "BACK", 1, 1);
-					btn3.initButton(&lcd, 275, 105, 75, 45, ILI9341_ORANGE, ILI9341_ORANGE, ILI9341_WHITE, "CLEAR", 1, 1);
-					
-					btn1.drawButton(btn1.isPressed());
-					btn4.drawButton(btn4.isPressed());
-					btn3.drawButton(btn3.isPressed());
-					
-					if (outCtl.IsInverted()) {
-						plot.Init(20, 36, 195, 188, "mV", "mA", curveTracer.vEnd, curveTracer.vStart, curveTracer.iLim, 0, 10, 10);
-					}
-					else {
-						plot.Init(20, 36, 195, 188, "mV", "mA", curveTracer.vStart, curveTracer.vEnd, 0, curveTracer.iLim, 10, 10);
-					}
-					plot.SetPlotColor(ILI9341_ORANGE);
-				}
-				if (uiRedraw || uiUpdate) {
-					if (curveTracer.GetSampleCount() > 0) {
-						plot.DrawLine(
-							curveTracer.data[curveTracer.GetSampleCount() - 1].v, 
-							curveTracer.data[curveTracer.GetSampleCount() - 1].i);
-					}
-					else {
-						plot.ResetLinePlot();
-					}
-				}
-				break;
 			}
 		}
 	}
@@ -746,10 +998,10 @@ void Plot_TypeDef::DrawLine(float x1Val, float y1Val) {
 		
 		if ((x < xPos || x > xPos + w) || (y < yPos || y > yPos + h)) {return;}
 		
-		if (lPoint[0] == 0 && lPoint[1] == 0) {
-			lPoint[0] = x;
-			lPoint[1] = y;
-		}
+//		if (lPoint[0] == 0 && lPoint[1] == 0) {
+//			lPoint[0] = x;
+//			lPoint[1] = y;
+//		}
 		lcd.drawLine(lPoint[0], lPoint[1], x, y, plotColor);
 		lPoint[0] = x;
 		lPoint[1] = y;
@@ -783,8 +1035,8 @@ void Plot_TypeDef::DrawLine(float x1Val, float y1Val, float x2Val, float y2Val) 
 	}
 }
 void Plot_TypeDef::ResetLinePlot() {
-	lPoint[0] = 0;
-	lPoint[1] = 0;
+	lPoint[0] = origX;
+	lPoint[1] = origY;
 }
 void Plot_TypeDef::Clear() {
 	lcd.fillRect(xPos + 1, yPos, w, h, ILI9341_WHITE);
@@ -1018,11 +1270,13 @@ void Keypad_TypeDef::TouchHandler(Point_TypeDef pos, uint8_t touch) {
 	}
 }
 
-float Keypad_TypeDef::GetKeyFloat() {
-	return atof(keyBuffer);
+float Keypad_TypeDef::GetKeyFloat(float min, float max) {
+	float x = atof(keyBuffer);
+	return (x < min ? min : (x > max ? max : x));
 }
-int Keypad_TypeDef::GetKeyInteger() {
-	return atoi(keyBuffer);
+int Keypad_TypeDef::GetKeyInteger(int min, int max) {
+	int x = atoi(keyBuffer);
+	return (x < min ? min : (x > max ? max : x));
 }
 
 uint8_t Keypad_TypeDef::IsPressed() {

@@ -60,7 +60,7 @@ void CurveTracer_TypeDef::Handler() {
 }
 
 void CurveTracer_TypeDef::Start() {
-	if (!IsChannelValid()) {return;}
+	if (!IsChannelValid() || !IsParamValid()) {return;}
 	run = 1;
 	end = 0;
 	this->tSample = (tSample < CT_MIN_SAMPLE_TIME ? CT_MIN_SAMPLE_TIME : tSample);

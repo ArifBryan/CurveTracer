@@ -14,10 +14,11 @@
 #define CH_MODE_CURRENT		2
 
 struct Channel_TypeDef {
-	Channel_TypeDef(GPIO_TypeDef *enableGPIO, uint32_t enablePIN, INA226_TypeDef *ina226) {
+	Channel_TypeDef(GPIO_TypeDef *enableGPIO, uint32_t enablePIN, INA226_TypeDef *ina226, uint8_t chNum) {
 		this->gpio = enableGPIO;
 		this->pin = enablePIN;
 		this->ina226 = ina226;
+		this -> chNum = chNum;
 	}
 	void Handler(void);
 	void SetVoltage(float vSet);
@@ -44,6 +45,9 @@ struct Channel_TypeDef {
 		this->calDACMax = dacMax;
 		calState = 1;
 	}
+	uint8_t GetChNumber() {
+		return chNum;
+	}
 	
 	float vSet, iSet;
 	float vMeas, iMeas;
@@ -60,6 +64,7 @@ private:
 	uint8_t calState;
 	float calVMin, calVMax;
 	uint16_t calDACMin, calDACMax;
+	uint8_t chNum;
 };
 
 struct OutputControl_TypeDef {
@@ -82,9 +87,9 @@ struct OutputControl_TypeDef {
 	}
 	void SelfTest(void);
 	uint8_t GetSelftestResult(void) {return selftestResult;}
-	Channel_TypeDef ch1 = Channel_TypeDef(OPA548_CH1_ES_GPIO, OPA548_CH1_ES_PIN, &ina226Ch1);
-	Channel_TypeDef ch2 = Channel_TypeDef(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN, &ina226Ch2);
-	Channel_TypeDef ch3 = Channel_TypeDef(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN, &ina226Ch3);
+	Channel_TypeDef ch1 = Channel_TypeDef(OPA548_CH1_ES_GPIO, OPA548_CH1_ES_PIN, &ina226Ch1, 1);
+	Channel_TypeDef ch2 = Channel_TypeDef(OPA548_CH2_ES_GPIO, OPA548_CH2_ES_PIN, &ina226Ch2, 2);
+	Channel_TypeDef ch3 = Channel_TypeDef(OPA548_CH3_ES_GPIO, OPA548_CH3_ES_PIN, &ina226Ch3, 3);
 private:
 	volatile uint32_t ctrlTimer;
 	uint8_t selftestResult;

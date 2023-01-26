@@ -11,6 +11,11 @@ struct Plot_TypeDef {
 	void DrawPoint(float xVal, float yVal);
 	void DrawLine(float x1Val, float y1Val, float x2Val, float y2Val);
 	void DrawLine(float xVal, float yVal);
+	void SetOrigin(uint16_t x, uint16_t y) {
+		origX = x;
+		origY = y;
+		ResetLinePlot();
+	}
 	void ResetLinePlot(void);
 	void Clear(void);
 private:
@@ -20,6 +25,7 @@ private:
 	uint16_t lPoint[2];
 	float xMin, xMax;
 	float yMin, yMax;
+	uint16_t origX, origY;
 };
 
 struct TextBox_TypeDef {
@@ -69,8 +75,8 @@ struct Keypad_TypeDef {
 	}
 	void ClearKey(void) {pressedKey = 0;}
 	char* GetKeyString(void) {return keyBuffer;}
-	float GetKeyFloat(void);
-	int GetKeyInteger(void);
+	float GetKeyFloat(float min, float max);
+	int GetKeyInteger(int min, int max);
 	uint8_t IsOKPressed(void) {return GetKey() == 'O';}
 	uint8_t IsCancelPressed(void) {return GetKey() == 'C';}
 	uint8_t IsEnabled(void);
