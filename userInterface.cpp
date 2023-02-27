@@ -288,7 +288,8 @@ void UserInterface_TypeDef::ButtonHandler() {
 				lcd.fillRect(0, 25, 320, 215, ILI9341_WHITE);
 			}
 			switch (uiMenuIndex) {
-			case 0:	// FET Menu
+			// FET Menu
+			case 0:	
 				if (text1.JustPressed()) {
 					Beep(50);
 					keypad.Enable("Vds Start", "mV");
@@ -350,8 +351,10 @@ void UserInterface_TypeDef::ButtonHandler() {
 					btn4.drawButton(btn4.isPressed());
 				}			
 			
+				// Start Trace
 				if (btn1.justPressed()) {
 					if (curveTracer.IsChannelValid() && curveTracer.IsParamValid()) {
+						enableNotification = 1;
 						Beep(50);
 						curveTracer.tSample = 100;
 						curveTracer.bType = curveTracer.bTypeVoltage;
@@ -363,6 +366,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 						Beep(50, 3);						
 					}
 				}
+				// N-CH / P-CH
 				if (btn2.justPressed()) {
 					Beep(50);
 					curveTracer.InvertParams();
@@ -376,6 +380,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 						btn2.setLabel("P-CH");
 					}
 				}
+				// BJT
 				if (btn4.justPressed()) {
 					Beep(50);
 					curveTracer.ResetParams();
@@ -384,7 +389,8 @@ void UserInterface_TypeDef::ButtonHandler() {
 				}
 				break;
 				
-			case 1:	// BJT Menu
+			// BJT Menu
+			case 1:	
 				if (text1.JustPressed()) {
 					Beep(50);
 					keypad.Enable("Vce Start", "mV");
@@ -446,8 +452,10 @@ void UserInterface_TypeDef::ButtonHandler() {
 					btn4.drawButton(btn4.isPressed());
 				}			
 			
+				// Start Trace
 				if (btn1.justPressed()) {
 					if (curveTracer.IsChannelValid() && curveTracer.IsParamValid()) {
+						enableNotification = 1;
 						Beep(50);
 						curveTracer.tSample = 100;
 						curveTracer.bType = curveTracer.bTypeCurrent;
@@ -459,6 +467,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 						Beep(50, 3);						
 					}
 				}
+				// NPN / PNP
 				if (btn2.justPressed()) {
 					Beep(50);
 					curveTracer.InvertParams();
@@ -472,6 +481,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 						btn2.setLabel("PNP");
 					}
 				}
+				// FET
 				if (btn4.justPressed()) {
 					Beep(50);
 					curveTracer.ResetParams();
@@ -480,26 +490,35 @@ void UserInterface_TypeDef::ButtonHandler() {
 				}
 				break;
 				
-			case 2:	// Trace Display
+			// Trace Display
+			case 2:
+				// Sampling Finished
 				if (curveTracer.IsSamplingDone() && curveTracer.IsNewSample()) {
 					btn1.setLabel("START");
 					btn1.setColor(ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE);
 					btn1.drawButton(btn1.isPressed());
-					ui.Beep(50, 2);
+					if (enableNotification) {
+						enableNotification = 0;
+						ui.Beep(50, 2);
+					}
 					uiNotify = 1;
 				}
 				if (curveTracer.IsNewSample()) {
 					uiUpdate = 1;
 				}
+				// Start / Stop
 				if (btn1.justPressed()) {
 					Beep(50);
 		
+					// Start
 					if (!curveTracer.IsSampling()) {
+						enableNotification = 1;
 						plot.ResetLinePlot();
 						curveTracer.Start();
 						btn1.setLabel("STOP");
 						btn1.setColor(ILI9341_MAROON, ILI9341_MAROON, ILI9341_WHITE);
 					}
+					// Stop
 					else {
 						curveTracer.Stop();
 						btn1.setLabel("START");
@@ -507,6 +526,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 					}
 					uiNotify = 1;
 				}
+				// Clear
 				if (btn3.justPressed()) {
 					Beep(50);
 					curveTracer.Stop();
@@ -525,6 +545,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 					btn3.drawButton(btn3.isPressed());
 				}
 		
+				// Exit
 				if (btn4.justPressed()) {
 					Beep(50);
 					curveTracer.Stop();
@@ -537,7 +558,8 @@ void UserInterface_TypeDef::ButtonHandler() {
 				}
 				break;
 				
-			case 3: // SMU Mode (DISABLED)
+			// SMU Mode (DISABLED)
+			case 3:
 				if (btn1.justPressed()) {
 					Beep(50);
 					if (outCtl.IsAnyChannelEnabled()) {
@@ -862,7 +884,7 @@ void UserInterface_TypeDef::ScreenMenu() {
 					else {
 						btn1.initButton(&lcd, 275, 55, 75, 45, ILI9341_DARKGREEN, ILI9341_DARKGREEN, ILI9341_WHITE, "START", 1, 1);
 					}
-					btn4.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "BACK", 1, 1);
+					btn4.initButton(&lcd, 275, 210, 75, 45, ILI9341_DARKCYAN, ILI9341_DARKCYAN, ILI9341_WHITE, "EXIT", 1, 1);
 					btn3.initButton(&lcd, 275, 105, 75, 45, ILI9341_ORANGE, ILI9341_ORANGE, ILI9341_WHITE, "CLEAR", 1, 1);
 					
 					btn1.drawButton(btn1.isPressed());

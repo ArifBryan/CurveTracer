@@ -134,6 +134,7 @@ private:
 	uint8_t editVar;
 	uint8_t sysMenu;
 	uint32_t touchBlock;
+	uint8_t enableNotification;
 };
 
 extern UserInterface_TypeDef ui;
