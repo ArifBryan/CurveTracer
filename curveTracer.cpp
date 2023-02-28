@@ -44,8 +44,8 @@ void CurveTracer_TypeDef::Handler() {
 			}
 			else {
 				nextSampleSeq = 0;
-				data[samplePtr].i = pA->GetCurrent();
-				data[samplePtr].v = pA->GetVoltage() - pRef->GetVoltage();
+				data[samplePtr].i = pMeasCurrent->GetCurrent();
+				data[samplePtr].v = pMeasVoltage->GetVoltage() - pRef->GetVoltage();
 				samplePtr++;
 			}
 			if (samplePtr < sampleLen && run && !nextSampleSeq) {
@@ -59,8 +59,8 @@ void CurveTracer_TypeDef::Handler() {
 	}
 }
 
-void CurveTracer_TypeDef::Start() {
-	if (!IsChannelValid() || !IsParamValid()) {return;}
+uint8_t CurveTracer_TypeDef::Start() {
+	if (!IsChannelValid() || !IsParamValid() || !IsMeasChannelValid()) {return 0;}
 	run = 1;
 	end = 0;
 	this->tSample = (tSample < CT_MIN_SAMPLE_TIME ? CT_MIN_SAMPLE_TIME : tSample);
@@ -88,6 +88,8 @@ void CurveTracer_TypeDef::Start() {
 		pB->SetState(1);
 	}
 	tracerTimer = sys.Ticks();
+	
+	return 1;
 }
 
 void CurveTracer_TypeDef::Stop() {

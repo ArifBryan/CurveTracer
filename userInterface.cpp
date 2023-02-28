@@ -358,6 +358,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 						Beep(50);
 						curveTracer.tSample = 100;
 						curveTracer.bType = curveTracer.bTypeVoltage;
+						curveTracer.SetDefaultMeasChannel();
 						curveTracer.Start();
 						plot.ResetLinePlot();
 						SetScreenMenu(2);
@@ -459,6 +460,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 						Beep(50);
 						curveTracer.tSample = 100;
 						curveTracer.bType = curveTracer.bTypeCurrent;
+						curveTracer.SetDefaultMeasChannel();
 						curveTracer.Start();
 						plot.ResetLinePlot();
 						SetScreenMenu(2);

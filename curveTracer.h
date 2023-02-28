@@ -51,7 +51,7 @@ struct CurveTracer_TypeDef {
 	}
 	uint32_t GetSampleLength(void) {return sampleLen;}
 	uint32_t GetSampleCount(void) {return samplePtr;}
-	void Start(void);
+	uint8_t Start(void);
 	void Stop(void);
 	uint8_t IsSampling(void);
 	uint8_t IsSamplingDone();
@@ -77,6 +77,9 @@ struct CurveTracer_TypeDef {
 		}
 		return vParamValid && iParamValid && bParamValid;
 	}
+	uint8_t IsMeasChannelValid(void) {
+		return (pMeasCurrent && pMeasVoltage);
+	}
 	void InvertParams() {
 		vStart = -vStart;
 		vEnd = -vEnd;
@@ -100,6 +103,10 @@ struct CurveTracer_TypeDef {
 	}
 	void SetpBiasModeCurrent() {bType = bTypeCurrent;}
 	void SetpBiasModeVoltage() {bType = bTypeVoltage; }
+	void SetDefaultMeasChannel() {
+		pMeasCurrent = pA;
+		pMeasVoltage = pA;
+	}
 	SampleData_TypeDef data[CT_DATA_LEN];
 	
 	float vStart, vEnd, vStep, iLim;
@@ -111,6 +118,7 @@ struct CurveTracer_TypeDef {
 	const uint8_t bTypeCurrent = 0;
 	const uint8_t bTypeVoltage = 1;
 	Channel_TypeDef *pRef, *pA, *pB;
+	Channel_TypeDef *pMeasCurrent, *pMeasVoltage;
 private:
 	uint8_t run;
 	uint8_t end;

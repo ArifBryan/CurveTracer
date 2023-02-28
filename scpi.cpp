@@ -194,8 +194,49 @@ parseMnemonic:
 		}
 		// TRACe
 		else if(IsMnemonic(&data, "TRACe:")) {
+			// PLOT
+			if (IsMnemonic(&data, "PLOT:")) {
+				if (IsMnemonic(&data, "CURRent")) {
+					if (strSkim(&data, " (@")) {
+						if (*data - '0' > 0 && *data - '0' < 9) {
+							switch (atoi(data)) {
+							case 1:
+								curveTracer.pMeasCurrent = &outCtl.ch1;
+								break;
+							case 2:
+								curveTracer.pMeasCurrent = &outCtl.ch2;
+								break;
+							case 3:
+								curveTracer.pMeasCurrent = &outCtl.ch3;
+								break;
+							default:
+								break;
+							}
+						}
+					}
+				}
+				else if (IsMnemonic(&data, "VOLTage")) {
+					if (strSkim(&data, " (@")) {
+						if (*data - '0' > 0 && *data - '0' < 9) {
+							switch (atoi(data)) {
+							case 1:
+								curveTracer.pMeasVoltage = &outCtl.ch1;
+								break;
+							case 2:
+								curveTracer.pMeasVoltage = &outCtl.ch2;
+								break;
+							case 3:
+								curveTracer.pMeasVoltage = &outCtl.ch3;
+								break;
+							default:
+								break;
+							}
+						}
+					}
+				}
+			}
 			// ROUTe
-			if (IsMnemonic(&data, "ROUTe")) {
+			else if (IsMnemonic(&data, "ROUTe")) {
 				if (strSkim(&data, " (@")) {
 					Channel_TypeDef *chList[3] = { 0, 0, 0 };
 					uint8_t cnt = 0;
