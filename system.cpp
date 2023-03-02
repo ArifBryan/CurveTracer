@@ -138,6 +138,9 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 				pwrBtnTmr = Ticks();
 				break;
 			}
+			// Re-latch power and reset timer
+			LL_GPIO_SetOutputPin(PWR_LATCH_GPIO, PWR_LATCH_PIN);
+			platchTmr = Ticks();
 		}
 		else {
 			pwrBtnTmr = Ticks();
@@ -145,16 +148,15 @@ void System_TypeDef::Init(void(*Startup_CallbackHandler)(void), void(*Shutdown_C
 		
 		// Temporary power latch timeout
 		if (Ticks() - platchTmr >= 500) {
+			// Release power latch
 			LL_GPIO_ResetOutputPin(PWR_LATCH_GPIO, PWR_LATCH_PIN);
+			// Start ADC conversion for sampling input voltage
+			ADCStartConversion();
 			
 			platchTmr = Ticks();		
 		}
-		else if (!LL_GPIO_IsInputPinSet(BTN_PWR_GPIO, BTN_PWR_PIN)) {
-			platchTmr = Ticks();
-		}
 		
 		// Standby loop
-		
 		
 		// Watchdog reset
 		LL_IWDG_ReloadCounter(IWDG);
