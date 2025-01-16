@@ -5,6 +5,7 @@
 #include "userInterface.h"
 #include <string.h>
 #include <ctype.h>
+#include <inttypes.h>
 
 SCPI_TypeDef scpi(&uart1);
 
@@ -604,8 +605,8 @@ void SCPI_TypeDef::Handler() {
 					sprintf(buff, "TRAC S%d", curveTracer.GetSequenceCount());
 					Return(buff);
 				}
-				uint8_t vDec = (uint)abs(curveTracer.data[sample - 1].v * 100) % 100;
-				uint8_t iDec = (uint)abs(curveTracer.data[sample - 1].i * 100) % 100;
+				uint8_t vDec = (uint8_t)abs(curveTracer.data[sample - 1].v * 100) % 100;
+				uint8_t iDec = (uint8_t)abs(curveTracer.data[sample - 1].i * 100) % 100;
 				sprintf(buff, "P%d V%d.%02d,I%d.%02d", sample, (int)curveTracer.data[sample - 1].v, vDec, (int)curveTracer.data[sample - 1].i, iDec);
 				Return(buff);
 			}
@@ -626,7 +627,7 @@ void SCPI_TypeDef::ReturnRaw(const char *data) {
 
 void SCPI_TypeDef::Return(float data) {
 	char str[13];
-	uint8_t dec = (uint)abs(data * 100) % 100;
+	uint8_t dec = (uint8_t)abs(data * 100) % 100;
 	sprintf(str, "%d.%02d", (int16_t)data, dec);
 	uart->Transmit(str);
 }

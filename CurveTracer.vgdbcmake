@@ -11,14 +11,15 @@
     <ExportAdvancedBuildVariables>false</ExportAdvancedBuildVariables>
     <SkipImportedProjectChecks>false</SkipImportedProjectChecks>
     <MemoryListSource>DeviceDefinition</MemoryListSource>
+    <TroubleshootGeneratedConfigurationFiles>false</TroubleshootGeneratedConfigurationFiles>
   </Project>
   <Build xsi:type="com.visualgdb.build.cmake">
     <BuildLogMode xsi:nil="true" />
     <ToolchainID>
       <ID>com.visualgdb.arm-eabi</ID>
       <Version>
-        <GCC>10.3.1</GCC>
-        <GDB>10.2.90</GDB>
+        <GCC>14.2.1</GCC>
+        <GDB>15.2</GDB>
         <Revision>1</Revision>
       </Version>
     </ToolchainID>
@@ -188,11 +189,12 @@
       <MaxBreakpointLimit>0</MaxBreakpointLimit>
       <EnableVerboseMode>true</EnableVerboseMode>
       <EnablePrettyPrinters>false</EnablePrettyPrinters>
+      <EnableAbsolutePathReporting>true</EnableAbsolutePathReporting>
     </AdditionalGDBSettings>
     <DebugMethod>
       <ID>com.sysprogs.arm.openocd</ID>
       <InterfaceID>stlink-v2</InterfaceID>
-      <InterfaceSerialNumber>5&amp;3B4D23A2&amp;0&amp;5</InterfaceSerialNumber>
+      <InterfaceSerialNumber>5&amp;37076CF8&amp;0&amp;1</InterfaceSerialNumber>
       <Configuration xsi:type="com.visualgdb.edp.openocd.settings">
         <CommandLine>-f interface/stlink-v2.cfg -c "adapter speed 4000" -c "transport select hla_swd" -f target/stm32f1x.cfg -c init -c "reset init"</CommandLine>
         <ExtraParameters>
@@ -215,6 +217,7 @@
         <PreferredTelnetPort>0</PreferredTelnetPort>
         <AlwaysPassSerialNumber>false</AlwaysPassSerialNumber>
         <SelectedCoreIndex xsi:nil="true" />
+        <LiveMemoryTimeout>5000</LiveMemoryTimeout>
       </Configuration>
     </DebugMethod>
     <AutoDetectRTOS>true</AutoDetectRTOS>

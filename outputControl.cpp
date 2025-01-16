@@ -79,9 +79,12 @@ void OutputControl_TypeDef::Init() {
 	ina226Ch2.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_332us, INA226_CONFIG_AVG_64);
 	ina226Ch3.Init(INA226_CONFIG_VBUSCT_204us, INA226_CONFIG_VSHCT_332us, INA226_CONFIG_AVG_64);
 	
-	ina226Ch1.SetCurrentCal(0.0517061);
-	ina226Ch2.SetCurrentCal(0.0518456);
-	ina226Ch3.SetCurrentCal(0.0522574);
+//	ina226Ch1.SetCurrentCal(0.0517061);
+//	ina226Ch2.SetCurrentCal(0.0518456);
+//	ina226Ch3.SetCurrentCal(0.0522574);
+	ina226Ch1.SetCurrentCal(0.1034122);
+	ina226Ch2.SetCurrentCal(0.1036912);
+	ina226Ch3.SetCurrentCal(0.1045148);
 	ina226Ch1.SetVoltageCal(-1.8);
 	ina226Ch2.SetVoltageCal(-2.6);
 	ina226Ch3.SetVoltageCal(-1.2);

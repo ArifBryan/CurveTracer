@@ -170,7 +170,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 						curveTracer.vEnd = keypad.GetKeyFloat(-20000, 20000);
 						break;
 					case 4:
-						curveTracer.iLim = keypad.GetKeyFloat(-1000, 1000);
+						curveTracer.iLim = keypad.GetKeyFloat(-800, 800);
 						break;
 					case 5:
 						curveTracer.bStart = keypad.GetKeyFloat(-20000, 20000);
@@ -205,7 +205,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 						curveTracer.vEnd = keypad.GetKeyFloat(-20000, 20000);
 						break;
 					case 4:
-						curveTracer.iLim = keypad.GetKeyFloat(-1000, 1000);
+						curveTracer.iLim = keypad.GetKeyFloat(-800, 800);
 						break;
 					case 5:
 						curveTracer.bStart = keypad.GetKeyFloat(-1000, 1000);
@@ -240,13 +240,13 @@ void UserInterface_TypeDef::ButtonHandler() {
 						outCtl.ch3.SetVoltage(keypad.GetKeyFloat(-20000, 20000));
 						break;
 					case 4:
-						outCtl.ch1.SetCurrent(keypad.GetKeyFloat(-1000, 1000));
+						outCtl.ch1.SetCurrent(keypad.GetKeyFloat(-800, 800));
 						break;
 					case 5:
-						outCtl.ch2.SetCurrent(keypad.GetKeyFloat(-1000, 1000));
+						outCtl.ch2.SetCurrent(keypad.GetKeyFloat(-00, 800));
 						break;
 					case 6:
-						outCtl.ch3.SetCurrent(keypad.GetKeyFloat(-1000, 1000));
+						outCtl.ch3.SetCurrent(keypad.GetKeyFloat(-800, 800));
 						break;
 					}
 					break;
