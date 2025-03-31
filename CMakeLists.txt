@@ -4,7 +4,7 @@ project(CurveTracer LANGUAGES C CXX ASM)
 
 find_bsp(
 	ID com.sysprogs.arm.stm32
-	VERSION 2024.07
+	VERSION 2025.01
 	MCU STM32F103RE
 	FRAMEWORKS com.sysprogs.arm.stm32.ll com.sysprogs.embedded.semihosting_and_profiler
 	FWCONFIGURATION

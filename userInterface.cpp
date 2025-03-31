@@ -208,13 +208,13 @@ void UserInterface_TypeDef::ButtonHandler() {
 						curveTracer.iLim = keypad.GetKeyFloat(-800, 800);
 						break;
 					case 5:
-						curveTracer.bStart = keypad.GetKeyFloat(-1000, 1000);
+						curveTracer.bStart = keypad.GetKeyFloat(-800, 800);
 						break;
 					case 6:
-						curveTracer.bStep = keypad.GetKeyFloat(-1000, 1000);
+						curveTracer.bStep = keypad.GetKeyFloat(-800, 800);
 						break;
 					case 7:
-						curveTracer.bEnd = keypad.GetKeyFloat(-1000, 1000);
+						curveTracer.bEnd = keypad.GetKeyFloat(-800, 800);
 						break;
 					case 8:
 						curveTracer.pB = chList[keypad.GetKeyInteger(0, 3)];
@@ -243,7 +243,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 						outCtl.ch1.SetCurrent(keypad.GetKeyFloat(-800, 800));
 						break;
 					case 5:
-						outCtl.ch2.SetCurrent(keypad.GetKeyFloat(-00, 800));
+						outCtl.ch2.SetCurrent(keypad.GetKeyFloat(-800, 800));
 						break;
 					case 6:
 						outCtl.ch3.SetCurrent(keypad.GetKeyFloat(-800, 800));
@@ -307,7 +307,7 @@ void UserInterface_TypeDef::ButtonHandler() {
 				}
 				if (text4.JustPressed()) {
 					Beep(50);
-					keypad.Enable("Id Range", "mA");
+					keypad.Enable("Id Range", "uA");
 					editVar = 4;
 				}
 				if (text5.JustPressed()) {
@@ -409,22 +409,22 @@ void UserInterface_TypeDef::ButtonHandler() {
 				}
 				if (text4.JustPressed()) {
 					Beep(50);
-					keypad.Enable("Ic Range", "mA");
+					keypad.Enable("Ic Range", "uA");
 					editVar = 4;
 				}
 				if (text5.JustPressed()) {
 					Beep(50);
-					keypad.Enable("Ib Start", "mA");
+					keypad.Enable("Ib Start", "uA");
 					editVar = 5;
 				}
 				if (text6.JustPressed()) {
 					Beep(50);
-					keypad.Enable("Ib Step", "mA");
+					keypad.Enable("Ib Step", "uA");
 					editVar = 6;
 				}
 				if (text7.JustPressed()) {
 					Beep(50);
-					keypad.Enable("Ib End", "mA");
+					keypad.Enable("Ib End", "uA");
 					editVar = 7;
 				}
 				if (text8.JustPressed()) {
@@ -607,17 +607,17 @@ void UserInterface_TypeDef::ButtonHandler() {
 				}
 				if (text4.JustPressed()) {
 					Beep(50);
-					keypad.Enable("CH1 Iset", "mA");
+					keypad.Enable("CH1 Iset", "uA");
 					editVar = 4;
 				}
 				if (text5.JustPressed()) {
 					Beep(50);
-					keypad.Enable("CH2 Iset", "mA");
+					keypad.Enable("CH2 Iset", "uA");
 					editVar = 5;
 				}
 				if (text6.JustPressed()) {
 					Beep(50);
-					keypad.Enable("CH3 Iset", "mA");
+					keypad.Enable("CH3 Iset", "uA");
 					editVar = 6;
 				}
 		
@@ -767,7 +767,7 @@ void UserInterface_TypeDef::ScreenMenu() {
 					text1.Init(90, 30, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 					text2.Init(90, 55, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 					text3.Init(90, 80, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
-					text4.Init(90, 105, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
+					text4.Init(90, 105, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "uA");
 					text5.Init(90, 130, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 					text6.Init(90, 155, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 					text7.Init(90, 180, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
@@ -829,10 +829,10 @@ void UserInterface_TypeDef::ScreenMenu() {
 					text1.Init(90, 30, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 					text2.Init(90, 55, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 					text3.Init(90, 80, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
-					text4.Init(90, 105, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
-					text5.Init(90, 130, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
-					text6.Init(90, 155, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
-					text7.Init(90, 180, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
+					text4.Init(90, 105, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "uA");
+					text5.Init(90, 130, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "uA");
+					text6.Init(90, 155, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "uA");
+					text7.Init(90, 180, 70, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "uA");
 					
 					btn1.drawButton(btn1.isPressed());
 					btn2.drawButton(btn2.isPressed());
@@ -894,11 +894,11 @@ void UserInterface_TypeDef::ScreenMenu() {
 					btn3.drawButton(btn3.isPressed());
 					
 					if (outCtl.IsInverted()) {
-						plot.Init(20, 36, 195, 188, "mV", "mA", curveTracer.vEnd, curveTracer.vStart, curveTracer.iLim, 0, 10, 10);
+						plot.Init(20, 36, 195, 188, "mV", "uA", curveTracer.vEnd, curveTracer.vStart, curveTracer.iLim, 0, 10, 10);
 						plot.SetOrigin(215, 36);
 					}
 					else {
-						plot.Init(20, 36, 195, 188, "mV", "mA", curveTracer.vStart, curveTracer.vEnd, 0, curveTracer.iLim, 10, 10);
+						plot.Init(20, 36, 195, 188, "mV", "uA", curveTracer.vStart, curveTracer.vEnd, 0, curveTracer.iLim, 10, 10);
 						plot.SetOrigin(20, 224);
 					}
 					plot.SetPlotColor(ILI9341_ORANGE);
@@ -933,9 +933,9 @@ void UserInterface_TypeDef::ScreenMenu() {
 					text1.Init(45, 30, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 					text2.Init(45, 55, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
 					text3.Init(45, 80, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mV");
-					text4.Init(140, 30, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
-					text5.Init(140, 55, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
-					text6.Init(140, 80, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "mA");
+					text4.Init(140, 30, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "uA");
+					text5.Init(140, 55, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "uA");
+					text6.Init(140, 80, 65, 19, ILI9341_DARKGREY, ILI9341_DARKCYAN, "uA");
 				
 					btn1.drawButton(btn1.isPressed());
 					btn2.drawButton(btn2.isPressed());
